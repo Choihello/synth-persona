@@ -15,6 +15,10 @@ describe("kosis", () => {
     expect(url).toContain("apiKey=K");
     expect(url).toContain("tblId=T1");
     expect(url).toContain("orgId=101");
+    expect(url).toContain("method=getList");
+    expect(url).toContain("format=json");
+    expect(url).toContain("jsonVD=Y");
+    expect(url).toContain("itmId=T1");
   });
 
   test("정상 응답을 행으로 파싱한다", () => {

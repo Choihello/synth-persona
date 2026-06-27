@@ -76,6 +76,10 @@ export interface KosisOpts {
   colDim: { name: string; keys: string[] };
   objL1?: string;
   objL2?: string;
+  itmId?: string;
+  prdSe?: string;
+  startPrdDe?: string;
+  endPrdDe?: string;
   fetchImpl?: typeof fetch;
 }
 
@@ -83,7 +87,16 @@ export class KosisSource implements DataSource {
   constructor(private opts: KosisOpts) {}
   async getDistribution(_spec?: DistSpec): Promise<Distribution> {
     const f = this.opts.fetchImpl ?? fetch;
-    const url = buildKosisUrl({ apiKey: this.opts.apiKey, tblId: this.opts.tblId, objL1: this.opts.objL1, objL2: this.opts.objL2 });
+    const url = buildKosisUrl({
+      apiKey: this.opts.apiKey,
+      tblId: this.opts.tblId,
+      objL1: this.opts.objL1,
+      objL2: this.opts.objL2,
+      itmId: this.opts.itmId,
+      prdSe: this.opts.prdSe,
+      startPrdDe: this.opts.startPrdDe,
+      endPrdDe: this.opts.endPrdDe,
+    });
     const res = await f(url);
     if (!res.ok) throw new Error(`HTTP ${res.status} from KOSIS`);
     const rows = parseKosisRows(await res.json());
