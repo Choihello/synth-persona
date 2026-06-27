@@ -1524,7 +1524,9 @@ Expected: PASS (1 test)
 
 - [ ] **Step 5: CLI 수동 스모크 (키 없이 mock)**
 
-Run: `node cli/main.ts --question "A안 vs B안?" --choices "A안,B안" --n 40 --mock`
+> Node 24의 타입 스트리핑은 `.js` import 지정자를 `.ts`로 매핑하지 않으므로, 빌드 산출물로 스모크한다.
+
+Run: `npm run build && node dist/cli/main.js --question "A안 vs B안?" --choices "A안,B안" --n 40 --mock`
 Expected: 🔴/🟢 신호 + age별 세그먼트가 출력됨(에러 없이).
 
 - [ ] **Step 6: 커밋**
