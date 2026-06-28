@@ -2,3 +2,5 @@ node_modules/
 dist/
 .env
 eval/report/*.html
+reports/
+.stryker-tmp/
