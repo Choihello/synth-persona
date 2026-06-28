@@ -40,3 +40,25 @@ export {
   type CalibrationReport,
 } from "./verify/calibrate.js";
 export { renderMarkdownReport, type ReportInput } from "./verify/report.js";
+export {
+  selfConsistency,
+  modeCollapseFlag,
+  positivitySkew,
+} from "./verify/probes.js";
+export {
+  paraphraseStability,
+  orderBias,
+  attributeSensitivity,
+  type ShareRunner,
+} from "./verify/robustness.js";
+export {
+  determinismGate,
+  costBudgetCheck,
+  driftDiff,
+  type Usage,
+  type Budget,
+} from "./verify/governance.js";
+export {
+  renderHarnessReport,
+  type HarnessFindings,
+} from "./verify/harness-report.js";
