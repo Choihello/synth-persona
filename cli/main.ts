@@ -44,6 +44,12 @@ export async function main(): Promise<void> {
     console.error('사용법: synth-persona --question "A안 vs B안?" --choices "A안,B안" [--n 50] [--mock]');
     process.exit(1);
   }
+  if (values.source !== "sample") {
+    console.error(
+      "KOSIS 소스는 아직 CLI에서 지원되지 않습니다 (인증키 연동 후 지원 예정). --source sample 을 사용하세요."
+    );
+    process.exit(1);
+  }
   const provider: LLMProvider = values.mock
     ? new MockProvider((p) => (["20대", "30대"].includes(p.attrs.age ?? "") ? (values.choices?.split(",")[0] ?? "A") : (values.choices?.split(",")[1] ?? "B")))
     : new ClaudeProvider();
