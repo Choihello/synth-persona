@@ -26,3 +26,17 @@ export { RecordedProvider } from "./llm/recorded.js";
 export { simulate, matchChoice, type Question } from "./simulate/simulate.js";
 export { aggregate, normalizedEntropy } from "./aggregate/uncertainty.js";
 export { runStudy, type StudyConfig } from "./study.js";
+export {
+  spearman,
+  meanAbsoluteError,
+  brierScore,
+  intervalCoverage,
+} from "./verify/scoring.js";
+export {
+  backtest,
+  topChoice,
+  type GroundTruthCase,
+  type CaseScore,
+  type CalibrationReport,
+} from "./verify/calibrate.js";
+export { renderMarkdownReport, type ReportInput } from "./verify/report.js";

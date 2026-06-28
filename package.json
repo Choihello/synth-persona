@@ -8,6 +8,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsup",
+    "calibrate:demo": "node dist/eval/calibrate-demo.js",
     "lint": "biome check .",
     "format": "biome format --write ."
   },
