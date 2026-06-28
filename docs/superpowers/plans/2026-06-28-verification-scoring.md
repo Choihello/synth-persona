@@ -466,7 +466,7 @@ git commit -m "feat: 마크다운 성적표 렌더 (신호+세그먼트+fidelity
 **Files:**
 - Modify: `src/index.ts`
 - Create: `eval/calibrate-demo.ts`, `eval/calibrate-demo.test.ts`
-- Modify: `package.json` (scripts)
+- Modify: `package.json` (scripts), `tsup.config.ts` (entry), `vitest.config.ts` (include), `tsconfig.json` (include)
 
 **Interfaces:**
 - Consumes: `backtest`, `GroundTruthCase`, `renderMarkdownReport`, `runStudy`, `SampleSource`, `MockProvider`, `spearman`/등
@@ -513,13 +513,14 @@ export { renderMarkdownReport, type ReportInput } from "./verify/report.js";
 
 `eval/calibrate-demo.ts`:
 ```ts
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+// groundtruth는 정적 JSON import로 번들에 인라인 → vitest와 빌드된 dist 모두에서
+// cwd/레이아웃 독립으로 동작 (SampleSource와 동일 전략; 런타임 파일읽기 금지).
+import casesJson from "./groundtruth/sample-cases.json" with { type: "json" };
+import { SampleSource } from "../src/data/sample-source.js";
+import { MockProvider } from "../src/llm/mock.js";
+import { runStudy } from "../src/study.js";
 import { type GroundTruthCase, backtest } from "../src/verify/calibrate.js";
 import { renderMarkdownReport } from "../src/verify/report.js";
-import { MockProvider } from "../src/llm/mock.js";
-import { SampleSource } from "../src/data/sample-source.js";
-import { runStudy } from "../src/study.js";
 
 export function loadCases(json: unknown): GroundTruthCase[] {
   const obj = json as { cases?: GroundTruthCase[] };
@@ -550,8 +551,7 @@ async function predictShare(c: GroundTruthCase): Promise<Record<string, number>>
 }
 
 export async function runDemo(): Promise<string> {
-  const path = fileURLToPath(new URL("./groundtruth/sample-cases.json", import.meta.url));
-  const cases = loadCases(JSON.parse(await readFile(path, "utf8")));
+  const cases = loadCases(casesJson);
   const calibration = await backtest(cases, predictShare);
   return renderMarkdownReport({ title: "synth-persona 캘리브레이션 데모", calibration });
 }
@@ -561,28 +561,46 @@ if (process.argv[1]?.endsWith("calibrate-demo.ts") || process.argv[1]?.endsWith(
 }
 ```
 
-- [ ] **Step 5: package.json 스크립트 추가**
+- [ ] **Step 5: 빌드/테스트 설정 + 스크립트 추가**
 
 `package.json`의 `scripts`에 추가:
 ```json
 "calibrate:demo": "node dist/eval/calibrate-demo.js"
 ```
-그리고 `tsup.config.ts`의 `entry` 배열에 `"eval/calibrate-demo.ts"` 추가(빌드 산출물 생성용).
+
+`tsup.config.ts`의 `entry` 배열에 `"eval/calibrate-demo.ts"` 추가(빌드 산출물 생성용). 예:
+```ts
+entry: ["src/index.ts", "cli/main.ts", "eval/calibrate-demo.ts"],
+```
+
+`vitest.config.ts`의 `include`에 eval 테스트를 추가(전체 스위트/CI에 포함되도록):
+```ts
+include: ["src/**/*.test.ts", "test/**/*.test.ts", "eval/**/*.test.ts"],
+```
+
+`tsconfig.json`의 `include`에 `"eval"`을 추가(타입 인식용):
+```json
+"include": ["src", "cli", "test", "eval"]
+```
 
 - [ ] **Step 6: 테스트 실행 → 통과 확인**
 
 Run: `npx vitest run eval/calibrate-demo.test.ts`
 Expected: PASS (2 tests)
 
-- [ ] **Step 7: 전체 게이트 확인**
+- [ ] **Step 7: 전체 게이트 + 빌드된 데모 확인**
 
 Run: `npm run lint && npm test && npm run build`
-Expected: 모두 통과(초록불). `runDemo`가 키 없이 동작.
+Expected: 모두 통과(초록불). `npm test`가 `eval/calibrate-demo.test.ts`를 포함(전체 카운트 증가).
+
+그다음 **빌드된 데모를 실제로 실행**해 dist에서도 동작하는지 확인(정적 JSON import 검증):
+Run: `node dist/eval/calibrate-demo.js`
+Expected: "# synth-persona 캘리브레이션 데모" + "캘리브레이션 (fidelity)" 섹션이 출력되고 에러 없음(키 불필요).
 
 - [ ] **Step 8: 커밋**
 
 ```bash
-git add src/index.ts eval/calibrate-demo.ts eval/calibrate-demo.test.ts package.json tsup.config.ts
+git add src/index.ts eval/calibrate-demo.ts eval/calibrate-demo.test.ts package.json tsup.config.ts vitest.config.ts tsconfig.json
 git commit -m "feat: 캘리브레이션 데모 스크립트 + 공개 API 노출"
 ```
 
