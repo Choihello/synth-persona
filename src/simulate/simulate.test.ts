@@ -15,6 +15,15 @@ describe("simulate", () => {
     expect(matchChoice("모르겠음", ["A", "B"])).toBeUndefined();
   });
 
+  test("한 선택지가 다른 선택지의 부분문자열이어도 정확히 매칭한다", () => {
+    // "안쓴다"는 "쓴다"를 부분문자열로 포함 → 가장 긴(구체적) 매치를 골라야 함
+    expect(matchChoice("안쓴다", ["쓴다", "안쓴다"])).toBe("안쓴다");
+    expect(matchChoice("저는 안쓴다고 봐요", ["쓴다", "안쓴다"])).toBe(
+      "안쓴다",
+    );
+    expect(matchChoice("쓴다", ["쓴다", "안쓴다"])).toBe("쓴다");
+  });
+
   test("각 페르소나에 대해 응답과 choice를 만든다", async () => {
     const provider = new MockProvider((p) =>
       p.attrs.age === "20대" ? "새벽배송 좋아요" : "저녁배송 좋아요",
