@@ -46,9 +46,9 @@ describe("ipf", () => {
     for (let a = 0; a < 4; a++)
       for (let h = 0; h < 4; h++)
         if (a === ai && h === hi) s += j.cells[a * 4 + h];
-    const targetTotal = d.crossTables?.[0].matrix
-      .flat()
-      .reduce((x, y) => x + y, 0);
+    const ct = d.crossTables?.[0];
+    if (!ct) throw new Error("fixture must provide crossTables");
+    const targetTotal = ct.matrix.flat().reduce((x, y) => x + y, 0);
     expect(s).toBeCloseTo(0.09 / targetTotal, 4);
   });
 
