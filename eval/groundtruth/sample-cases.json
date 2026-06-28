@@ -1,0 +1,17 @@
+{
+  "_note": "illustrative seed cases only — replace with real survey outcomes as they accumulate",
+  "cases": [
+    {
+      "id": "milkkit-subscribe",
+      "question": "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?",
+      "choices": ["쓴다", "안쓴다"],
+      "actualShare": { "쓴다": 0.42, "안쓴다": 0.58 }
+    },
+    {
+      "id": "delivery-time",
+      "question": "새벽배송 vs 저녁배송?",
+      "choices": ["새벽배송", "저녁배송"],
+      "actualShare": { "새벽배송": 0.55, "저녁배송": 0.45 }
+    }
+  ]
+}
