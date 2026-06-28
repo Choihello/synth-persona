@@ -18,6 +18,7 @@ export {
   parseKosisRows,
   rowsToCrossTable,
 } from "./data/kosis-source.js";
+export type { KosisRow, KosisOpts } from "./data/kosis-source.js";
 export type { LLMProvider } from "./llm/provider.js";
 export { MockProvider } from "./llm/mock.js";
 export { ClaudeProvider } from "./llm/claude.js";

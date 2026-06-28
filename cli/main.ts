@@ -61,6 +61,7 @@ export async function main(): Promise<void> {
     );
     process.exit(1);
   }
+  // demo stub: deterministic mock for key-less demos — assumes an 'age' attribute and binary choices
   const provider: LLMProvider = values.mock
     ? new MockProvider((p) =>
         ["20대", "30대"].includes(p.attrs.age ?? "")
