@@ -23,29 +23,45 @@ function tally(responses: Response[]): Record<string, number> {
   return counts;
 }
 
-function signalOf(responses: Response[], threshold: number): { signal: "consensus" | "split"; dispersion: number; breakdown: Record<string, number> } {
+function signalOf(
+  responses: Response[],
+  threshold: number,
+): {
+  signal: "consensus" | "split";
+  dispersion: number;
+  breakdown: Record<string, number>;
+} {
   const breakdown = tally(responses);
   const dispersion = normalizedEntropy(Object.values(breakdown));
-  return { signal: dispersion >= threshold ? "split" : "consensus", dispersion, breakdown };
+  return {
+    signal: dispersion >= threshold ? "split" : "consensus",
+    dispersion,
+    breakdown,
+  };
 }
 
 export function aggregate(
   responses: Response[],
-  opts?: { splitThreshold?: number; missing?: { personaId: string; reason: string }[] },
+  opts?: {
+    splitThreshold?: number;
+    missing?: { personaId: string; reason: string }[];
+  },
 ): StudyResult {
   const threshold = opts?.splitThreshold ?? 0.5;
   const overall = signalOf(responses, threshold);
 
   // 모든 속성 차원에 대해 세그먼트 교차
   const dims = new Set<string>();
-  for (const r of responses) for (const k of Object.keys(r.persona.attrs)) dims.add(k);
+  for (const r of responses)
+    for (const k of Object.keys(r.persona.attrs)) dims.add(k);
   const bySegment: Record<string, Record<string, SegmentResult>> = {};
   for (const dim of dims) {
     bySegment[dim] = {};
     const groups: Record<string, Response[]> = {};
     for (const r of responses) {
       const v = r.persona.attrs[dim];
-      (groups[v] ??= []).push(r);
+      if (!groups[v]) groups[v] = [];
+      groups[v].push(r);
     }
     for (const [v, rs] of Object.entries(groups)) {
       const s = signalOf(rs, threshold);

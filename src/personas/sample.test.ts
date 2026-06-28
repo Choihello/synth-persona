@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { makeRng, samplePersonas } from "./sample.js";
 import type { JointDistribution } from "../types.js";
+import { makeRng, samplePersonas } from "./sample.js";
 
 const joint = (): JointDistribution => ({
   dimensions: [
@@ -26,7 +26,11 @@ describe("samplePersonas", () => {
 
   test("가중치 0인 조합은 절대 나오지 않는다(상관 보존)", () => {
     const ps = samplePersonas(joint(), 200, 7);
-    const bad = ps.filter((p) => (p.attrs.age === "20s" && p.attrs.hh === "4+") || (p.attrs.age === "40s" && p.attrs.hh === "1"));
+    const bad = ps.filter(
+      (p) =>
+        (p.attrs.age === "20s" && p.attrs.hh === "4+") ||
+        (p.attrs.age === "40s" && p.attrs.hh === "1"),
+    );
     expect(bad.length).toBe(0);
   });
 });

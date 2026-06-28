@@ -1,12 +1,17 @@
 import { describe, expect, test } from "vitest";
-import type { StudyResult } from "./types.js";
 import { formatResult } from "../cli/main.js";
+import type { StudyResult } from "./types.js";
 
 const result: StudyResult = {
   responses: [],
   signal: "split",
   dispersion: 0.9,
-  bySegment: { age: { "20대": { signal: "consensus", breakdown: { A안: 10 } }, "40대": { signal: "consensus", breakdown: { B안: 10 } } } },
+  bySegment: {
+    age: {
+      "20대": { signal: "consensus", breakdown: { A안: 10 } },
+      "40대": { signal: "consensus", breakdown: { B안: 10 } },
+    },
+  },
 };
 
 describe("formatResult", () => {

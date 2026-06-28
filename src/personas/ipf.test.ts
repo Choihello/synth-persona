@@ -1,7 +1,7 @@
-import { describe, expect, test } from "vitest";
 import fc from "fast-check";
-import { ipf } from "./ipf.js";
+import { describe, expect, test } from "vitest";
 import type { Distribution } from "../types.js";
+import { ipf } from "./ipf.js";
 
 const baseDist = (): Distribution => ({
   dimensions: [
@@ -22,7 +22,8 @@ const baseDist = (): Distribution => ({
   ],
 });
 
-const cellSum = (j: { cells: Float64Array }) => j.cells.reduce((a, b) => a + b, 0);
+const cellSum = (j: { cells: Float64Array }) =>
+  j.cells.reduce((a, b) => a + b, 0);
 
 describe("ipf", () => {
   test("결합분포 합은 1 (정규화)", () => {
@@ -39,19 +40,25 @@ describe("ipf", () => {
     const d = baseDist();
     const j = ipf(d);
     // age=2(40s), hh=3(4+) 셀 합이 타깃과 일치해야 함
-    const ai = 2, hi = 3;
+    const ai = 2;
+    const hi = 3;
     let s = 0;
     for (let a = 0; a < 4; a++)
       for (let h = 0; h < 4; h++)
         if (a === ai && h === hi) s += j.cells[a * 4 + h];
-    const targetTotal = d.crossTables![0].matrix.flat().reduce((x, y) => x + y, 0);
+    const targetTotal = d.crossTables?.[0].matrix
+      .flat()
+      .reduce((x, y) => x + y, 0);
     expect(s).toBeCloseTo(0.09 / targetTotal, 4);
   });
 
   test("property: 1-way 마진 타깃을 항상 복원한다", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ min: 0.05, max: 1, noNaN: true }), { minLength: 2, maxLength: 2 }),
+        fc.array(fc.double({ min: 0.05, max: 1, noNaN: true }), {
+          minLength: 2,
+          maxLength: 2,
+        }),
         (sexRaw) => {
           const total = sexRaw[0] + sexRaw[1];
           const sex = sexRaw.map((v) => v / total);
@@ -65,8 +72,12 @@ describe("ipf", () => {
           };
           const j = ipf(d);
           // sex 마진 복원 확인
-          let m = 0, f = 0;
-          for (let a = 0; a < 2; a++) { m += j.cells[a * 2 + 0]; f += j.cells[a * 2 + 1]; }
+          let m = 0;
+          let f = 0;
+          for (let a = 0; a < 2; a++) {
+            m += j.cells[a * 2 + 0];
+            f += j.cells[a * 2 + 1];
+          }
           expect(m).toBeCloseTo(sex[0], 4);
           expect(f).toBeCloseTo(sex[1], 4);
         },

@@ -1,5 +1,7 @@
-import sampleData from "../../data/samples/kr-census-sample.json" with { type: "json" };
 import { readFile } from "node:fs/promises";
+import sampleData from "../../data/samples/kr-census-sample.json" with {
+  type: "json",
+};
 import type { Distribution } from "../types.js";
 import type { DataSource, DistSpec } from "./source.js";
 

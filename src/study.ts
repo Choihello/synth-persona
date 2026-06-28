@@ -19,6 +19,13 @@ export async function runStudy(config: StudyConfig): Promise<StudyResult> {
   const dist = await config.source.getDistribution();
   const joint = ipf(dist);
   const personas = samplePersonas(joint, config.n, config.seed ?? 1);
-  const { responses, missing } = await simulate(personas, config.question, config.provider);
-  return aggregate(responses, { splitThreshold: config.splitThreshold, missing });
+  const { responses, missing } = await simulate(
+    personas,
+    config.question,
+    config.provider,
+  );
+  return aggregate(responses, {
+    splitThreshold: config.splitThreshold,
+    missing,
+  });
 }

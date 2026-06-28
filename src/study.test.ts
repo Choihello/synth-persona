@@ -6,7 +6,9 @@ import { runStudy } from "./study.js";
 describe("runStudy (end-to-end, mock)", () => {
   test("샘플 분포 + mock LLM로 StudyResult를 만든다", async () => {
     // 연령으로 갈리는 mock: 20/30대는 A, 40/50대는 B
-    const provider = new MockProvider((p) => (["20대", "30대"].includes(p.attrs.age) ? "A안" : "B안"));
+    const provider = new MockProvider((p) =>
+      ["20대", "30대"].includes(p.attrs.age) ? "A안" : "B안",
+    );
     const result = await runStudy({
       source: new SampleSource(),
       provider,
@@ -24,6 +26,8 @@ describe("runStudy (end-to-end, mock)", () => {
       n: 80,
       seed: 42,
     });
-    expect(again.responses.map((r) => r.choice)).toEqual(result.responses.map((r) => r.choice));
+    expect(again.responses.map((r) => r.choice)).toEqual(
+      result.responses.map((r) => r.choice),
+    );
   });
 });

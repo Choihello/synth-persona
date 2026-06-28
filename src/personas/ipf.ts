@@ -11,10 +11,15 @@ function normalize(vec: number[]): number[] {
   return t > 0 ? vec.map((v) => v / t) : vec.map(() => 0);
 }
 
-export function ipf(dist: Distribution, opts?: { iterations?: number }): JointDistribution {
+export function ipf(
+  dist: Distribution,
+  opts?: { iterations?: number },
+): JointDistribution {
   const iterations = opts?.iterations ?? 50;
   const sizes = dist.dimensions.map((d) => d.categories.length);
-  const dimIndex = Object.fromEntries(dist.dimensions.map((d, i) => [d.name, i]));
+  const dimIndex = Object.fromEntries(
+    dist.dimensions.map((d, i) => [d.name, i]),
+  );
   const st = strides(sizes);
   const N = sizes.reduce((a, b) => a * b, 1);
   const cells = new Float64Array(N).fill(1 / N);
@@ -41,7 +46,9 @@ export function ipf(dist: Distribution, opts?: { iterations?: number }): JointDi
       const db = dimIndex[ct.dims[1]];
       if (da == null || db == null) continue;
       const flatTotal = ct.matrix.flat().reduce((a, b) => a + b, 0);
-      const cur: number[][] = Array.from({ length: sizes[da] }, () => new Array(sizes[db]).fill(0));
+      const cur: number[][] = Array.from({ length: sizes[da] }, () =>
+        new Array(sizes[db]).fill(0),
+      );
       for (let i = 0; i < N; i++) cur[coord(i, da)][coord(i, db)] += cells[i];
       for (let i = 0; i < N; i++) {
         const ca = coord(i, da);

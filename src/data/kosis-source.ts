@@ -53,7 +53,11 @@ export function parseKosisRows(json: unknown): KosisRow[] {
   }));
 }
 
-export function rowsToCrossTable(rows: KosisRow[], rowKeys: string[], colKeys: string[]): number[][] {
+export function rowsToCrossTable(
+  rows: KosisRow[],
+  rowKeys: string[],
+  colKeys: string[],
+): number[][] {
   const ri = Object.fromEntries(rowKeys.map((k, i) => [k, i]));
   const ci = Object.fromEntries(colKeys.map((k, i) => [k, i]));
   const M = rowKeys.map(() => colKeys.map(() => 0));
@@ -65,7 +69,9 @@ export function rowsToCrossTable(rows: KosisRow[], rowKeys: string[], colKeys: s
     M[i][j] += r.value;
   }
   const tot = M.flat().reduce((a, b) => a + b, 0);
-  if (tot > 0) for (let i = 0; i < M.length; i++) for (let j = 0; j < M[i].length; j++) M[i][j] /= tot;
+  if (tot > 0)
+    for (let i = 0; i < M.length; i++)
+      for (let j = 0; j < M[i].length; j++) M[i][j] /= tot;
   return M;
 }
 
@@ -100,14 +106,20 @@ export class KosisSource implements DataSource {
     const res = await f(url);
     if (!res.ok) throw new Error(`HTTP ${res.status} from KOSIS`);
     const rows = parseKosisRows(await res.json());
-    const matrix = rowsToCrossTable(rows, this.opts.rowDim.keys, this.opts.colDim.keys);
+    const matrix = rowsToCrossTable(
+      rows,
+      this.opts.rowDim.keys,
+      this.opts.colDim.keys,
+    );
     return {
       dimensions: [
         { name: this.opts.rowDim.name, categories: this.opts.rowDim.keys },
         { name: this.opts.colDim.name, categories: this.opts.colDim.keys },
       ],
       marginals: {},
-      crossTables: [{ dims: [this.opts.rowDim.name, this.opts.colDim.name], matrix }],
+      crossTables: [
+        { dims: [this.opts.rowDim.name, this.opts.colDim.name], matrix },
+      ],
     };
   }
 }

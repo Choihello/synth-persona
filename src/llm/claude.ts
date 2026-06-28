@@ -15,15 +15,27 @@ export function personaSystemPrompt(persona: Persona): string {
 }
 
 interface MessagesClient {
-  messages: { create: (args: unknown) => Promise<{ content: Array<{ type: string; text?: string }> }> };
+  messages: {
+    create: (
+      args: unknown,
+    ) => Promise<{ content: Array<{ type: string; text?: string }> }>;
+  };
 }
 
 export class ClaudeProvider implements LLMProvider {
   private client: MessagesClient;
   private model: string;
-  constructor(opts?: { apiKey?: string; model?: string; client?: MessagesClient }) {
+  constructor(opts?: {
+    apiKey?: string;
+    model?: string;
+    client?: MessagesClient;
+  }) {
     this.model = opts?.model ?? DEFAULT_MODEL;
-    this.client = opts?.client ?? (new Anthropic({ apiKey: opts?.apiKey ?? process.env.ANTHROPIC_API_KEY }) as unknown as MessagesClient);
+    this.client =
+      opts?.client ??
+      (new Anthropic({
+        apiKey: opts?.apiKey ?? process.env.ANTHROPIC_API_KEY,
+      }) as unknown as MessagesClient);
   }
   async ask(persona: Persona, prompt: string): Promise<string> {
     const res = await this.client.messages.create({

@@ -11,7 +11,11 @@ export function makeRng(seed: number): () => number {
   };
 }
 
-export function samplePersonas(joint: JointDistribution, n: number, seed = 1): Persona[] {
+export function samplePersonas(
+  joint: JointDistribution,
+  n: number,
+  seed = 1,
+): Persona[] {
   const sizes = joint.dimensions.map((d) => d.categories.length);
   const st = new Array(sizes.length).fill(1);
   for (let i = sizes.length - 2; i >= 0; i--) st[i] = st[i + 1] * sizes[i + 1];
@@ -23,7 +27,10 @@ export function samplePersonas(joint: JointDistribution, n: number, seed = 1): P
     let idx = 0;
     for (let i = 0; i < joint.cells.length; i++) {
       r -= joint.cells[i];
-      if (r <= 0) { idx = i; break; }
+      if (r <= 0) {
+        idx = i;
+        break;
+      }
       idx = i;
     }
     const attrs: Record<string, string> = {};
