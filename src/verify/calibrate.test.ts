@@ -2,8 +2,18 @@ import { describe, expect, test } from "vitest";
 import { type GroundTruthCase, backtest, topChoice } from "./calibrate.js";
 
 const cases: GroundTruthCase[] = [
-  { id: "a", question: "q1", choices: ["X", "Y"], actualShare: { X: 0.4, Y: 0.6 } },
-  { id: "b", question: "q2", choices: ["P", "Q"], actualShare: { P: 0.7, Q: 0.3 } },
+  {
+    id: "a",
+    question: "q1",
+    choices: ["X", "Y"],
+    actualShare: { X: 0.4, Y: 0.6 },
+  },
+  {
+    id: "b",
+    question: "q2",
+    choices: ["P", "Q"],
+    actualShare: { P: 0.7, Q: 0.3 },
+  },
 ];
 
 describe("calibrate", () => {

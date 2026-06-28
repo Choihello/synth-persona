@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { brierScore, intervalCoverage, meanAbsoluteError, spearman } from "./scoring.js";
+import {
+  brierScore,
+  intervalCoverage,
+  meanAbsoluteError,
+  spearman,
+} from "./scoring.js";
 
 describe("scoring", () => {
   test("spearman: 완전 일치 순위 → 1", () => {
@@ -20,6 +25,15 @@ describe("scoring", () => {
     expect(brierScore([0, 1], [1, 0])).toBeCloseTo(1, 6);
   });
   test("intervalCoverage", () => {
-    expect(intervalCoverage([[0, 1], [0, 1], [2, 3]], [0.5, 5, 2.5])).toBeCloseTo(2 / 3, 6);
+    expect(
+      intervalCoverage(
+        [
+          [0, 1],
+          [0, 1],
+          [2, 3],
+        ],
+        [0.5, 5, 2.5],
+      ),
+    ).toBeCloseTo(2 / 3, 6);
   });
 });

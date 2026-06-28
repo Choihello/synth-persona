@@ -49,7 +49,10 @@ export function brierScore(probs: number[], outcomes: number[]): number {
   return s / n;
 }
 
-export function intervalCoverage(intervals: Array<[number, number]>, actuals: number[]): number {
+export function intervalCoverage(
+  intervals: Array<[number, number]>,
+  actuals: number[],
+): number {
   const n = Math.min(intervals.length, actuals.length);
   if (n === 0) return 0;
   let hit = 0;

@@ -15,7 +15,15 @@ const result: StudyResult = {
   },
 };
 const calibration: CalibrationReport = {
-  cases: [{ id: "milkkit", predictedShare: { 쓴다: 0.5, 안쓴다: 0.5 }, rankCorrelation: 1, shareMAE: 0.08, directionHit: true }],
+  cases: [
+    {
+      id: "milkkit",
+      predictedShare: { 쓴다: 0.5, 안쓴다: 0.5 },
+      rankCorrelation: 1,
+      shareMAE: 0.08,
+      directionHit: true,
+    },
+  ],
   meanRankCorrelation: 0.74,
   shareMAE: 0.08,
   directionAccuracy: 1,
