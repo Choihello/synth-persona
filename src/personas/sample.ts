@@ -38,7 +38,7 @@ export function samplePersonas(
       const c = Math.floor(idx / st[d]) % sizes[d];
       attrs[joint.dimensions[d].name] = joint.dimensions[d].categories[c];
     }
-    out.push({ id: `p${k + 1}`, attrs });
+    out.push({ id: `p${k + 1}`, attrs, weight: 1 });
   }
   return out;
 }

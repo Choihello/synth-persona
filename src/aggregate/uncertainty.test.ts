@@ -3,7 +3,7 @@ import type { Response } from "../types.js";
 import { aggregate, normalizedEntropy } from "./uncertainty.js";
 
 const r = (age: string, choice: string): Response => ({
-  persona: { id: Math.random().toString(), attrs: { age } },
+  persona: { id: Math.random().toString(), attrs: { age }, weight: 1 },
   answer: choice,
   choice,
 });

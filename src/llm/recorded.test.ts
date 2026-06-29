@@ -11,7 +11,7 @@ afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("RecordedProvider", () => {
   test("record 모드는 underlying을 호출하고 저장, replay는 재생", async () => {
-    const persona = { id: "1", attrs: { age: "40대" } };
+    const persona = { id: "1", attrs: { age: "40대" }, weight: 1 };
     const rec = new RecordedProvider({
       cassettePath: cassette,
       mode: "record",
@@ -28,7 +28,7 @@ describe("RecordedProvider", () => {
   });
 
   test("키는 결정적", () => {
-    const p = { id: "x", attrs: { a: "1" } };
+    const p = { id: "x", attrs: { a: "1" }, weight: 1 };
     expect(cassetteKey(p, "q")).toBe(cassetteKey(p, "q"));
   });
 
@@ -37,8 +37,8 @@ describe("RecordedProvider", () => {
       cassettePath: cassette,
       mode: "replay",
     });
-    await expect(play.ask({ id: "z", attrs: {} }, "없음")).rejects.toThrow(
-      /cassette/i,
-    );
+    await expect(
+      play.ask({ id: "z", attrs: {}, weight: 1 }, "없음"),
+    ).rejects.toThrow(/cassette/i);
   });
 });

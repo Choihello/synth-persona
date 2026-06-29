@@ -12,6 +12,7 @@ export class SampleSource implements DataSource {
       const raw = await readFile(this.path, "utf8");
       return JSON.parse(raw) as Distribution;
     }
-    return sampleData as Distribution;
+    // JSON import는 dims를 string[]로 추론하므로 unknown 경유 캐스트(CrossTable.dims는 [string,string])
+    return sampleData as unknown as Distribution;
   }
 }

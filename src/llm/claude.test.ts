@@ -6,6 +6,7 @@ describe("ClaudeProvider", () => {
     const s = personaSystemPrompt({
       id: "1",
       attrs: { age: "40대", region: "수도권" },
+      weight: 1,
     });
     expect(s).toContain("40대");
     expect(s).toContain("수도권");
@@ -24,7 +25,7 @@ describe("ClaudeProvider", () => {
       model: "test-model",
     });
     const out = await p.ask(
-      { id: "1", attrs: { age: "40대" } },
+      { id: "1", attrs: { age: "40대" }, weight: 1 },
       "이거 살래요?",
     );
     expect(out).toBe("살래요");

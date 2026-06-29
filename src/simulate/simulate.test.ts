@@ -3,8 +3,8 @@ import { MockProvider } from "../llm/mock.js";
 import { matchChoice, simulate } from "./simulate.js";
 
 const personas = [
-  { id: "1", attrs: { age: "20대" } },
-  { id: "2", attrs: { age: "40대" } },
+  { id: "1", attrs: { age: "20대" }, weight: 1 },
+  { id: "2", attrs: { age: "40대" }, weight: 1 },
 ];
 
 describe("simulate", () => {
