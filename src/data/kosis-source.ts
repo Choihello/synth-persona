@@ -7,13 +7,14 @@ export interface KosisRow {
   period: string;
   c1nm: string;
   c2nm: string | null;
+  c3nm: string | null;
   item: string;
   value: number | null;
 }
 
 // 교차표의 행/열을 어느 필드에서 읽을지. 일부 KOSIS 표는 한 축을
 // 분류(C1/C2)가 아니라 항목(ITM_NM)으로 인코딩한다(예: DT_1JC1511의 가구원수).
-export type KosisAxis = "c1nm" | "c2nm" | "item";
+export type KosisAxis = "c1nm" | "c2nm" | "c3nm" | "item";
 
 export function buildKosisUrl(p: {
   apiKey: string;
@@ -62,6 +63,7 @@ export function parseKosisRows(json: unknown): KosisRow[] {
     period: String(r.PRD_DE ?? ""),
     c1nm: String(r.C1_NM ?? ""),
     c2nm: r.C2_NM != null ? String(r.C2_NM) : null,
+    c3nm: r.C3_NM != null ? String(r.C3_NM) : null,
     item: String(r.ITM_NM ?? ""),
     // KOSIS는 비공표를 "X", 결측/해당없음을 "-" 등 비숫자로 표기 → null 처리.
     value: toNumOrNull(r.DT),

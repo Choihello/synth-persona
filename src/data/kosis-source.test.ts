@@ -237,4 +237,33 @@ describe("kosis 항목축(ITM) 지원", () => {
     const m = dist.crossTables?.[0].matrix as number[][];
     expect(m[1][1]).toBeGreaterThan(m[1][0]); // 40~44세 4인 > 1인
   });
+
+  test("parseKosisRows는 C3_NM을 c3nm으로 노출하고 c3nm 축으로 교차표를 만든다", () => {
+    const rows = parseKosisRows([
+      {
+        PRD_DE: "2024",
+        C1_NM: "전국",
+        C2_NM: "남자",
+        C3_NM: "20~24세",
+        ITM_NM: "일반가구원",
+        DT: "100",
+        UNIT_NM: "명",
+      },
+      {
+        PRD_DE: "2024",
+        C1_NM: "전국",
+        C2_NM: "여자",
+        C3_NM: "20~24세",
+        ITM_NM: "일반가구원",
+        DT: "120",
+        UNIT_NM: "명",
+      },
+    ]);
+    expect(rows[0].c3nm).toBe("20~24세");
+    const m = rowsToCrossTable(rows, ["남자", "여자"], ["20~24세"], {
+      rowField: "c2nm",
+      colField: "c3nm",
+    });
+    expect(m.flat().reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
+  });
 });
