@@ -52,8 +52,17 @@ const AGE_KEYS = [
   "70~74세",
   "75~79세",
   "80~84세",
-  "85세 이상",
+  "85세이상", // 표마다 "85세이상"/"85세 이상" 혼재 → 공백 제거로 정규화(아래 stripAgeSpaces)
 ];
+
+// 연령 라벨의 공백 차이를 흡수(표 간 "85세 이상" vs "85세이상"). 성/지역은 영향 없음.
+function stripAgeSpaces(rows: KosisRow[]): KosisRow[] {
+  return rows.map((r) => ({
+    ...r,
+    c2nm: r.c2nm == null ? null : r.c2nm.replace(/\s/g, ""),
+    c3nm: r.c3nm == null ? null : r.c3nm.replace(/\s/g, ""),
+  }));
+}
 
 async function fetchRows(params: {
   tblId: string;
@@ -72,7 +81,7 @@ async function fetchRows(params: {
   });
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} from KOSIS`);
-  return parseKosisRows(await res.json());
+  return stripAgeSpaces(parseKosisRows(await res.json()));
 }
 
 // 연령(C2)×var 조건부 행렬. var는 ITM_NM을 itemMap으로 깨끗한 키에 매핑.
@@ -147,7 +156,7 @@ export async function main(): Promise<void> {
     itemMap: {
       내국인_미혼: "미혼",
       내국인_유배우: "유배우",
-      내국인_사별·이혼: "사별·이혼",
+      내국인_사별·이혼: "사별·이혼", // 중점(·) 포함 → 따옴표 필수
     },
   });
 
@@ -176,7 +185,8 @@ export async function main(): Promise<void> {
     bridge: "householder_age_as_proxy",
   });
 
-  const year = new Date().getFullYear();
+  // year는 실행일이 아니라 데이터 기간(PRD_DE)에서 유도
+  const year = Number(coreRows[0]?.period) || new Date().getFullYear();
   const generatedAt = new Date().toISOString();
   const snapshot: Snapshot = {
     meta: {
@@ -220,13 +230,14 @@ export async function main(): Promise<void> {
   };
 
   const outDir = fileURLToPath(new URL("../../data/census/", import.meta.url));
+  const fileName = `kr-${year}.json`;
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(`${outDir}kr-2024.json`, JSON.stringify(snapshot, null, 2));
+  writeFileSync(`${outDir}${fileName}`, JSON.stringify(snapshot, null, 2));
   writeFileSync(
     `${outDir}manifest.json`,
     JSON.stringify(
       {
-        latest: "kr-2024.json",
+        latest: fileName,
         availableYears: [year],
         tableIds: ["DT_1IN1509", "DT_1MR2060", "DT_1JC1511"],
         generatedAt,

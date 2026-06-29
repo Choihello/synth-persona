@@ -1,5 +1,6 @@
 import { makeRng } from "../personas/sample.js";
 import type { Persona } from "../types.js";
+import { loadSnapshot } from "./loader.js";
 import type { Snapshot } from "./schema.js";
 import { synthesizePopulation } from "./synthesize.js";
 
@@ -33,6 +34,7 @@ export interface PersonaSource {
 export class CensusPopulation implements PersonaSource {
   constructor(private snapshot: Snapshot) {}
   async population(): Promise<Persona[]> {
-    return synthesizePopulation(this.snapshot);
+    // loadSnapshot로 구조 검증 + frame 가드를 거친 뒤 합성
+    return synthesizePopulation(loadSnapshot(this.snapshot));
   }
 }
