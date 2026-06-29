@@ -62,3 +62,19 @@ export {
   renderHarnessReport,
   type HarnessFindings,
 } from "./verify/harness-report.js";
+export type {
+  Snapshot,
+  SnapshotMeta,
+  CoreJoint,
+  ConditionalTable,
+} from "./population/schema.js";
+export { loadSnapshot } from "./population/loader.js";
+export {
+  synthesizePopulation,
+  conditionalProbs,
+} from "./population/synthesize.js";
+export {
+  sampleForSimulation,
+  CensusPopulation,
+  type PersonaSource,
+} from "./population/source.js";
