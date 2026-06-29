@@ -6,7 +6,9 @@
 
 ## 1. 목적과 포지셔닝
 
-단순 "페르소나 생성기"가 아니라 **검증 가능한 합성 인구(synthetic population) 기반 사전 시장조사 도구**로 격상한다. 통계청 다수 교차표를 결합해 인구학적으로 충실한 5축 페르소나 모집단을 만들고, 그 충실도를 원본 대비 숫자로 검증(fidelity 리포트)한다.
+단순 "페르소나 생성기"가 아니라 **검증 가능한 합성 인구(synthetic population) 기반 사전 시장조사 도구**로 격상한다. 통계청 다수 교차표를 결합해 인구학적으로 충실한 **5속성 페르소나** 모집단을 만들고, 그 충실도를 원본 대비 숫자로 검증(fidelity 리포트)한다.
+
+> **표현 주의(정직성)**: 이것은 *완전한 5-way 결합분포가 아니다*. 정확히는 **"3축 matched-core(성×연령×권역, 실측 joint) + 2개 연령 앵커 조건부 맥락(혼인·가구원수)을 가진 5속성 synthetic persona"** 다. 문서·README·결과물 어디서도 "5축 joint"로 부르지 않는다.
 
 ### 신뢰성 2층 모델 (이 설계의 토대)
 - **1층 — 구성(인구학적) 충실도**: "이 가상 집단이 실제 한국 인구를 닮았나?" → **측정 가능**. 통계청 + 합성 + fidelity 리포트가 담당. 이 문서의 범위.
@@ -24,6 +26,9 @@
 | 생성 방식 | **접근 B: matched-core + 조건부 부착** (전체 IPF joint 아님) |
 | 데이터 전달 | **번들 스냅샷(커밋) + 라이브 갱신 스크립트** — 키 없이 재현/테스트/CI 그린 |
 | 5번째 축 | 혼인상태(인구총조사, 같은 프레임). 경제활동은 별도 조사라 후속 |
+| 응답자 universe | **15세 이상**(혼인 표 universe와 정렬 + householder bridge 오차 축소). 성인(19+)으로 좁히는 건 설정 |
+| 표현 | "5속성 페르소나" — *5-way joint 아님*(matched-core 3축 + 조건부 2) |
+| 가중치 | **Persona.weight 필수**(대표 인구수). 합성=가중 모집단 열거, fidelity=가중 집계 기본 |
 
 ## 3. 데이터 소스 (정찰로 확인된 실재 표)
 
@@ -51,7 +56,12 @@ conditional 부착:
   - *구조적 불가능*(예: 15세미만 × 기혼) → universe/연령 정렬로 애초에 차단(+validity 가드).
   - *희귀하지만 실재*(예: 기혼 × 1인가구 = 분거) → 보존하되 conditioned 표시. **무조건 필터 금지**(분포 왜곡).
 - **universe 정렬(A)**: 혼인은 15세+ 코어 연령에만 부착, <15세는 "해당없음" 기본값(provenance: inferred).
-- **householder bridge 가정(명시)**: `DT_1JC1511`은 `P(가구원수 | 가구주연령)`인데 이를 개인의 연령으로 부착하면 *"개인 연령 ≈ 가구주 연령"* 근사가 들어감(비가구주에겐 부정확). MVP에서 허용하되 provenance=conditioned + frame=householder로 명시하고 fidelity의 matched-vs-estimated에 드러냄. (정석: 가구 생성 후 가구원 샘플링 — 후속.)
+- **householder bridge 가정(강하게 명시)**: `DT_1JC1511`은 `P(가구원수 | 가구주연령)`인데 이를 개인 연령으로 부착하면 *"개인 연령 ≈ 가구주 연령"* 근사(비가구주·청소년·자녀엔 부정확). 대응:
+  - **응답자 universe를 15세+로 제한**(MVP) — 성인일수록 가구주 연령 근사가 덜 틀어짐.
+  - 가구원수 속성에 **전용 flag/provenance**: `provenance["가구원수"] = "conditioned"` + `flags: ["bridge:householder_age_as_proxy"]`.
+  - **fidelity에서 연령×가구원수는 "개인 기준 검증"이 아니라 "householder bridge 참고 검증"으로 라벨**.
+  - (정석: 가구 생성 후 가구원 샘플링 — 후속 범위.)
+- **결측/비공개 처리(structural zero ≠ suppressed)**: KOSIS 마커를 구분 — `-`(해당없음)=구조적 0으로 0 기여, `X`(비공개)=미지의 양수 → **해당 분모에서 제외(renormalize) + flag/report**. 조건부 P(·|연령)에서 suppressed를 0으로 치면 과소배분되므로 0 처리 금지.
 
 ## 5. 스냅샷 스키마 (검토 의견 3·6 반영)
 
@@ -71,7 +81,14 @@ conditional 부착:
         "frame": "householder", "universe": "일반가구(가구주)", "denominator": "가구" }
     ],
     "ageBins": ["15세미만","15~19세", /* ... */ "85세 이상"],
-    "suppression": { "marker": ["X","-"], "policy": "null→0 기여, rare는 report에 기록" }
+    "weightUnit": "person_count",          // person_count | normalized_weight
+    "regionMapping": { "수도권": ["서울","인천","경기"], "비수도권": ["..."] }, // 시도→권역
+    "bridgeAssumptions": ["householder_age_as_proxy"],
+    "missingPolicy": {
+      "structuralZero": ["-"],             // 0으로 기여
+      "suppressed": ["X"],                 // 분모서 제외(renormalize) + report
+      "rareCell": "minCellCount 미만은 report에 rare 목록(생성은 허용, low-confidence flag)"
+    }
   },
   "core":        { "dims": ["성","연령","지역"], "categories": {...}, "counts": [...] },
   "conditional": [
@@ -104,20 +121,28 @@ type Provenance = "matched" | "conditioned" | "inferred" | "llm_generated";
 interface Persona {
   id: string;
   attrs: Record<string, string>;
+  weight: number;                       // 대표 인구수(또는 정규화 가중치) — 필수
   provenance?: Record<string, Provenance>;
-  flags?: string[];                     // 예: "low-confidence:연령bin"
+  flags?: string[];                     // 예: "bridge:householder_age_as_proxy", "low-confidence:연령bin"
 }
 
-interface PersonaSource { generate(n: number, seed: number): Promise<Persona[]>; }
-class CensusPopulation implements PersonaSource { constructor(snapshot: Snapshot); /* synthesize */ }
-// 기존 DataSource(SampleSource/KosisSource) 경로는 어댑터로 PersonaSource 충족(하위호환)
+// 합성 = 가중 모집단 "열거"(샘플링 아님): matched-core × 조건부 조합을 만들고
+// weight = core셀수 × P(혼인|연령) × P(가구원수|연령). 결정적(RNG 불필요), core fidelity 정확.
+function synthesizePopulation(snapshot: Snapshot): Persona[];   // 가중 모집단 전체
 
-function synthesizePopulation(snapshot: Snapshot, n: number, seed: number): Persona[];
+// LLM(2층)은 비용상 전수 호출 불가 → weight 비례로 N명 추출(시드)
+function sampleForSimulation(personas: Persona[], n: number, seed: number): Persona[];
+
+interface PersonaSource { population(): Promise<Persona[]>; }   // 가중 모집단(fidelity용)
+class CensusPopulation implements PersonaSource { constructor(snapshot: Snapshot); }
+// 기존 DataSource(SampleSource/KosisSource) 경로는 어댑터로 PersonaSource 충족(하위호환; weight=균등)
 ```
 
 **frame 가드(#2)**: 서로 다른 frame의 소스를 결합하려면 *명시 bridge 함수*를 거쳐야 함(예: `attachHouseholdContext`). loader가 무심코 cross-frame join을 막음(런타임 throw + 타입).
 
-**runStudy 통합**: `runStudy`는 `personaSource: PersonaSource`를 받도록 일반화. 기존 `source: DataSource` 호출은 어댑터(`distributionPersonaSource(dataSource)`)로 동일 동작 유지.
+**runStudy 통합**: `runStudy`는 `personaSource: PersonaSource`를 받도록 일반화. 가중 모집단을 받아 `sampleForSimulation(n, seed)`로 LLM 호출 대상 N명을 weight 비례 추출. 기존 `source: DataSource` 호출은 어댑터로 동일 동작 유지(weight=균등).
+
+**파급 노트(2층, 3A/3B 범위 밖)**: 페르소나가 weight를 가지면 LLM 응답 집계도 대표성을 가지려면 (a) weight 비례 샘플링으로 비가중 집계가 근사 대표성을 갖게 하거나 (b) 응답을 가중 집계해야 함. 현재 `aggregate`(Plan 1)는 비가중 → 2층 기능점검 시 weight 비례 샘플링(기본) 또는 가중 집계 변형 필요. **fidelity(1층)는 항상 가중 집계**.
 
 ## 7. Plan 3B — fidelity 리포트
 
@@ -130,8 +155,9 @@ src/index.ts                # export
 ```
 
 **`populationFidelity` 산출(검토 의견 4·5 반영):**
-- **core fidelity**: 합성 집단의 성×연령×권역 재집계 vs 스냅샷 core joint → MAE/TVD/maxErrorCell. *실제 joint라 ≈0(샘플오차만) 기대* — 0에서 크게 벗어나면 버그.
-- **conditional fidelity**: 연령×혼인, 연령×가구원수 재집계 vs 원본 조건부 → MAE/TVD (부착이라 0 아님, 표본오차+정렬효과).
+- **가중 집계 기본**: 모든 재집계는 Persona.weight 기반. (옵션으로 sample-only 비가중 오차도 별도 표기.)
+- **core fidelity**: 가중 재집계한 성×연령×권역 vs 스냅샷 core joint → MAE/TVD/maxErrorCell. *가중 열거라 ≈0(부동소수 오차만) 기대* — 벗어나면 버그.
+- **conditional fidelity**: 가중 재집계 연령×혼인, 연령×가구원수 vs 원본 조건부 → MAE/TVD (부착이라 정렬효과 존재). **연령×가구원수는 "개인 기준"이 아니라 "householder bridge 참고 검증"으로 라벨.**
 - **matched vs estimated 표**: 각 변수/pair가 matched(core) / conditioned / inferred 중 무엇인지, 독립가정된 pair(예: 혼인×가구원수) 명시.
 - **rare/sparse 셀 목록** + suppressed 셀 표기.
 - 지표: MAE(기존 scoring), **TVD 주력**, **smoothed KL 보조**(0셀 회피).
@@ -145,8 +171,10 @@ src/index.ts                # export
 
 ## 9. 테스트 (키/네트워크 없이 결정적)
 
-- 작은 **픽스처 스냅샷** + 고정 시드로 `synthesizePopulation` 검증: provenance 정확, universe 정렬(15세미만에 혼인 미부착), 불가능 조합 0건, 희귀 조합 보존+flag.
-- `populationFidelity`: core 재집계 ≈ 원본(tol), conditional MAE 합리적, matched-vs-estimated 분류 정확.
+- 작은 **픽스처 스냅샷**으로 `synthesizePopulation` 검증(결정적): weight 합 = 모집단 총수, provenance 정확, universe 정렬(15세미만에 혼인 미부착·응답자 15세+), householder bridge flag 부착, 불가능 조합 0건, 희귀 조합 보존+flag.
+- **suppressed(X) renormalize** 검증: 조건부에서 suppressed 셀이 0이 아니라 분모 제외로 처리되는지.
+- `sampleForSimulation`: 고정 시드 → 결정적, weight 비례 추출.
+- `populationFidelity`(가중): core 재집계 ≈ 원본(tol 극소), conditional MAE 합리적, matched-vs-estimated 분류 정확, suppressed/rare 셀 목록.
 - **frame 가드**: cross-frame 직접 join 시 throw.
 - scoring TVD/smoothedKL 단위 테스트(0셀 포함).
 - 갱신 스크립트는 라이브(키)라 단위 테스트는 파싱/집계 로직만 mock으로.
