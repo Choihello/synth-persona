@@ -374,8 +374,8 @@ describe("synthesize", () => {
   test("weight 합이 보존된다(15세+ core 총합)", () => {
     const pop = synthesizePopulation(snap);
     const total = pop.reduce((s, p) => s + p.weight, 0);
-    // 15세+ core 합 = 전체(700) - 15세미만(40) = 660
-    expect(total).toBeCloseTo(660, 4);
+    // 15세+ core 합 = 전체(625) - 15세미만(40) = 585 (조건부 부착은 weight 보존)
+    expect(total).toBeCloseTo(585, 4);
   });
 
   test("연령-혼인 상관 보존: 20~24세는 미혼>기혼, 40~44세는 기혼>미혼", () => {
