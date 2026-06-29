@@ -85,13 +85,43 @@ describe("kosis", () => {
 
   test("비숫자 DT(KOSIS 비공표 'X', 결측 '-')는 null로 처리한다", () => {
     const rows = parseKosisRows([
-      { PRD_DE: "2024", C1_NM: "전국", C2_NM: "15세미만", ITM_NM: "가구원수 5명", DT: "X", UNIT_NM: "가구" },
-      { PRD_DE: "2024", C1_NM: "전국", C2_NM: "15세미만", ITM_NM: "가구원수 6명", DT: "-", UNIT_NM: "가구" },
-      { PRD_DE: "2024", C1_NM: "전국", C2_NM: "25~29세", ITM_NM: "가구원수 1명", DT: "901813", UNIT_NM: "가구" },
+      {
+        PRD_DE: "2024",
+        C1_NM: "전국",
+        C2_NM: "15세미만",
+        ITM_NM: "가구원수 5명",
+        DT: "X",
+        UNIT_NM: "가구",
+      },
+      {
+        PRD_DE: "2024",
+        C1_NM: "전국",
+        C2_NM: "15세미만",
+        ITM_NM: "가구원수 6명",
+        DT: "-",
+        UNIT_NM: "가구",
+      },
+      {
+        PRD_DE: "2024",
+        C1_NM: "전국",
+        C2_NM: "25~29세",
+        ITM_NM: "가구원수 1명",
+        DT: "901813",
+        UNIT_NM: "가구",
+      },
+      {
+        PRD_DE: "2024",
+        C1_NM: "전국",
+        C2_NM: "85세 이상",
+        ITM_NM: "가구원수 7명 이상",
+        DT: "0",
+        UNIT_NM: "가구",
+      },
     ]);
     expect(rows[0].value).toBeNull();
     expect(rows[1].value).toBeNull();
     expect(rows[2].value).toBe(901813);
+    expect(rows[3].value).toBe(0); // 진짜 0은 결측(null)과 구분되어야
   });
 
   test("에러 응답은 throw 한다", () => {
