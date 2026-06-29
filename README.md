@@ -85,6 +85,29 @@ node --env-file=.env dist/cli/main.js --question "..." --choices "...,..." --n 5
 
 기본 모델은 비용을 고려해 Haiku이며, 라이브러리에서 다른 Claude 모델로 교체 가능하다.
 
+### 실제 통계청 데이터(KOSIS)로
+
+`.env`에 `KOSIS_API_KEY`를 넣고(kosis.kr 활용신청 → 자동승인 즉시 발급) 라이브러리에서 `KosisSource`를 쓰면, 번들 샘플 대신 실제 인구총조사 교차표로 페르소나를 만든다:
+
+```ts
+import { KosisSource, runStudy, ClaudeProvider } from "synth-persona";
+
+const source = new KosisSource({
+  apiKey: process.env.KOSIS_API_KEY!,
+  tblId: "DT_1JC1511",          // 인구총조사: 가구주 연령 × 가구원수
+  orgId: "101", objL1: "00",    // 전국 (40,000셀 한도 회피)
+  objL2: "ALL", itmId: "ALL",
+  newEstPrdCnt: 1,              // 최신 1개 기간 (다연도 합산 방지)
+  rowDim: { name: "연령", keys: ["25~29세", "40~44세", /* ... */] },
+  colDim: { name: "가구원수", keys: ["가구원수 1명", "가구원수 4명", /* ... */] },
+  rowAxis: "c2nm",             // 연령은 분류축
+  colAxis: "item",             // 가구원수는 항목축(ITM_NM)
+});
+const result = await runStudy({ source, provider: new ClaudeProvider(), question: { /* ... */ }, n: 100 });
+```
+
+> 표마다 축 인코딩이 다르다 — 어떤 표는 한 축을 분류(C1/C2)가 아니라 **항목(ITM_NM)**으로 둔다. `rowAxis`/`colAxis`로 지정한다. 비공표값(`X`)·결측(`-`)은 자동으로 null 처리된다.
+
 ### CLI 옵션
 
 | 플래그 | 설명 | 기본값 |
@@ -156,7 +179,7 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **코어 엔진** — IPF · 페르소나 샘플링 · LLM 시뮬 · 불확실성 집계 · CLI (Plan 1)
 - [x] **검증 — 채점·캘리브레이션·성적표** — fidelity 점수(순위상관/MAE/방향정확도) + 마크다운 report card (`npm run calibrate:demo`) (Plan 2A)
 - [x] **검증 — 능동 점검** — 편향 탐침(예스맨/평균회귀/자기일관성) · 강건성(패러프레이즈/순서편향/속성민감도) · 거버넌스(결정성/예산/드리프트) · 뮤테이션 테스트(`npm run test:mutation`, 코어 ~79%) (Plan 2B)
-- [ ] **라이브 KOSIS 연동** — 통계청 인증키로 실제 인구총조사 교차표 사용
+- [x] **라이브 KOSIS 연동 (라이브러리)** — 통계청 인증키로 실제 인구총조사 교차표(예: `DT_1JC1511` 가구주 연령×가구원수) 사용. `KosisSource`가 항목축 매핑·비공표값(`X`/`-`)·기간 제약(`newEstPrdCnt`) 처리. (CLI `--source kosis` 노출은 추후)
 - [ ] 웹 UI
 
 ## 라이선스
