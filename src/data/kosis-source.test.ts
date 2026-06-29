@@ -68,6 +68,17 @@ describe("kosis", () => {
     expect(url).not.toContain("newEstPrdCnt"); // 미지정 시 생략
   });
 
+  test("objL3 지정 시 URL에 포함된다(3축 표 지원)", () => {
+    const url = buildKosisUrl({
+      apiKey: "K",
+      tblId: "T1",
+      objL1: "ALL",
+      objL2: "ALL",
+      objL3: "ALL",
+    });
+    expect(url).toContain("objL3=ALL");
+  });
+
   test("newEstPrdCnt 지정 시 URL에 포함된다(최신 N개 기간)", () => {
     const url = buildKosisUrl({ apiKey: "K", tblId: "T1", newEstPrdCnt: 1 });
     expect(url).toContain("newEstPrdCnt=1");

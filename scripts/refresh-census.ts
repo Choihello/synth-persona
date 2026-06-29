@@ -1,7 +1,10 @@
 // 라이브 KOSIS → 권역 스냅샷 생성 (키 필요, CI/단위테스트 제외).
 // 실행: npm run build && node --env-file=.env dist/scripts/refresh-census.js
-// 순수 변환 헬퍼는 build-region-core.ts(테스트됨). 이 main의 KOSIS 파라미터는
-// 라이브 정찰값 기반이며, 표 구조 변경 시 여기만 손보면 된다.
+// 순수 변환 헬퍼(aggregateSidoToRegion)는 build-region-core.ts에서 테스트됨.
+// 표별 KOSIS 구조(정찰 확인):
+//  - DT_1IN1509: C1=지역(시도) C2=성 C3=연령, 일반가구원=ITM T00 → 시도→권역 집계
+//  - DT_1MR2060: C2=연령, 혼인=ITM(내국인_미혼 T2/유배우 T3/사별·이혼 T4), 18세+
+//  - DT_1JC1511: C2=가구주연령, 가구원수=ITM("가구원수 N명")
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -34,10 +37,29 @@ const REGION_MAPPING: Record<string, string[]> = {
   ],
 };
 
+const AGE_KEYS = [
+  "15~19세",
+  "20~24세",
+  "25~29세",
+  "30~34세",
+  "35~39세",
+  "40~44세",
+  "45~49세",
+  "50~54세",
+  "55~59세",
+  "60~64세",
+  "65~69세",
+  "70~74세",
+  "75~79세",
+  "80~84세",
+  "85세 이상",
+];
+
 async function fetchRows(params: {
   tblId: string;
   objL1?: string;
   objL2?: string;
+  objL3?: string;
   itmId?: string;
 }): Promise<KosisRow[]> {
   if (!KEY) throw new Error("KOSIS_API_KEY 미설정 (.env)");
@@ -53,42 +75,41 @@ async function fetchRows(params: {
   return parseKosisRows(await res.json());
 }
 
-// given(연령)×var 카운트 행렬 생성. value==null(비공개 X)은 null로 보존(분모 제외).
-function buildConditional(
+// 연령(C2)×var 조건부 행렬. var는 ITM_NM을 itemMap으로 깨끗한 키에 매핑.
+// value==null(비공개 X)은 null 보존(분모 제외).
+function buildConditionalFromItem(
   rows: KosisRow[],
   spec: {
     var: string;
     frame: ConditionalTable["frame"];
     universe: string;
-    givenKeys: string[];
     varKeys: string[];
-    givenField: "c2nm" | "c3nm";
-    varField: "c1nm" | "c2nm" | "c3nm" | "item";
+    itemMap: Record<string, string>;
     bridge?: string;
   },
 ): ConditionalTable {
-  const gi = Object.fromEntries(spec.givenKeys.map((k, i) => [k, i]));
+  const gi = Object.fromEntries(AGE_KEYS.map((k, i) => [k, i]));
   const vi = Object.fromEntries(spec.varKeys.map((k, i) => [k, i]));
-  const matrix: (number | null)[][] = spec.givenKeys.map(() =>
+  const matrix: (number | null)[][] = AGE_KEYS.map(() =>
     spec.varKeys.map(() => 0),
   );
   for (const r of rows) {
-    const g = gi[r[spec.givenField] ?? ""];
-    const v = vi[r[spec.varField] ?? ""];
+    const g = gi[r.c2nm ?? ""];
+    const mapped = spec.itemMap[r.item];
+    const v = mapped == null ? undefined : vi[mapped];
     if (g == null || v == null) continue;
     if (r.value == null) {
-      matrix[g][v] = null; // 비공개/결측 보존
+      matrix[g][v] = null;
       continue;
     }
-    const cur = matrix[g][v];
-    matrix[g][v] = (cur ?? 0) + r.value;
+    matrix[g][v] = (matrix[g][v] ?? 0) + r.value;
   }
   return {
     given: "연령",
     var: spec.var,
     frame: spec.frame,
     universe: spec.universe,
-    givenKeys: spec.givenKeys,
+    givenKeys: AGE_KEYS,
     varKeys: spec.varKeys,
     matrix,
     bridge: spec.bridge,
@@ -96,60 +117,41 @@ function buildConditional(
 }
 
 export async function main(): Promise<void> {
-  // 1) core: 성×연령×지역 — DT_1IN1509 (C1=지역, C2=성, C3=연령, ITM=세대구성)
-  //    ITM "일반가구원"(개인 총계)만 사용해 성×연령×지역 도출 후 권역 집계.
-  const sexKeys = ["남자", "여자"];
-  const ageKeys = [
-    "15~19세",
-    "20~24세",
-    "25~29세",
-    "30~34세",
-    "35~39세",
-    "40~44세",
-    "45~49세",
-    "50~54세",
-    "55~59세",
-    "60~64세",
-    "65~69세",
-    "70~74세",
-    "75~79세",
-    "80~84세",
-    "85세 이상",
-  ];
-  const coreRows = (
-    await fetchRows({
-      tblId: "DT_1IN1509",
-      objL1: "ALL",
-      objL2: "ALL",
-      itmId: "ALL",
-    })
-  ).filter((r) => r.item === "일반가구원");
+  // 1) core: DT_1IN1509, 일반가구원(T00), 시도→권역
+  const coreRows = await fetchRows({
+    tblId: "DT_1IN1509",
+    objL1: "ALL",
+    objL2: "ALL",
+    objL3: "ALL",
+    itmId: "T00",
+  });
   const core = aggregateSidoToRegion(
     coreRows,
     REGION_MAPPING,
-    sexKeys,
-    ageKeys,
+    ["남자", "여자"],
+    AGE_KEYS,
   );
 
-  // 2) conditional 혼인: DT_1MR2060 (연령×혼인, 15세+)
-  const maritalKeys = ["미혼", "배우자있음", "사별", "이혼"];
+  // 2) 혼인: DT_1MR2060 (연령=C2, 혼인=ITM 내국인_*), 18세+
   const maritalRows = await fetchRows({
     tblId: "DT_1MR2060",
     objL1: "00",
     objL2: "ALL",
     itmId: "ALL",
   });
-  const marital = buildConditional(maritalRows, {
+  const marital = buildConditionalFromItem(maritalRows, {
     var: "혼인",
     frame: "individual",
-    universe: "15세이상인구",
-    givenKeys: ageKeys,
-    varKeys: maritalKeys,
-    givenField: "c2nm",
-    varField: "item",
+    universe: "내국인18세이상",
+    varKeys: ["미혼", "유배우", "사별·이혼"],
+    itemMap: {
+      내국인_미혼: "미혼",
+      내국인_유배우: "유배우",
+      내국인_사별·이혼: "사별·이혼",
+    },
   });
 
-  // 3) conditional 가구원수: DT_1JC1511 (가구주연령×가구원수) — householder bridge
+  // 3) 가구원수: DT_1JC1511 (가구주연령=C2, 가구원수=ITM) — householder bridge
   const hhKeys = [
     "가구원수 1명",
     "가구원수 2명",
@@ -165,29 +167,29 @@ export async function main(): Promise<void> {
     objL2: "ALL",
     itmId: "ALL",
   });
-  const household = buildConditional(hhRows, {
+  const household = buildConditionalFromItem(hhRows, {
     var: "가구원수",
     frame: "householder",
     universe: "일반가구",
-    givenKeys: ageKeys,
     varKeys: hhKeys,
-    givenField: "c2nm",
-    varField: "item",
+    itemMap: Object.fromEntries(hhKeys.map((k) => [k, k])),
     bridge: "householder_age_as_proxy",
   });
 
+  const year = new Date().getFullYear();
+  const generatedAt = new Date().toISOString();
   const snapshot: Snapshot = {
     meta: {
-      year: new Date().getFullYear(),
+      year,
       geographyLevel: "권역",
-      generatedAt: new Date().toISOString(),
+      generatedAt,
       sources: [
         {
           var: ["성", "연령", "지역"],
           tblId: "DT_1IN1509",
           orgId: "101",
           frame: "individual",
-          universe: "전체인구",
+          universe: "전체인구(일반가구원)",
           denominator: "명",
         },
         {
@@ -195,7 +197,7 @@ export async function main(): Promise<void> {
           tblId: "DT_1MR2060",
           orgId: "101",
           frame: "individual",
-          universe: "15세이상인구",
+          universe: "내국인18세이상",
           denominator: "명",
         },
         {
@@ -207,7 +209,7 @@ export async function main(): Promise<void> {
           denominator: "가구",
         },
       ],
-      ageBins: ageKeys,
+      ageBins: AGE_KEYS,
       weightUnit: "person_count",
       regionMapping: REGION_MAPPING,
       bridgeAssumptions: ["householder_age_as_proxy"],
@@ -225,16 +227,17 @@ export async function main(): Promise<void> {
     JSON.stringify(
       {
         latest: "kr-2024.json",
-        availableYears: [snapshot.meta.year],
+        availableYears: [year],
         tableIds: ["DT_1IN1509", "DT_1MR2060", "DT_1JC1511"],
-        generatedAt: snapshot.meta.generatedAt,
+        generatedAt,
       },
       null,
       2,
     ),
   );
+  const coreTotal = core.counts.reduce((a, b) => a + b, 0);
   console.log(
-    `snapshot written: core ${core.counts.length} cells, conditional ${snapshot.conditional.length}`,
+    `snapshot written: core ${core.counts.length} cells (총 ${coreTotal}명), conditional ${snapshot.conditional.length}`,
   );
 }
 

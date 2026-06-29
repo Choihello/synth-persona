@@ -22,6 +22,7 @@ export function buildKosisUrl(p: {
   orgId?: string;
   objL1?: string;
   objL2?: string;
+  objL3?: string;
   prdSe?: string;
   startPrdDe?: string;
   endPrdDe?: string;
@@ -36,6 +37,7 @@ export function buildKosisUrl(p: {
     itmId: p.itmId ?? "T1",
     objL1: p.objL1 ?? "ALL",
     ...(p.objL2 ? { objL2: p.objL2 } : {}),
+    ...(p.objL3 ? { objL3: p.objL3 } : {}),
     prdSe: p.prdSe ?? "Y",
     ...(p.startPrdDe ? { startPrdDe: p.startPrdDe } : {}),
     ...(p.endPrdDe ? { endPrdDe: p.endPrdDe } : {}),
