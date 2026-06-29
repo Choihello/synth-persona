@@ -78,3 +78,10 @@ export {
   CensusPopulation,
   type PersonaSource,
 } from "./population/source.js";
+export {
+  populationFidelity,
+  type FidelityReport,
+  type BlockFidelity,
+  type CellError,
+} from "./verify/fidelity.js";
+export { renderFidelityReport } from "./verify/fidelity-report.js";

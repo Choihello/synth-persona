@@ -12,6 +12,7 @@
     "test:mutation": "stryker run",
     "build": "tsup",
     "calibrate:demo": "node dist/eval/calibrate-demo.js",
+    "fidelity:demo": "node dist/eval/fidelity-demo.js",
     "lint": "biome check .",
     "format": "biome format --write ."
   },
