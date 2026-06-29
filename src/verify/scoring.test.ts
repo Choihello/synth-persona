@@ -3,7 +3,9 @@ import {
   brierScore,
   intervalCoverage,
   meanAbsoluteError,
+  smoothedKL,
   spearman,
+  totalVariationDistance,
 } from "./scoring.js";
 
 describe("scoring", () => {
@@ -35,5 +37,14 @@ describe("scoring", () => {
         [0.5, 5, 2.5],
       ),
     ).toBeCloseTo(2 / 3, 6);
+  });
+
+  test("totalVariationDistance: 동일=0, 서로소=1", () => {
+    expect(totalVariationDistance([0.5, 0.5], [0.5, 0.5])).toBeCloseTo(0, 6);
+    expect(totalVariationDistance([1, 0], [0, 1])).toBeCloseTo(1, 6);
+  });
+  test("smoothedKL: 동일 분포 ≈ 0, 0셀에도 유한", () => {
+    expect(smoothedKL([0.5, 0.5], [0.5, 0.5])).toBeCloseTo(0, 6);
+    expect(Number.isFinite(smoothedKL([1, 0], [0, 1]))).toBe(true);
   });
 });

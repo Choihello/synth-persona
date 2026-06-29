@@ -62,3 +62,29 @@ export function intervalCoverage(
   }
   return hit / n;
 }
+
+export function totalVariationDistance(p: number[], q: number[]): number {
+  const n = Math.max(p.length, q.length);
+  let s = 0;
+  for (let i = 0; i < n; i++) s += Math.abs((p[i] ?? 0) - (q[i] ?? 0));
+  return s / 2;
+}
+
+export function smoothedKL(p: number[], q: number[], eps = 1e-9): number {
+  const n = Math.max(p.length, q.length);
+  const ps: number[] = [];
+  const qs: number[] = [];
+  for (let i = 0; i < n; i++) {
+    ps.push((p[i] ?? 0) + eps);
+    qs.push((q[i] ?? 0) + eps);
+  }
+  const pSum = ps.reduce((a, b) => a + b, 0);
+  const qSum = qs.reduce((a, b) => a + b, 0);
+  let kl = 0;
+  for (let i = 0; i < n; i++) {
+    const pi = ps[i] / pSum;
+    const qi = qs[i] / qSum;
+    kl += pi * Math.log(pi / qi);
+  }
+  return kl;
+}
