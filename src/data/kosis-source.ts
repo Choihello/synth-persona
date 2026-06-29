@@ -7,8 +7,13 @@ export interface KosisRow {
   period: string;
   c1nm: string;
   c2nm: string | null;
+  item: string;
   value: number | null;
 }
+
+// 교차표의 행/열을 어느 필드에서 읽을지. 일부 KOSIS 표는 한 축을
+// 분류(C1/C2)가 아니라 항목(ITM_NM)으로 인코딩한다(예: DT_1JC1511의 가구원수).
+export type KosisAxis = "c1nm" | "c2nm" | "item";
 
 export function buildKosisUrl(p: {
   apiKey: string;
@@ -19,6 +24,7 @@ export function buildKosisUrl(p: {
   prdSe?: string;
   startPrdDe?: string;
   endPrdDe?: string;
+  newEstPrdCnt?: number;
   itmId?: string;
 }): string {
   const q = new URLSearchParams({
@@ -32,10 +38,17 @@ export function buildKosisUrl(p: {
     prdSe: p.prdSe ?? "Y",
     ...(p.startPrdDe ? { startPrdDe: p.startPrdDe } : {}),
     ...(p.endPrdDe ? { endPrdDe: p.endPrdDe } : {}),
+    ...(p.newEstPrdCnt ? { newEstPrdCnt: String(p.newEstPrdCnt) } : {}),
     format: "json",
     jsonVD: "Y",
   });
   return `${ENDPOINT}?${q.toString()}`;
+}
+
+function toNumOrNull(dt: unknown): number | null {
+  if (dt === "" || dt == null) return null;
+  const n = Number(dt);
+  return Number.isFinite(n) ? n : null;
 }
 
 export function parseKosisRows(json: unknown): KosisRow[] {
@@ -49,7 +62,9 @@ export function parseKosisRows(json: unknown): KosisRow[] {
     period: String(r.PRD_DE ?? ""),
     c1nm: String(r.C1_NM ?? ""),
     c2nm: r.C2_NM != null ? String(r.C2_NM) : null,
-    value: r.DT === "" || r.DT == null ? null : Number(r.DT),
+    item: String(r.ITM_NM ?? ""),
+    // KOSIS는 비공표를 "X", 결측/해당없음을 "-" 등 비숫자로 표기 → null 처리.
+    value: toNumOrNull(r.DT),
   }));
 }
 
@@ -57,14 +72,20 @@ export function rowsToCrossTable(
   rows: KosisRow[],
   rowKeys: string[],
   colKeys: string[],
+  opts?: { rowField?: KosisAxis; colField?: KosisAxis },
 ): number[][] {
+  const rowField = opts?.rowField ?? "c1nm";
+  const colField = opts?.colField ?? "c2nm";
   const ri = Object.fromEntries(rowKeys.map((k, i) => [k, i]));
   const ci = Object.fromEntries(colKeys.map((k, i) => [k, i]));
   const M = rowKeys.map(() => colKeys.map(() => 0));
   for (const r of rows) {
-    if (r.value == null || r.c2nm == null) continue;
-    const i = ri[r.c1nm];
-    const j = ci[r.c2nm];
+    if (r.value == null) continue;
+    const rv = r[rowField];
+    const cv = r[colField];
+    if (rv == null || cv == null) continue;
+    const i = ri[rv];
+    const j = ci[cv];
     if (i == null || j == null) continue;
     M[i][j] += r.value;
   }
@@ -80,12 +101,16 @@ export interface KosisOpts {
   tblId: string;
   rowDim: { name: string; keys: string[] };
   colDim: { name: string; keys: string[] };
+  // 행/열을 읽을 축(기본 c1nm × c2nm). 항목축 표는 colAxis: "item" 등으로 지정.
+  rowAxis?: KosisAxis;
+  colAxis?: KosisAxis;
   objL1?: string;
   objL2?: string;
   itmId?: string;
   prdSe?: string;
   startPrdDe?: string;
   endPrdDe?: string;
+  newEstPrdCnt?: number;
   fetchImpl?: typeof fetch;
 }
 
@@ -102,6 +127,7 @@ export class KosisSource implements DataSource {
       prdSe: this.opts.prdSe,
       startPrdDe: this.opts.startPrdDe,
       endPrdDe: this.opts.endPrdDe,
+      newEstPrdCnt: this.opts.newEstPrdCnt,
     });
     const res = await f(url);
     if (!res.ok) throw new Error(`HTTP ${res.status} from KOSIS`);
@@ -110,6 +136,7 @@ export class KosisSource implements DataSource {
       rows,
       this.opts.rowDim.keys,
       this.opts.colDim.keys,
+      { rowField: this.opts.rowAxis, colField: this.opts.colAxis },
     );
     return {
       dimensions: [
