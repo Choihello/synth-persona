@@ -180,6 +180,8 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **검증 — 채점·캘리브레이션·성적표** — fidelity 점수(순위상관/MAE/방향정확도) + 마크다운 report card (`npm run calibrate:demo`) (Plan 2A)
 - [x] **검증 — 능동 점검** — 편향 탐침(예스맨/평균회귀/자기일관성) · 강건성(패러프레이즈/순서편향/속성민감도) · 거버넌스(결정성/예산/드리프트) · 뮤테이션 테스트(`npm run test:mutation`, 코어 ~79%) (Plan 2B)
 - [x] **라이브 KOSIS 연동 (라이브러리)** — 통계청 인증키로 실제 인구총조사 교차표(예: `DT_1JC1511` 가구주 연령×가구원수) 사용. `KosisSource`가 항목축 매핑·비공표값(`X`/`-`)·기간 제약(`newEstPrdCnt`) 처리. (CLI `--source kosis` 노출은 추후)
+- [x] **검증된 합성 인구 (Plan 3A)** — 통계청 다표 융합으로 5속성 페르소나: 성×연령×권역 *matched-core* + 혼인·가구원수 *연령 앵커 조건부 부착*(완전 5-way joint 아님). 가중 모집단(`weight`)·provenance(matched/conditioned/inferred)·frame 가드·householder bridge 명시. 실제 2024 인구총조사 스냅샷(`data/census/`, 약 4,346만 명) 번들 — 키 없이 재현.
+- [ ] **합성 인구 fidelity 리포트 (Plan 3B)** — 합성 집단을 원본 대비 가중 재집계(MAE/TVD)해 "1층 신뢰"를 숫자로
 - [ ] 웹 UI
 
 ## 라이선스
