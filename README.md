@@ -162,6 +162,7 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - **캘리브레이션 성적표** — 결과를 아는 과거 사례에 백테스트해 *fidelity*(순위상관·MAE·방향정확도)를 내고 마크다운 report card로 렌더 (`npm run calibrate:demo`)
 - **능동 편향/강건성 점검** — 예스맨·평균회귀·자기일관성 탐침, 패러프레이즈·선택지 순서·속성 민감도 섭동 검사, 결정성/예산/드리프트 거버넌스 → ✅/⚠️ 하네스 성적표
 - **뮤테이션 테스트** — Stryker로 순수 코어에 버그를 심어 "테스트가 진짜 버그를 잡는지" 점수화 (`npm run test:mutation`)
+- **합성 인구 fidelity** — 합성 모집단을 통계청 원본 대비 가중 재집계해 MAE/TVD로 "1층(인구학) 신뢰"를 숫자화하고, matched(실측)와 conditioned(추정) 변수를 분리 표기 (`npm run fidelity:demo`)
 
 > 위 데모의 핵심 버그(부분문자열 선택지 오매칭)도 실제 CLI를 돌려보다 발견해 고쳤다 — 정적 검사가 아니라 실행·관찰로.
 
@@ -181,7 +182,7 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **검증 — 능동 점검** — 편향 탐침(예스맨/평균회귀/자기일관성) · 강건성(패러프레이즈/순서편향/속성민감도) · 거버넌스(결정성/예산/드리프트) · 뮤테이션 테스트(`npm run test:mutation`, 코어 ~79%) (Plan 2B)
 - [x] **라이브 KOSIS 연동 (라이브러리)** — 통계청 인증키로 실제 인구총조사 교차표(예: `DT_1JC1511` 가구주 연령×가구원수) 사용. `KosisSource`가 항목축 매핑·비공표값(`X`/`-`)·기간 제약(`newEstPrdCnt`) 처리. (CLI `--source kosis` 노출은 추후)
 - [x] **검증된 합성 인구 (Plan 3A)** — 통계청 다표 융합으로 5속성 페르소나: 성×연령×권역 *matched-core* + 혼인·가구원수 *연령 앵커 조건부 부착*(완전 5-way joint 아님). 가중 모집단(`weight`)·provenance(matched/conditioned/inferred)·frame 가드·householder bridge 명시. 실제 2024 인구총조사 스냅샷(`data/census/`, 약 4,346만 명) 번들 — 키 없이 재현.
-- [ ] **합성 인구 fidelity 리포트 (Plan 3B)** — 합성 집단을 원본 대비 가중 재집계(MAE/TVD)해 "1층 신뢰"를 숫자로
+- [x] **합성 인구 fidelity 리포트 (Plan 3B)** — 합성 집단을 원본 대비 가중 재집계(MAE/TVD/smoothedKL)해 "1층 신뢰"를 숫자로. matched-core vs conditioned 분리, `npm run fidelity:demo` (실 스냅샷 core/conditional 전부 MAE≈0)
 - [ ] 웹 UI
 
 ## 라이선스
