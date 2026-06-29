@@ -14,6 +14,9 @@ describe("probes", () => {
   test("selfConsistency: 빈 입력 → 1", () => {
     expect(selfConsistency([])).toBe(1);
   });
+  test("selfConsistency: 빈 내부 응답 → 1", () => {
+    expect(selfConsistency([[]])).toBe(1);
+  });
   test("modeCollapseFlag: 전원 동일 응답이면 collapsed", () => {
     const r = modeCollapseFlag([{ A: 10 }, { B: 10 }]);
     expect(r.meanDispersion).toBeCloseTo(0, 6);

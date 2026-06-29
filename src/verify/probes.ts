@@ -10,7 +10,8 @@ export function selfConsistency(answersPerPersona: string[][]): number {
     }
     const counts: Record<string, number> = {};
     for (const a of answers) counts[a] = (counts[a] ?? 0) + 1;
-    const mode = Math.max(...Object.values(counts));
+    let mode = 0;
+    for (const v of Object.values(counts)) if (v > mode) mode = v;
     sum += mode / answers.length;
   }
   return sum / answersPerPersona.length;
