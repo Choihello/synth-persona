@@ -6,6 +6,18 @@ export interface Question {
   choices?: string[];
 }
 
+export function buildPrompt(question: Question): string {
+  if (!question.choices || question.choices.length === 0)
+    return question.prompt;
+  const list = question.choices.map((c) => `- ${c}`).join("\n");
+  return [
+    question.prompt,
+    "",
+    "아래 선택지 중 정확히 하나만 고르고, 그 선택지 문구를 그대로 답에 포함하세요:",
+    list,
+  ].join("\n");
+}
+
 export function matchChoice(
   answer: string,
   choices: string[],
@@ -32,9 +44,10 @@ export async function simulate(
 }> {
   const responses: Response[] = [];
   const missing: { personaId: string; reason: string }[] = [];
+  const prompt = buildPrompt(question);
   for (const persona of personas) {
     try {
-      const answer = await provider.ask(persona, question.prompt);
+      const answer = await provider.ask(persona, prompt);
       const choice = question.choices
         ? matchChoice(answer, question.choices)
         : undefined;

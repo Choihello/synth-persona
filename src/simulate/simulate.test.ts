@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { MockProvider } from "../llm/mock.js";
-import { matchChoice, simulate } from "./simulate.js";
+import { buildPrompt, matchChoice, simulate } from "./simulate.js";
 
 const personas = [
   { id: "1", attrs: { age: "20대" }, weight: 1 },
@@ -36,6 +36,42 @@ describe("simulate", () => {
     expect(missing).toHaveLength(0);
     expect(responses[0].choice).toBe("새벽배송");
     expect(responses[1].choice).toBe("저녁배송");
+  });
+
+  test("choices가 있으면 프롬프트에 선택지 전체 + '정확히 하나' 지시가 합성된다", async () => {
+    let captured = "";
+    const provider = new MockProvider((_p, prompt) => {
+      captured = prompt;
+      return "쓴다";
+    });
+    await simulate(
+      [{ id: "1", attrs: {}, weight: 1 }],
+      { prompt: "월 9900원에 쓸 의향?", choices: ["쓴다", "안쓴다"] },
+      provider,
+    );
+    expect(captured).toContain("월 9900원에 쓸 의향?");
+    expect(captured).toContain("쓴다");
+    expect(captured).toContain("안쓴다");
+    expect(captured).toMatch(/정확히 하나/);
+  });
+
+  test("choices가 없으면 프롬프트가 변형되지 않는다(자유응답)", async () => {
+    let captured = "";
+    const provider = new MockProvider((_p, prompt) => {
+      captured = prompt;
+      return "자유응답";
+    });
+    await simulate(
+      [{ id: "1", attrs: {}, weight: 1 }],
+      { prompt: "어떻게 생각해?" },
+      provider,
+    );
+    expect(captured).toBe("어떻게 생각해?");
+  });
+
+  test("buildPrompt: choices 없으면 원본 그대로", () => {
+    expect(buildPrompt({ prompt: "Q" })).toBe("Q");
+    expect(buildPrompt({ prompt: "Q", choices: [] })).toBe("Q");
   });
 
   test("개별 응답 실패는 missing에 기록되고 중단되지 않는다", async () => {
