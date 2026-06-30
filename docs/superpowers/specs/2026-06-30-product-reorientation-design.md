@@ -94,7 +94,9 @@ interface ReliabilityCard {
 
 ### 4.3 렌더러
 
-`renderReliabilityCard(card): string`(markdown). 기존 `renderMarkdownReport`에 **선택적 reliability 섹션**으로 결합한다(인자 옵셔널 → 기존 호출 불변). CLI에도 "신뢰성" 블록을 추가한다. 1층(구성)과 2층(LLM 응답)을 **명확히 분리된 블록**으로 렌더한다.
+`renderReliabilityCard(card): string`(markdown). 기존 `renderMarkdownReport`에 **선택적 reliability 섹션**으로 결합한다(인자 옵셔널 → 기존 호출 불변). 1층(구성)과 2층(LLM 응답)을 **명확히 분리된 블록**으로 렌더한다.
+
+> **CLI 배선은 묶음 A 범위 밖이다(묶음 B로 이월).** 현재 CLI는 provenance 없는 `SampleSource` 경로라 신뢰성 카드가 대부분 `unknown`이 되어 가치가 낮다. 묶음 A는 `reliability:demo`(키 없는 census 기반)로 신뢰성 카드를 보여주고, CLI 배선은 `runStudy`에 `PersonaSource`/census 경로가 연결되는 묶음 B에서 처리한다. (plan의 "범위 밖" 설명과 동일.)
 
 ### 4.4 공개 API
 

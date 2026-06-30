@@ -33,6 +33,7 @@
 - `src/index.ts` — **수정**. 배럴 export 추가.
 - `eval/reliability-demo.ts` — **신규**. census 합성인구 + mock LLM 기반 key-free 데모.
 - `eval/reliability-demo.test.ts` — **신규**. 데모 출력 검증.
+- `tsup.config.ts` — **수정**. `entry`에 `eval/reliability-demo.ts` 추가(P1-c: 없으면 build 후 demo 실행 실패).
 - `package.json` — **수정**. `reliability:demo` 스크립트 추가.
 
 **범위 밖(묶음 B로 이월, 본 플랜 제외):** CLI(`cli/main.ts`) 배선 — 현재 CLI는 provenance 없는 `SampleSource`를 써서 카드가 전부 unknown이 됨. CLI는 묶음 B에서 `runStudy`에 `PersonaSource`(census)를 연결할 때 함께 처리한다.
@@ -90,6 +91,25 @@ describe("assessReliability", () => {
     expect(byDim.연령).toBe("high");
     expect(byDim.혼인).toBe("medium");
     expect(byDim.가구원수).toBe("low");
+  });
+
+  test("같은 dim에 matched+inferred 섞이면 보수적으로 low (첫 샘플에 끌리지 않음)", () => {
+    const result = studyWith([
+      resp({ 혼인: "미혼" }, { 혼인: "matched" }),
+      resp({ 혼인: "유배우" }, { 혼인: "inferred" }),
+    ]);
+    const a = assessReliability(result).attributes.find((x) => x.dim === "혼인");
+    expect(a?.provenance).toBe("inferred");
+    expect(a?.confidence).toBe("low");
+  });
+
+  test("같은 dim에 matched+conditioned 섞이면 최소 medium", () => {
+    const result = studyWith([
+      resp({ 혼인: "미혼" }, { 혼인: "matched" }),
+      resp({ 혼인: "유배우" }, { 혼인: "conditioned" }),
+    ]);
+    const a = assessReliability(result).attributes.find((x) => x.dim === "혼인");
+    expect(a?.confidence).toBe("medium");
   });
 
   test("provenance 없는 페르소나 → unknown", () => {
@@ -178,6 +198,19 @@ const CONFIDENCE_BY_PROVENANCE: Record<Provenance, Confidence> = {
   llm_generated: "low",
 };
 
+// 한 dim 안에 여러 provenance가 섞이면 가장 보수적인(낮은 신뢰) 값으로 집계 — 과신 방지.
+// 우선순위: inferred > conditioned > llm_generated > matched > unknown
+const PROVENANCE_SEVERITY: Provenance[] = [
+  "inferred",
+  "conditioned",
+  "llm_generated",
+  "matched",
+];
+function worstProvenance(seen: Set<Provenance>): Provenance | "unknown" {
+  for (const p of PROVENANCE_SEVERITY) if (seen.has(p)) return p;
+  return "unknown";
+}
+
 const DEFAULT_PRICE_CRITICAL_AXES = ["소득", "직업", "자녀"];
 const COMPOSITION_MAE_THRESHOLD = 0.05;
 
@@ -193,16 +226,15 @@ export function assessReliability(
   const bridges = ctx?.bridges ?? {};
 
   const attributes: AttributeReliability[] = dims.map((dim) => {
-    let prov: Provenance | undefined;
+    // dim에 등장한 모든 provenance를 모아 가장 보수적인 값으로 판정 (첫 샘플에 끌리지 않게)
+    const seen = new Set<Provenance>();
     for (const r of result.responses) {
       const p = r.persona.provenance?.[dim];
-      if (p) {
-        prov = p;
-        break;
-      }
+      if (p) seen.add(p);
     }
-    const provenance: Provenance | "unknown" = prov ?? "unknown";
-    const confidence: Confidence = prov ? CONFIDENCE_BY_PROVENANCE[prov] : "unknown";
+    const provenance: Provenance | "unknown" = worstProvenance(seen);
+    const confidence: Confidence =
+      provenance === "unknown" ? "unknown" : CONFIDENCE_BY_PROVENANCE[provenance];
     const note = bridges[dim] ? `bridge:${bridges[dim]}` : undefined;
     return { dim, provenance, confidence, note };
   });
@@ -498,6 +530,7 @@ git commit -m "feat: renderMarkdownReport에 신뢰성 카드 결합 + 공개 AP
 **Files:**
 - Create: `eval/reliability-demo.ts`
 - Test: `eval/reliability-demo.test.ts`
+- Modify: `tsup.config.ts` (build entry 추가 — P1-c)
 - Modify: `package.json`
 
 **Interfaces:**
@@ -596,7 +629,15 @@ if (
 Run: `npx vitest run eval/reliability-demo.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: package.json 스크립트 추가**
+- [ ] **Step 5: build entry + npm 스크립트 추가**
+
+> ⚠️ **P1-c (리뷰 보완)**: `tsup.config.ts`의 `entry`에 데모를 추가하지 않으면 `npm run build` 후 `dist/eval/reliability-demo.js`가 생성되지 않아 `npm run reliability:demo`가 실패한다. 아래 두 곳을 **반드시** 수정한다.
+
+`tsup.config.ts`의 `entry` 배열에 `eval/fidelity-demo.ts` 다음 줄로 추가:
+
+```ts
+    "eval/reliability-demo.ts",
+```
 
 `package.json`의 `scripts`에 `fidelity:demo` 다음 줄로 추가:
 
