@@ -1,10 +1,13 @@
 import { parseArgs } from "node:util";
+import snapshotJson from "../data/census/kr-2024.json" with { type: "json" };
 import { SampleSource } from "../src/data/sample-source.js";
 import { ClaudeProvider } from "../src/llm/claude.js";
 import { MockProvider } from "../src/llm/mock.js";
 import type { LLMProvider } from "../src/llm/provider.js";
-import { type StudyConfig, runStudy } from "../src/study.js";
-import type { StudyResult } from "../src/types.js";
+import type { Snapshot } from "../src/population/schema.js";
+import { CensusPopulation } from "../src/population/source.js";
+import { runCensusStudy, runStudy } from "../src/study.js";
+import type { Persona, StudyResult } from "../src/types.js";
 
 export function parseN(raw: string): number {
   const n = Number(raw);
@@ -14,6 +17,24 @@ export function parseN(raw: string): number {
     );
   }
   return n;
+}
+
+/**
+ * 키 없는 결정적 데모용 mock. 첫 선택지=젊은 층, 둘째=그 외.
+ * sample 소스(attrs.age "20대"/"30대")와 census 소스(attrs.연령 "20~24세"…)
+ * 둘 다에서 동작한다. 실제 시장 예측이 아니라 데모용 결정적 응답이다.
+ */
+export function censusAwareDemoMock(
+  choices?: string[],
+): (persona: Persona) => string {
+  const yes = choices?.[0] ?? "A";
+  const no = choices?.[1] ?? "B";
+  const youngCensus = new Set(["20~24세", "25~29세", "30~34세", "35~39세"]);
+  return (persona) => {
+    const age = persona.attrs.age ?? persona.attrs.연령 ?? "";
+    const young = age === "20대" || age === "30대" || youngCensus.has(age);
+    return young ? yes : no;
+  };
 }
 
 export function formatResult(result: StudyResult): string {
@@ -61,35 +82,40 @@ export async function main(): Promise<void> {
   });
   if (!values.question) {
     console.error(
-      '사용법: synth-persona --question "A안 vs B안?" --choices "A안,B안" [--n 50] [--mock]',
+      '사용법: synth-persona --question "A안 vs B안?" --choices "A안,B안" [--n 50] [--source sample|census] [--mock]',
     );
     process.exit(1);
   }
-  if (values.source !== "sample") {
+  const source = values.source ?? "sample";
+  if (source !== "sample" && source !== "census") {
     console.error(
-      "KOSIS 소스는 아직 CLI에서 지원되지 않습니다 (인증키 연동 후 지원 예정). --source sample 을 사용하세요.",
+      `지원하지 않는 소스입니다: "${source}". --source sample (번들 샘플 분포) 또는 census (번들 통계청 합성 인구)를 사용하세요. KOSIS 라이브 소스는 라이브러리 전용입니다.`,
     );
     process.exit(1);
   }
-  // demo stub: deterministic mock for key-less demos — assumes an 'age' attribute and binary choices
+  const choices = values.choices?.split(",").map((c) => c.trim());
+  const question = { prompt: values.question, choices };
+  const n = parseN(values.n ?? "50");
+  const seed = values.seed ? Number(values.seed) : undefined;
   const provider: LLMProvider = values.mock
-    ? new MockProvider((p) =>
-        ["20대", "30대"].includes(p.attrs.age ?? "")
-          ? (values.choices?.split(",")[0] ?? "A")
-          : (values.choices?.split(",")[1] ?? "B"),
-      )
+    ? new MockProvider(censusAwareDemoMock(choices))
     : new ClaudeProvider();
-  const config: StudyConfig = {
-    source: new SampleSource(),
-    provider,
-    question: {
-      prompt: values.question,
-      choices: values.choices?.split(",").map((c) => c.trim()),
-    },
-    n: parseN(values.n ?? "50"),
-    seed: values.seed ? Number(values.seed) : undefined,
-  };
-  const result = await runStudy(config);
+
+  let result: StudyResult;
+  if (source === "census") {
+    const population = new CensusPopulation(
+      snapshotJson as unknown as Snapshot,
+    );
+    result = await runCensusStudy({ population, provider, question, n, seed });
+  } else {
+    result = await runStudy({
+      source: new SampleSource(),
+      provider,
+      question,
+      n,
+      seed,
+    });
+  }
   console.log(formatResult(result));
 }
 

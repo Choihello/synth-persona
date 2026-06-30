@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { formatResult, parseN } from "../cli/main.js";
-import type { StudyResult } from "./types.js";
+import { censusAwareDemoMock, formatResult, parseN } from "../cli/main.js";
+import type { Persona, StudyResult } from "./types.js";
 
 const result: StudyResult = {
   responses: [],
@@ -44,4 +44,24 @@ describe("parseN", () => {
       expect(() => parseN(bad)).toThrow(/--n/);
     },
   );
+});
+
+describe("censusAwareDemoMock", () => {
+  const p = (attrs: Record<string, string>): Persona => ({
+    id: "1",
+    attrs,
+    weight: 1,
+  });
+
+  test("census 연령(20~39대)은 첫 선택지, 그 외는 둘째", () => {
+    const fn = censusAwareDemoMock(["쓴다", "안쓴다"]);
+    expect(fn(p({ 연령: "25~29세" }))).toBe("쓴다");
+    expect(fn(p({ 연령: "60~64세" }))).toBe("안쓴다");
+  });
+
+  test("기존 sample 소스(age '20대'/'40대')와도 호환된다", () => {
+    const fn = censusAwareDemoMock(["쓴다", "안쓴다"]);
+    expect(fn(p({ age: "20대" }))).toBe("쓴다");
+    expect(fn(p({ age: "40대" }))).toBe("안쓴다");
+  });
 });
