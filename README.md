@@ -3,7 +3,7 @@
 > 통계청 인구 통계로 만든 **가상 페르소나**에게 시장조사 질문을 던져, 진짜 설문 전에 빠르게 "간"을 보는 오픈소스 도구.
 > *Synthetic personas grounded in real Korean census distributions — a fast, cheap "zeroth-draft" market read before you run an actual survey.*
 
-![tests](https://img.shields.io/badge/tests-passing-brightgreen) ![node](https://img.shields.io/badge/node-24-blue) ![license](https://img.shields.io/badge/license-MIT-black) ![deps](https://img.shields.io/badge/runtime%20deps-1-lightgrey)
+[![CI](https://github.com/Choihello/synth-persona/actions/workflows/ci.yml/badge.svg)](https://github.com/Choihello/synth-persona/actions/workflows/ci.yml) ![node](https://img.shields.io/badge/node-24-blue) ![license](https://img.shields.io/badge/license-MIT-black) ![deps](https://img.shields.io/badge/runtime%20deps-1-lightgrey)
 
 <p align="center">
   <img src="docs/demo.svg" alt="synth-persona CLI demo" width="680">

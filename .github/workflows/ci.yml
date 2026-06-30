@@ -14,5 +14,6 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run lint
+      - run: npx tsc --noEmit
       - run: npm test
       - run: npm run build
