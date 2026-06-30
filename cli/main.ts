@@ -41,6 +41,10 @@ export function formatResult(result: StudyResult): string {
   const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
   const lines: string[] = [];
   lines.push(
+    "⚠️ synthetic panel response — 실제 시장 반응 아님 · 사람 대상 실측 전 가설 탐색용",
+    "",
+  );
+  lines.push(
     `전체 신호: ${dot(result.signal)} ${result.signal} (분산 ${result.dispersion.toFixed(2)})`,
   );
   if (result.responses.length) {
@@ -64,8 +68,13 @@ export function formatResult(result: StudyResult): string {
       lines.push(`  ${dot(s.signal)} ${val}: ${bd}`);
     }
   }
-  if (result.missing?.length)
-    lines.push(`\n⚠️ 누락 ${result.missing.length}건(응답 실패)`);
+  if (result.missing?.length) {
+    const total = result.responses.length + result.missing.length;
+    const rate = total > 0 ? (result.missing.length / total) * 100 : 0;
+    lines.push(
+      `\n⚠️ 누락 ${result.missing.length}건(응답 실패) — missing rate ${rate.toFixed(1)}%`,
+    );
+  }
   return lines.join("\n");
 }
 

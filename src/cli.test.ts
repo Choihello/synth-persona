@@ -22,13 +22,27 @@ describe("formatResult", () => {
     expect(text).toContain("20대");
   });
 
-  test("일부 실패(missing)는 출력에 누락 건수로 표시된다", () => {
+  test("일부 실패(missing)는 출력에 누락 건수 + missing rate로 표시된다", () => {
     const text = formatResult({
       ...result,
+      responses: [
+        {
+          persona: { id: "x", attrs: {}, weight: 1 },
+          answer: "A안",
+          choice: "A안",
+        },
+      ],
       missing: [{ personaId: "1", reason: "rate limit" }],
     });
     expect(text).toContain("누락");
     expect(text).toContain("1건");
+    expect(text).toContain("missing rate 50.0%"); // 1 실패 / (1 응답 + 1 실패)
+  });
+
+  test("출력에 synthetic panel response 라벨 배너가 포함된다", () => {
+    const text = formatResult(result);
+    expect(text).toContain("synthetic panel response");
+    expect(text).toContain("실제 시장 반응 아님");
   });
 });
 
