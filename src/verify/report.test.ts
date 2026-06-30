@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import type { ReliabilityCard } from "../assess/reliability.js";
 import type { StudyResult } from "../types.js";
 import type { CalibrationReport } from "./calibrate.js";
 import { renderMarkdownReport } from "./report.js";
@@ -50,5 +51,20 @@ describe("renderMarkdownReport", () => {
     const md = renderMarkdownReport({ title: "t" });
     expect(md).toContain("# t");
     expect(md.length).toBeGreaterThan(0);
+  });
+  test("reliability 카드가 주어지면 리포트에 신뢰성 섹션이 결합된다", () => {
+    const card: ReliabilityCard = {
+      composition: null,
+      attributes: [{ dim: "연령", provenance: "matched", confidence: "high" }],
+      responseConsistency: {
+        status: "not-measured",
+        reason: "키 필요(묶음 B)",
+      },
+      guardrails: ["synthetic panel response — 실제 예측 아님"],
+      missingAxes: [],
+    };
+    const md = renderMarkdownReport({ title: "T", reliability: card });
+    expect(md).toContain("## 신뢰성 카드");
+    expect(md).toContain("synthetic panel response");
   });
 });

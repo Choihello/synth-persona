@@ -1,3 +1,5 @@
+import { renderReliabilityCard } from "../assess/reliability-report.js";
+import type { ReliabilityCard } from "../assess/reliability.js";
 import type { StudyResult } from "../types.js";
 import type { CalibrationReport } from "./calibrate.js";
 
@@ -5,6 +7,7 @@ export interface ReportInput {
   title: string;
   result?: StudyResult;
   calibration?: CalibrationReport;
+  reliability?: ReliabilityCard;
 }
 
 const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
@@ -69,8 +72,9 @@ function renderCalibration(cal: CalibrationReport): string {
 export function renderMarkdownReport(input: ReportInput): string {
   const parts: string[] = [`# ${input.title}`, ""];
   if (input.result) parts.push(renderResult(input.result));
+  if (input.reliability) parts.push(renderReliabilityCard(input.reliability));
   if (input.calibration) parts.push(renderCalibration(input.calibration));
-  if (!input.result && !input.calibration)
+  if (!input.result && !input.calibration && !input.reliability)
     parts.push("_표시할 결과가 없습니다._");
   return parts.join("\n");
 }

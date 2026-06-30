@@ -85,3 +85,10 @@ export {
   type CellError,
 } from "./verify/fidelity.js";
 export { renderFidelityReport } from "./verify/fidelity-report.js";
+export {
+  assessReliability,
+  type ReliabilityCard,
+  type AttributeReliability,
+  type Confidence,
+} from "./assess/reliability.js";
+export { renderReliabilityCard } from "./assess/reliability-report.js";
