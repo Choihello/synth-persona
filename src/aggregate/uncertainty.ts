@@ -47,6 +47,16 @@ export function aggregate(
     missing?: { personaId: string; reason: string }[];
   },
 ): StudyResult {
+  // 응답 0건을 정상 결과로 만들면 normalized entropy가 0이 되어 거짓 consensus(🟢)로
+  // 보인다. 모든 LLM 응답 실패·표본 0 같은 상황은 신호가 아니라 실패이므로 명시적으로 throw.
+  if (responses.length === 0) {
+    const failed = opts?.missing?.length ?? 0;
+    throw new Error(
+      failed > 0
+        ? `집계할 응답이 0건입니다 — 모든 페르소나 응답이 실패했습니다(${failed}건). API 키/요청 한도를 확인하세요.`
+        : "집계할 응답이 0건입니다 — 표본이 비어 있습니다(--n 값을 확인하세요).",
+    );
+  }
   const threshold = opts?.splitThreshold ?? 0.5;
   const overall = signalOf(responses, threshold);
 

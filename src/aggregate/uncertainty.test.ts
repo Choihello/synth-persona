@@ -51,4 +51,11 @@ describe("aggregate", () => {
     });
     expect(out.missing?.[0].personaId).toBe("9");
   });
+
+  test("응답 0건은 consensus가 아니라 throw (false consensus 방지)", () => {
+    expect(() => aggregate([])).toThrow(/응답/);
+    expect(() =>
+      aggregate([], { missing: [{ personaId: "1", reason: "rate limit" }] }),
+    ).toThrow(/응답/);
+  });
 });

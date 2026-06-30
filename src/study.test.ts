@@ -30,4 +30,19 @@ describe("runStudy (end-to-end, mock)", () => {
       result.responses.map((r) => r.choice),
     );
   });
+
+  test("모든 응답이 실패하면 runStudy가 throw (false consensus 방지)", async () => {
+    const provider = new MockProvider(() => {
+      throw new Error("rate limit");
+    });
+    await expect(
+      runStudy({
+        source: new SampleSource(),
+        provider,
+        question: { prompt: "q", choices: ["A안", "B안"] },
+        n: 10,
+        seed: 1,
+      }),
+    ).rejects.toThrow(/응답/);
+  });
 });
