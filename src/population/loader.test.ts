@@ -61,7 +61,8 @@ describe("loadSnapshot", () => {
 
   test("dim에 대응하는 category가 없으면 throw", () => {
     const bad = structuredClone(ok);
-    delete (bad.core.categories as Record<string, string[]>).지역;
+    (bad.core.categories as Record<string, string[] | undefined>).지역 =
+      undefined;
     expect(() => loadSnapshot(bad)).toThrow(/categor/i);
   });
 
