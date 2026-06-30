@@ -68,7 +68,10 @@ export function synthesizePopulation(
       attrs[dim] = core.categories[dim][c];
       provenance[dim] = "matched";
     }
-    if (attrs.연령 === "15세미만") continue; // 응답자 universe 15세+
+    // 응답자 universe는 15세+. 번들 스냅샷(kr-2024)은 15~19세부터 시작해 이 가드가
+    // 걸리지 않지만, 15세미만 빈을 포함한 다른 스냅샷이 들어와도 제외하기 위한 방어.
+    // (synthesize.test.ts의 "15세미만 코어는 제외된다"가 이 동작을 검증한다.)
+    if (attrs.연령 === "15세미만") continue;
     pop.push({ id: "tmp", attrs, weight: w, provenance, flags: [] });
   }
 

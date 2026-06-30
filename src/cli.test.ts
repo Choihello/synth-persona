@@ -21,6 +21,15 @@ describe("formatResult", () => {
     expect(text).toContain("age");
     expect(text).toContain("20대");
   });
+
+  test("일부 실패(missing)는 출력에 누락 건수로 표시된다", () => {
+    const text = formatResult({
+      ...result,
+      missing: [{ personaId: "1", reason: "rate limit" }],
+    });
+    expect(text).toContain("누락");
+    expect(text).toContain("1건");
+  });
 });
 
 describe("parseN", () => {
