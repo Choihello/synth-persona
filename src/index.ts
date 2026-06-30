@@ -25,7 +25,13 @@ export { ClaudeProvider } from "./llm/claude.js";
 export { RecordedProvider } from "./llm/recorded.js";
 export { simulate, matchChoice, type Question } from "./simulate/simulate.js";
 export { aggregate, normalizedEntropy } from "./aggregate/uncertainty.js";
-export { runStudy, type StudyConfig } from "./study.js";
+export {
+  runStudy,
+  type StudyConfig,
+  runCensusStudy,
+  censusShareRunner,
+  type CensusStudyConfig,
+} from "./study.js";
 export {
   spearman,
   meanAbsoluteError,
