@@ -6,6 +6,16 @@ import type { LLMProvider } from "../src/llm/provider.js";
 import { type StudyConfig, runStudy } from "../src/study.js";
 import type { StudyResult } from "../src/types.js";
 
+export function parseN(raw: string): number {
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new Error(
+      `--n 은 1 이상의 정수여야 합니다 (입력: "${raw}"). 예: --n 50`,
+    );
+  }
+  return n;
+}
+
 export function formatResult(result: StudyResult): string {
   const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
   const lines: string[] = [];
@@ -76,7 +86,7 @@ export async function main(): Promise<void> {
       prompt: values.question,
       choices: values.choices?.split(",").map((c) => c.trim()),
     },
-    n: Number(values.n),
+    n: parseN(values.n ?? "50"),
     seed: values.seed ? Number(values.seed) : undefined,
   };
   const result = await runStudy(config);

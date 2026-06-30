@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatResult } from "../cli/main.js";
+import { formatResult, parseN } from "../cli/main.js";
 import type { StudyResult } from "./types.js";
 
 const result: StudyResult = {
@@ -21,4 +21,18 @@ describe("formatResult", () => {
     expect(text).toContain("age");
     expect(text).toContain("20대");
   });
+});
+
+describe("parseN", () => {
+  test("유효한 양의 정수는 통과", () => {
+    expect(parseN("50")).toBe(50);
+    expect(parseN("1")).toBe(1);
+  });
+
+  test.each(["0", "-1", "abc", "2.5", "", "Infinity"])(
+    "잘못된 --n=%s 는 throw (조용히 빈 결과로 흘러가지 않음)",
+    (bad) => {
+      expect(() => parseN(bad)).toThrow(/--n/);
+    },
+  );
 });
