@@ -52,4 +52,52 @@ describe("loadSnapshot", () => {
   test("구조 불량은 throw", () => {
     expect(() => loadSnapshot({})).toThrow();
   });
+
+  test("counts 길이가 product(categories)와 다르면 throw", () => {
+    const bad = structuredClone(ok);
+    bad.core.counts = [100, 200]; // product=1인데 2개
+    expect(() => loadSnapshot(bad)).toThrow(/counts/i);
+  });
+
+  test("dim에 대응하는 category가 없으면 throw", () => {
+    const bad = structuredClone(ok);
+    delete (bad.core.categories as Record<string, string[]>).지역;
+    expect(() => loadSnapshot(bad)).toThrow(/categor/i);
+  });
+
+  test("category 배열이 비어 있으면 throw", () => {
+    const bad = structuredClone(ok);
+    bad.core.categories.지역 = [];
+    expect(() => loadSnapshot(bad)).toThrow(/categor/i);
+  });
+
+  test("음수/NaN count는 throw", () => {
+    const neg = structuredClone(ok);
+    neg.core.counts = [-1];
+    expect(() => loadSnapshot(neg)).toThrow();
+    const nan = structuredClone(ok);
+    nan.core.counts = [Number.NaN];
+    expect(() => loadSnapshot(nan)).toThrow();
+  });
+
+  test("conditional matrix 행 수가 givenKeys와 다르면 throw", () => {
+    const bad = structuredClone(ok);
+    bad.conditional[0].matrix = [[100], [50]]; // givenKeys len1인데 2행
+    expect(() => loadSnapshot(bad)).toThrow();
+  });
+
+  test("conditional matrix row 길이가 varKeys와 다르면 throw", () => {
+    const bad = structuredClone(ok);
+    bad.conditional[0].matrix = [[100, 50]]; // varKeys len1인데 2열
+    expect(() => loadSnapshot(bad)).toThrow();
+  });
+
+  test("conditional 음수 값은 throw하되 null(suppressed)은 허용", () => {
+    const neg = structuredClone(ok);
+    neg.conditional[0].matrix = [[-5]];
+    expect(() => loadSnapshot(neg)).toThrow();
+    const sup = structuredClone(ok);
+    sup.conditional[0].matrix = [[null]];
+    expect(() => loadSnapshot(sup)).not.toThrow();
+  });
 });
