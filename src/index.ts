@@ -21,9 +21,14 @@ export {
 export type { KosisRow, KosisOpts, KosisAxis } from "./data/kosis-source.js";
 export type { LLMProvider } from "./llm/provider.js";
 export { MockProvider } from "./llm/mock.js";
-export { ClaudeProvider } from "./llm/claude.js";
+export { ClaudeProvider, personaSystemPrompt } from "./llm/claude.js";
 export { RecordedProvider } from "./llm/recorded.js";
-export { simulate, matchChoice, type Question } from "./simulate/simulate.js";
+export {
+  simulate,
+  matchChoice,
+  buildPrompt,
+  type Question,
+} from "./simulate/simulate.js";
 export { aggregate, normalizedEntropy } from "./aggregate/uncertainty.js";
 export {
   runStudy,
