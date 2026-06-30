@@ -91,3 +91,36 @@ describe("simulate", () => {
     });
   });
 });
+
+describe("matchChoice 자연어/다지선다 robustness", () => {
+  const two = ["쓸 의향이 있다", "쓸 의향이 없다"];
+  const three = ["써보고 싶다", "잘 모르겠다", "쓰지 않을 것 같다"];
+
+  test("자연어 문장에 선택지가 그대로 들어가면 2지선다 매칭", () => {
+    expect(matchChoice("네, 저는 쓸 의향이 있다고 생각해요", two)).toBe(
+      "쓸 의향이 있다",
+    );
+    expect(matchChoice("솔직히 쓸 의향이 없다 쪽이에요", two)).toBe(
+      "쓸 의향이 없다",
+    );
+  });
+
+  test("부분문자열 공유 선택지에서 더 구체적인(긴) 것을 고른다", () => {
+    // '쓸 의향이 있다'/'쓸 의향이 없다'는 '쓸 의향이' 공유 → 긴 매치 우선
+    expect(matchChoice("쓸 의향이 없다", two)).toBe("쓸 의향이 없다");
+  });
+
+  test("3지선다 매칭", () => {
+    expect(matchChoice("한번 써보고 싶다", three)).toBe("써보고 싶다");
+    expect(matchChoice("음 잘 모르겠다", three)).toBe("잘 모르겠다");
+    expect(matchChoice("아마 쓰지 않을 것 같다", three)).toBe(
+      "쓰지 않을 것 같다",
+    );
+  });
+
+  test("선택지 문구를 그대로 포함하지 않으면 미매칭(undefined → missing 처리)", () => {
+    // 어미가 달라지면(있다 vs 있습니다) 부분문자열로 안 잡힘 → missing으로 집계됨
+    expect(matchChoice("쓸 의향이 있습니다", two)).toBeUndefined();
+    expect(matchChoice("잘 모르겠어요", three)).toBeUndefined();
+  });
+});
