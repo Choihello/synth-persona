@@ -5,6 +5,7 @@ export default defineConfig({
     "cli/main.ts",
     "eval/calibrate-demo.ts",
     "eval/fidelity-demo.ts",
+    "eval/reliability-demo.ts",
     "scripts/refresh-census.ts",
   ],
   format: ["esm"],

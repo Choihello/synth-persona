@@ -14,6 +14,7 @@
     "build": "tsup",
     "calibrate:demo": "node dist/eval/calibrate-demo.js",
     "fidelity:demo": "node dist/eval/fidelity-demo.js",
+    "reliability:demo": "node dist/eval/reliability-demo.js",
     "lint": "biome check .",
     "format": "biome format --write ."
   },
