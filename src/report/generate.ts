@@ -1,5 +1,6 @@
 import type { StudyResult } from "../types.js";
 import type { FidelityReport } from "../verify/fidelity.js";
+import { rankSegments } from "./segments.js";
 import type {
   FounderInsightReport,
   FounderReportOptions,
@@ -63,11 +64,18 @@ export function generateFounderInsightReport(
     );
   }
 
+  const minN = options.minN ?? DEFAULT_MIN_N;
+  const { opportunity, resistance, observedButHeld } = rankSegments(
+    result,
+    positiveChoice,
+    minN,
+  );
+
   const appendix: ReportAppendix = {
     generatedAt: new Date().toISOString(),
     options,
     caveats,
-    observedButHeldCount: 0,
+    observedButHeldCount: observedButHeld.length,
   };
 
   return {
@@ -75,13 +83,15 @@ export function generateFounderInsightReport(
     disclaimer: DISCLAIMER,
     executiveSummary: {
       headline: "",
+      topOpportunity: opportunity[0]?.segmentLabel,
+      topResistance: resistance[0]?.segmentLabel,
       doNotTrustYet: "",
       thisWeekAction: "",
     },
     overallSignal: overallSection(result, options),
-    opportunitySegments: [],
-    resistanceSegments: [],
-    observedButHeld: [],
+    opportunitySegments: opportunity,
+    resistanceSegments: resistance,
+    observedButHeld,
     keyDrivers: [],
     keyObjections: [],
     riskyAssumptions: [],
