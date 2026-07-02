@@ -104,3 +104,22 @@ export {
   type Confidence,
 } from "./assess/reliability.js";
 export { renderReliabilityCard } from "./assess/reliability-report.js";
+export { generateFounderInsightReport } from "./report/generate.js";
+export type {
+  FounderReportOptions,
+  FounderInsightReport,
+  SegmentInsight,
+  ConfidenceCard,
+  ConfidenceLayer,
+  RiskyAssumption,
+  DriverInsight,
+  InterviewTarget,
+  InterviewQuestion,
+  SurveyQuestion,
+  MessageTest,
+  ValidationAction,
+  ReportAppendix,
+  Basis,
+  FounderGoal,
+  ConceptMeta,
+} from "./report/types.js";
