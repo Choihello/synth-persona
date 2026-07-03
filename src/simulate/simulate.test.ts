@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { MockProvider } from "../llm/mock.js";
+import type { Persona } from "../types.js";
 import { buildPrompt, matchChoice, simulate } from "./simulate.js";
 
-const personas = [
+const twoPersonas = [
   { id: "1", attrs: { age: "20대" }, weight: 1 },
   { id: "2", attrs: { age: "40대" }, weight: 1 },
 ];
@@ -29,7 +30,7 @@ describe("simulate", () => {
       p.attrs.age === "20대" ? "새벽배송 좋아요" : "저녁배송 좋아요",
     );
     const { responses, missing } = await simulate(
-      personas,
+      twoPersonas,
       { prompt: "q", choices: ["새벽배송", "저녁배송"] },
       provider,
     );
@@ -80,7 +81,7 @@ describe("simulate", () => {
       return "저녁배송";
     });
     const { responses, missing } = await simulate(
-      personas,
+      twoPersonas,
       { prompt: "q", choices: ["새벽배송", "저녁배송"] },
       provider,
     );
@@ -122,5 +123,105 @@ describe("matchChoice 자연어/다지선다 robustness", () => {
     // 어미가 달라지면(있다 vs 있습니다) 부분문자열로 안 잡힘 → missing으로 집계됨
     expect(matchChoice("쓸 의향이 있습니다", two)).toBeUndefined();
     expect(matchChoice("잘 모르겠어요", three)).toBeUndefined();
+  });
+});
+
+function personas(n: number): Persona[] {
+  return Array.from({ length: n }, (_, i) => ({
+    id: `p${i + 1}`,
+    attrs: { age: "20대" },
+    weight: 1,
+  }));
+}
+
+describe("simulate — 동시성/재시도", () => {
+  const question = { prompt: "q?", choices: ["A", "B"] };
+
+  test("동시 실행 수가 concurrency를 넘지 않는다", async () => {
+    let active = 0;
+    let maxActive = 0;
+    const provider = {
+      async ask() {
+        active++;
+        maxActive = Math.max(maxActive, active);
+        await new Promise((r) => setTimeout(r, 5));
+        active--;
+        return "A";
+      },
+    };
+    await simulate(personas(12), question, provider, { concurrency: 3 });
+    expect(maxActive).toBeLessThanOrEqual(3);
+    expect(maxActive).toBeGreaterThan(1); // 실제로 병렬이었는지
+  });
+
+  test("완료 순서와 무관하게 responses는 persona 입력 순서", async () => {
+    const provider = {
+      async ask(p: Persona) {
+        // 뒤쪽 persona일수록 먼저 끝나게 역순 지연
+        const idx = Number(p.id.slice(1));
+        await new Promise((r) => setTimeout(r, (12 - idx) * 2));
+        return "A";
+      },
+    };
+    const { responses } = await simulate(personas(12), question, provider, {
+      concurrency: 4,
+    });
+    expect(responses.map((r) => r.persona.id)).toEqual(
+      personas(12).map((p) => p.id),
+    );
+  });
+
+  test("일시 오류는 재시도로 회복한다 (backoffMs=0)", async () => {
+    const failedOnce = new Set<string>();
+    let calls = 0;
+    const provider = {
+      async ask(p: Persona) {
+        calls++;
+        if (!failedOnce.has(p.id)) {
+          failedOnce.add(p.id);
+          throw new Error("429 rate limited");
+        }
+        return "A";
+      },
+    };
+    const { responses, missing } = await simulate(
+      personas(5),
+      question,
+      provider,
+      { retries: 1, backoffMs: 0 },
+    );
+    expect(missing).toEqual([]);
+    expect(responses).toHaveLength(5);
+    expect(calls).toBe(10); // 5회 실패 + 5회 성공
+  });
+
+  test("재시도 소진 시 missing으로 남는다", async () => {
+    const provider = {
+      async ask() {
+        throw new Error("terminal error");
+      },
+    };
+    const { responses, missing } = await simulate(
+      personas(3),
+      question,
+      provider,
+      { retries: 1, backoffMs: 0 },
+    );
+    expect(responses).toEqual([]);
+    expect(missing).toHaveLength(3);
+  });
+
+  test("onProgress가 완료 건수를 보고한다", async () => {
+    const seen: number[] = [];
+    const provider = {
+      async ask() {
+        return "A";
+      },
+    };
+    await simulate(personas(4), question, provider, {
+      onProgress: (done, total) => seen.push(done * 100 + total),
+    });
+    expect(seen).toHaveLength(4);
+    expect(seen[seen.length - 1]).toBe(404); // done=4, total=4
   });
 });

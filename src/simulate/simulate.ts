@@ -34,30 +34,93 @@ export function matchChoice(
   return best;
 }
 
+export interface SimulateOpts {
+  /** 동시 LLM 호출 수. 기본 1 = 기존 순차 동작과 동일(결정성 보존). */
+  concurrency?: number;
+  /** simulate 레벨 재시도 횟수. SDK 자체 재시도(429/5xx, 2회) 위의 보조 레이어. 기본 1. */
+  retries?: number;
+  /** 지수 백오프 기본 간격(ms). 테스트에서 0으로 주입. 기본 500. */
+  backoffMs?: number;
+  onProgress?: (done: number, total: number) => void;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries: number,
+  backoffMs: number,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      if (attempt < retries) await sleep(backoffMs * 2 ** attempt);
+    }
+  }
+  throw lastErr;
+}
+
 export async function simulate(
   personas: Persona[],
   question: Question,
   provider: LLMProvider,
+  opts?: SimulateOpts,
 ): Promise<{
   responses: Response[];
   missing: { personaId: string; reason: string }[];
 }> {
+  const prompt = buildPrompt(question);
+  const concurrency = Math.max(1, opts?.concurrency ?? 1);
+  const retries = opts?.retries ?? 1;
+  const backoffMs = opts?.backoffMs ?? 500;
+
+  type Slot =
+    | { ok: true; res: Response }
+    | { ok: false; miss: { personaId: string; reason: string } };
+  const slots: Slot[] = new Array(personas.length);
+  let next = 0;
+  let done = 0;
+
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const i = next++;
+      if (i >= personas.length) return;
+      const persona = personas[i];
+      try {
+        const answer = await withRetry(
+          () => provider.ask(persona, prompt),
+          retries,
+          backoffMs,
+        );
+        const choice = question.choices
+          ? matchChoice(answer, question.choices)
+          : undefined;
+        slots[i] = { ok: true, res: { persona, answer, choice } };
+      } catch (e) {
+        slots[i] = {
+          ok: false,
+          miss: {
+            personaId: persona.id,
+            reason: e instanceof Error ? e.message : String(e),
+          },
+        };
+      }
+      done++;
+      opts?.onProgress?.(done, personas.length);
+    }
+  };
+
+  const workers = Math.min(concurrency, Math.max(personas.length, 1));
+  await Promise.all(Array.from({ length: workers }, worker));
+
   const responses: Response[] = [];
   const missing: { personaId: string; reason: string }[] = [];
-  const prompt = buildPrompt(question);
-  for (const persona of personas) {
-    try {
-      const answer = await provider.ask(persona, prompt);
-      const choice = question.choices
-        ? matchChoice(answer, question.choices)
-        : undefined;
-      responses.push({ persona, answer, choice });
-    } catch (e) {
-      missing.push({
-        personaId: persona.id,
-        reason: e instanceof Error ? e.message : String(e),
-      });
-    }
+  for (const s of slots) {
+    if (s.ok) responses.push(s.res);
+    else missing.push(s.miss);
   }
   return { responses, missing };
 }
