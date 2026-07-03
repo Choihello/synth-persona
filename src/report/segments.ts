@@ -25,6 +25,8 @@ export function rankSegments(
   opportunity: SegmentInsight[];
   resistance: SegmentInsight[];
   observedButHeld: SegmentInsight[];
+  /** 긍정 비율이 기준선과 정확히 같아 기회/저항 어느 쪽도 아닌 세그먼트 (전량 보존) */
+  atBaseline: SegmentInsight[];
   globalPositiveRatio: number;
 } {
   const buckets = new Map<string, Bucket>();
@@ -84,6 +86,7 @@ export function rankSegments(
   const opportunity: Array<{ s: SegmentInsight; score: number }> = [];
   const resistance: Array<{ s: SegmentInsight; score: number }> = [];
   const held: SegmentInsight[] = [];
+  const atBaseline: SegmentInsight[] = [];
 
   for (const b of buckets.values()) {
     const insight = toInsight(b);
@@ -103,17 +106,21 @@ export function rankSegments(
         score:
           (globalPositiveRatio - insight.positiveRatio) * Math.log(b.total),
       });
+    } else {
+      atBaseline.push(insight);
     }
   }
 
   opportunity.sort((a, b) => b.score - a.score);
   resistance.sort((a, b) => b.score - a.score);
   held.sort((a, b) => b.sampleCount - a.sampleCount);
+  atBaseline.sort((a, b) => b.sampleCount - a.sampleCount);
 
   return {
     opportunity: opportunity.map((x) => x.s),
     resistance: resistance.map((x) => x.s),
     observedButHeld: held,
+    atBaseline,
     globalPositiveRatio,
   };
 }

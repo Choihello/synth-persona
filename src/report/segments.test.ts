@@ -59,6 +59,25 @@ describe("rankSegments", () => {
     expect(held?.caveats.some((c) => c.includes("판단 보류"))).toBe(true);
   });
 
+  test("긍정 비율이 기준선과 정확히 같은 세그먼트는 atBaseline으로 보존된다", () => {
+    // 두 세그먼트 모두 8:8 → global 0.5 == 각 세그먼트 0.5 (만장일치 케이스의 일반형)
+    const responses = [
+      ...make(8, 8, "연령", "30대"),
+      ...make(8, 8, "연령", "60대"),
+    ];
+    const { opportunity, resistance, atBaseline } = rankSegments(
+      study(responses),
+      "쓴다",
+      8,
+    );
+    expect(opportunity).toEqual([]);
+    expect(resistance).toEqual([]);
+    expect(atBaseline.map((s) => s.segmentLabel).sort()).toEqual([
+      "연령=30대",
+      "연령=60대",
+    ]);
+  });
+
   test("기준선보다 아주 조금 높은 큰 세그먼트가 과대평가되지 않는다", () => {
     const responses = [
       ...make(52, 48, "그룹", "A"),
