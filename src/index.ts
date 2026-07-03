@@ -123,3 +123,10 @@ export type {
   FounderGoal,
   ConceptMeta,
 } from "./report/types.js";
+export {
+  HeuristicPrescriptionGenerator,
+  detectThemes,
+  type PrescriptionGenerator,
+  type PrescriptionContext,
+  type Theme,
+} from "./report/prescriptions.js";

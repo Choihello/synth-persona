@@ -2,6 +2,11 @@ import { assessReliability } from "../assess/reliability.js";
 import type { StudyResult } from "../types.js";
 import type { FidelityReport } from "../verify/fidelity.js";
 import { buildConfidenceCard, buildRiskyAssumptions } from "./confidence.js";
+import {
+  HeuristicPrescriptionGenerator,
+  type PrescriptionContext,
+  type PrescriptionGenerator,
+} from "./prescriptions.js";
 import { rankSegments } from "./segments.js";
 import type {
   FounderInsightReport,
@@ -43,6 +48,7 @@ export function generateFounderInsightReport(
   result: StudyResult,
   options: FounderReportOptions,
   ctx?: { fidelity?: FidelityReport; bridges?: Record<string, string> },
+  generator: PrescriptionGenerator = new HeuristicPrescriptionGenerator(),
 ): FounderInsightReport {
   const { choices } = options;
   if (choices.length < 2) {
@@ -110,6 +116,17 @@ export function generateFounderInsightReport(
     observedButHeld.length,
   );
 
+  const pctx: PrescriptionContext = {
+    options,
+    positiveChoice,
+    opportunitySegments,
+    resistanceSegments,
+    confidenceCard,
+    hasPriceSignal,
+    priceAxisMissing: card.missingAxes.length > 0,
+  };
+  const { drivers, objections } = generator.drivers(pctx);
+
   const topOpportunity = opportunitySegments[0]?.segmentLabel;
   const topResistance = resistanceSegments[0]?.segmentLabel;
 
@@ -142,15 +159,15 @@ export function generateFounderInsightReport(
     opportunitySegments,
     resistanceSegments,
     observedButHeld,
-    keyDrivers: [],
-    keyObjections: [],
+    keyDrivers: drivers,
+    keyObjections: objections,
     riskyAssumptions,
     confidenceCard,
-    recommendedInterviews: [],
-    interviewQuestions: [],
-    surveyDraft: [],
-    landingPageMessageTests: [],
-    nextValidationPlan: [],
+    recommendedInterviews: generator.interviews(pctx),
+    interviewQuestions: generator.interviewQuestions(pctx),
+    surveyDraft: generator.survey(pctx),
+    landingPageMessageTests: generator.landingTests(pctx),
+    nextValidationPlan: generator.validationPlan(pctx),
     appendix,
   };
 }

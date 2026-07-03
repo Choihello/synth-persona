@@ -73,17 +73,41 @@ describe("generateFounderInsightReport — core/validation", () => {
     expect(rep.disclaimer).toContain("synthetic panel response");
   });
 
-  test("처방 배열은 P4-1에서 비어 있음", () => {
+  test("처방 필드가 heuristic generator로 채워진다", () => {
     const rep = generateFounderInsightReport(
       study([r({ 연령: "30대" }, "쓴다")]),
-      opts,
+      {
+        question: "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?",
+        choices: ["쓴다", "안쓴다"],
+      },
     );
-    expect(rep.recommendedInterviews).toEqual([]);
-    expect(rep.interviewQuestions).toEqual([]);
-    expect(rep.surveyDraft).toEqual([]);
-    expect(rep.landingPageMessageTests).toEqual([]);
-    expect(rep.nextValidationPlan).toEqual([]);
+    expect(rep.keyDrivers.length).toBeGreaterThan(0);
+    expect(rep.recommendedInterviews.length).toBeGreaterThanOrEqual(1);
+    expect(rep.interviewQuestions.length).toBeGreaterThanOrEqual(8);
+    expect(rep.surveyDraft.length).toBeGreaterThan(0);
+    expect(rep.nextValidationPlan.length).toBeGreaterThanOrEqual(5);
+    for (const d of [...rep.keyDrivers, ...rep.keyObjections]) {
+      expect(d.provenance).toBe("inferred");
+      expect(d.basis).toBe("heuristic");
+    }
+  });
+
+  test("커스텀 generator를 주입할 수 있다 (issue #4 LLM v2 스왑 지점)", () => {
+    const stub = {
+      drivers: () => ({ drivers: [], objections: [] }),
+      interviews: () => [],
+      interviewQuestions: () => [],
+      survey: () => [],
+      landingTests: () => [],
+      validationPlan: () => [],
+    };
+    const rep = generateFounderInsightReport(
+      study([r({ 연령: "30대" }, "쓴다")]),
+      { question: "q?", choices: ["A", "B"] },
+      undefined,
+      stub,
+    );
     expect(rep.keyDrivers).toEqual([]);
-    expect(rep.keyObjections).toEqual([]);
+    expect(rep.nextValidationPlan).toEqual([]);
   });
 });
