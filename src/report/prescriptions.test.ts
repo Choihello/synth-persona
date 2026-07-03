@@ -98,3 +98,44 @@ describe("drivers", () => {
     );
   });
 });
+
+describe("interviews", () => {
+  const gen = new HeuristicPrescriptionGenerator();
+  it("기회+저항에서 3~5개 대상, 전부 inferred/heuristic", () => {
+    const ctx = baseCtx({
+      opportunitySegments: [seg("연령=25~29세"), seg("가구원수=1인가구")],
+      resistanceSegments: [seg("연령=50~54세", { positiveRatio: 0.2 })],
+    });
+    const targets = gen.interviews(ctx);
+    expect(targets.length).toBeGreaterThanOrEqual(3);
+    expect(targets.length).toBeLessThanOrEqual(5);
+    for (const t of targets) {
+      expect(t.provenance).toBe("inferred");
+      expect(t.basis).toBe("heuristic");
+      expect(t.sampleSizeRecommendation).toContain("5~8");
+    }
+  });
+  it("기회/저항이 비면 안전한 폴백 대상을 낸다", () => {
+    const ctx = baseCtx({ opportunitySegments: [], resistanceSegments: [] });
+    const targets = gen.interviews(ctx);
+    expect(targets.length).toBeGreaterThanOrEqual(1);
+    expect(targets[0].whyInterview).toContain("랭킹");
+  });
+});
+
+describe("interviewQuestions", () => {
+  const gen = new HeuristicPrescriptionGenerator();
+  it("8~12개, 과거 행동형 질문이 존재하고 가정형 사용의향 직문이 없다", () => {
+    const qs = gen.interviewQuestions(baseCtx());
+    expect(qs.length).toBeGreaterThanOrEqual(8);
+    expect(qs.length).toBeLessThanOrEqual(12);
+    expect(qs.some((q) => /최근|마지막|실제로/.test(q.text))).toBe(true);
+    expect(qs.some((q) => /쓰시겠어요\?|쓰겠어요\?/.test(q.text))).toBe(false);
+  });
+  it("가격 테마 + 축 결핍이면 price 질문에 caution", () => {
+    const qs = gen.interviewQuestions(baseCtx({ priceAxisMissing: true }));
+    const priceQ = qs.find((q) => q.type === "price");
+    expect(priceQ).toBeDefined();
+    expect(priceQ?.caution).toContain("소득");
+  });
+});
