@@ -92,6 +92,41 @@ describe("generateFounderInsightReport — core/validation", () => {
     }
   });
 
+  test("가격 무관 질문(단어 속 원: 직원)에는 가격 위험가정·가격 caveat이 붙지 않는다", () => {
+    const rep = generateFounderInsightReport(
+      study([r({ 연령: "30대" }, "쓴다"), r({ 연령: "40대" }, "안쓴다")]),
+      { question: "직원 복지 앱 쓸 의향?", choices: ["쓴다", "안쓴다"] },
+    );
+    expect(
+      rep.riskyAssumptions.some((a) => a.assumption.includes("가격")),
+    ).toBe(false);
+  });
+
+  test("테마는 generate에서 1회 계산되어 generator ctx로 전달된다", () => {
+    let seen: unknown;
+    const stub = {
+      drivers: (ctx: { themes?: string[] }) => {
+        seen = ctx.themes;
+        return { drivers: [], objections: [] };
+      },
+      interviews: () => [],
+      interviewQuestions: () => [],
+      survey: () => [],
+      landingTests: () => [],
+      validationPlan: () => [],
+    };
+    generateFounderInsightReport(
+      study([r({ 연령: "30대" }, "쓴다")]),
+      {
+        question: "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?",
+        choices: ["쓴다", "안쓴다"],
+      },
+      undefined,
+      stub,
+    );
+    expect(seen).toEqual(expect.arrayContaining(["price", "subscription"]));
+  });
+
   test("커스텀 generator를 주입할 수 있다 (issue #4 LLM v2 스왑 지점)", () => {
     const stub = {
       drivers: () => ({ drivers: [], objections: [] }),

@@ -73,6 +73,14 @@ describe("detectThemes", () => {
   it("매칭 실패 시 generic 폴백", () => {
     expect(detectThemes("이 색상 어때요?")).toEqual(["generic"]);
   });
+  it("단어 속 원/월(직원·병원·월요일)은 가격·구독으로 오탐하지 않는다", () => {
+    expect(detectThemes("직원 복지 앱 쓸 의향?")).toEqual(["generic"]);
+    expect(detectThemes("매주 월요일 병원 예약 앱 쓸래?")).toEqual(["generic"]);
+  });
+  it("통화 표기(9900원·5만원)는 가격으로 감지한다", () => {
+    expect(detectThemes("5만원짜리 서비스 어때?")).toEqual(["price"]);
+    expect(detectThemes("9,900원이면 살래?")).toEqual(["price"]);
+  });
 });
 
 describe("drivers", () => {

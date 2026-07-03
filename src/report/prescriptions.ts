@@ -19,6 +19,8 @@ export interface PrescriptionContext {
   hasPriceSignal: boolean;
   /** 가격 판단에 필요한 축(소득·직업·자녀)이 데이터에 없는가 (card.missingAxes 기반) */
   priceAxisMissing: boolean;
+  /** generate가 1회 계산해 전달하는 질문 테마. 없으면 각 메서드가 detectThemes로 폴백. */
+  themes?: Theme[];
 }
 
 export interface PrescriptionGenerator {
@@ -36,7 +38,11 @@ export interface PrescriptionGenerator {
 export type Theme = "price" | "subscription" | "trust" | "generic";
 
 const THEME_PATTERNS: Array<{ theme: Theme; pattern: RegExp }> = [
-  { theme: "price", pattern: /원|₩|가격|비용|유료|price/i },
+  // "원"은 통화 표기(숫자+단위 뒤)만 — 직원·병원 같은 단어 속 "원" 오탐 방지
+  {
+    theme: "price",
+    pattern: /\d[\d,.]*\s*(?:십|백|천|만|억)*\s*원|₩|가격|비용|유료|price/i,
+  },
   { theme: "subscription", pattern: /구독|정기|멤버십|월\s?\d/i },
   { theme: "trust", pattern: /신뢰|안전|보안|개인정보|위생/i },
 ];
@@ -119,7 +125,7 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
     drivers: DriverInsight[];
     objections: DriverInsight[];
   } {
-    const themes = detectThemes(ctx.options.question);
+    const themes = ctx.themes ?? detectThemes(ctx.options.question);
     return {
       drivers: themes.map((t) => DRIVER_TEMPLATES[t].driver),
       objections: themes.map((t) => DRIVER_TEMPLATES[t].objection),
@@ -162,7 +168,7 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
   }
 
   interviewQuestions(ctx: PrescriptionContext): InterviewQuestion[] {
-    const themes = detectThemes(ctx.options.question);
+    const themes = ctx.themes ?? detectThemes(ctx.options.question);
     const qs: InterviewQuestion[] = [
       {
         text: "최근 한 달 동안 이 질문의 상황과 관련해 가장 불편했던 순간을 구체적으로 말씀해 주세요.",

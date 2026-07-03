@@ -6,6 +6,7 @@ import {
   HeuristicPrescriptionGenerator,
   type PrescriptionContext,
   type PrescriptionGenerator,
+  detectThemes,
 } from "./prescriptions.js";
 import { rankSegments } from "./segments.js";
 import type {
@@ -19,8 +20,6 @@ import type {
 export const DISCLAIMER =
   "이 리포트의 모든 수치는 synthetic panel response(가상 패널 응답)이며, 실제 시장 반응·구매율이 아닙니다. 실제 인터뷰·설문으로 검증해야 합니다.";
 export const DEFAULT_MIN_N = 8;
-
-const PRICE_SIGNAL = /원|월|구독|가격|₩|price/i;
 
 function overallSection(
   result: StudyResult,
@@ -89,9 +88,10 @@ export function generateFounderInsightReport(
   });
   const confidenceCard = buildConfidenceCard(card);
 
-  const hasPriceSignal = PRICE_SIGNAL.test(
-    `${options.question} ${positiveChoice}`,
-  );
+  // 테마는 여기서 1회 계산해 처방 generator까지 공유 — 가격 신호 정의가 한 곳(detectThemes)에 있게 한다
+  const themes = detectThemes(`${options.question} ${positiveChoice}`);
+  const hasPriceSignal =
+    themes.includes("price") || themes.includes("subscription");
   const priceUnsafe = hasPriceSignal && card.missingAxes.length > 0;
 
   // dim별 provenance 신뢰도를 세그먼트에 반영 + 가격 저신뢰 caveat
@@ -124,6 +124,7 @@ export function generateFounderInsightReport(
     confidenceCard,
     hasPriceSignal,
     priceAxisMissing: card.missingAxes.length > 0,
+    themes,
   };
   const { drivers, objections } = generator.drivers(pctx);
 
