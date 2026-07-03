@@ -19,6 +19,14 @@ export function parseN(raw: string): number {
   return n;
 }
 
+export function parseSeed(raw: string): number {
+  const s = Number(raw);
+  if (!Number.isFinite(s) || !Number.isInteger(s)) {
+    throw new Error(`--seed 는 정수여야 합니다 (입력: "${raw}"). 예: --seed 7`);
+  }
+  return s;
+}
+
 /**
  * 키 없는 결정적 데모용 mock. 첫 선택지=젊은 층, 둘째=그 외.
  * sample 소스(attrs.age "20대"/"30대")와 census 소스(attrs.연령 "20~24세"…)
@@ -37,7 +45,11 @@ export function censusAwareDemoMock(
   };
 }
 
-export function formatResult(result: StudyResult): string {
+export function formatResult(
+  result: StudyResult,
+  opts?: { minN?: number },
+): string {
+  const minN = opts?.minN ?? 8;
   const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
   const lines: string[] = [];
   lines.push(
@@ -62,10 +74,15 @@ export function formatResult(result: StudyResult): string {
   for (const [dim, segs] of Object.entries(result.bySegment)) {
     lines.push(`\n[${dim}별]`);
     for (const [val, s] of Object.entries(segs)) {
+      const n = Object.values(s.breakdown).reduce((a, b) => a + b, 0);
       const bd = Object.entries(s.breakdown)
         .map(([k, v]) => `${k}=${v}`)
         .join(", ");
-      lines.push(`  ${dot(s.signal)} ${val}: ${bd}`);
+      if (n < minN) {
+        lines.push(`  ⚪ ${val} (n=${n}): ${bd} — 표본 부족, 판단 보류`);
+      } else {
+        lines.push(`  ${dot(s.signal)} ${val} (n=${n}): ${bd}`);
+      }
     }
   }
   if (result.missing?.length) {
@@ -87,6 +104,7 @@ export async function main(): Promise<void> {
       seed: { type: "string" },
       source: { type: "string", default: "sample" },
       mock: { type: "boolean", default: false },
+      concurrency: { type: "string", default: "4" },
     },
   });
   if (!values.question) {
@@ -105,17 +123,36 @@ export async function main(): Promise<void> {
   const choices = values.choices?.split(",").map((c) => c.trim());
   const question = { prompt: values.question, choices };
   const n = parseN(values.n ?? "50");
-  const seed = values.seed ? Number(values.seed) : undefined;
+  const seed = values.seed ? parseSeed(values.seed) : undefined;
+  const concurrency = parseN(values.concurrency ?? "4");
   const provider: LLMProvider = values.mock
     ? new MockProvider(censusAwareDemoMock(choices))
     : new ClaudeProvider();
+
+  const isLive = !values.mock;
+  const simulateOpts = {
+    concurrency: isLive ? concurrency : 1, // mock은 순차(결정성·기존 데모 출력 보존)
+    onProgress: isLive
+      ? (done: number, total: number) => {
+          process.stderr.write(`\r응답 수집 중 ${done}/${total}`);
+          if (done === total) process.stderr.write("\n");
+        }
+      : undefined,
+  };
 
   let result: StudyResult;
   if (source === "census") {
     const population = new CensusPopulation(
       snapshotJson as unknown as Snapshot,
     );
-    result = await runCensusStudy({ population, provider, question, n, seed });
+    result = await runCensusStudy({
+      population,
+      provider,
+      question,
+      n,
+      seed,
+      simulate: simulateOpts,
+    });
   } else {
     result = await runStudy({
       source: new SampleSource(),
@@ -123,9 +160,16 @@ export async function main(): Promise<void> {
       question,
       n,
       seed,
+      simulate: simulateOpts,
     });
   }
   console.log(formatResult(result));
+  if (provider instanceof ClaudeProvider && provider.usage.calls > 0) {
+    const u = provider.usage;
+    console.error(
+      `\n토큰 사용: 입력 ${u.inputTokens.toLocaleString()} · 출력 ${u.outputTokens.toLocaleString()} (${u.calls}회 호출) — 단가는 콘솔 요금표 확인`,
+    );
+  }
 }
 
 if (

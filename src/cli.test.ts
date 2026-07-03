@@ -1,5 +1,10 @@
-import { describe, expect, test } from "vitest";
-import { censusAwareDemoMock, formatResult, parseN } from "../cli/main.js";
+import { describe, expect, it, test } from "vitest";
+import {
+  censusAwareDemoMock,
+  formatResult,
+  parseN,
+  parseSeed,
+} from "../cli/main.js";
 import type { Persona, StudyResult } from "./types.js";
 
 const result: StudyResult = {
@@ -77,5 +82,45 @@ describe("censusAwareDemoMock", () => {
     const fn = censusAwareDemoMock(["쓴다", "안쓴다"]);
     expect(fn(p({ age: "20대" }))).toBe("쓴다");
     expect(fn(p({ age: "40대" }))).toBe("안쓴다");
+  });
+});
+
+describe("parseSeed", () => {
+  it("정수를 파싱한다", () => {
+    expect(parseSeed("7")).toBe(7);
+  });
+  it("숫자가 아니면 명확히 실패한다 (NaN 조용히 통과 금지)", () => {
+    expect(() => parseSeed("abc")).toThrow(/--seed/);
+    expect(() => parseSeed("1.5")).toThrow(/--seed/);
+  });
+});
+
+describe("formatResult — 소표본 세그먼트", () => {
+  it("n<minN 세그먼트는 ⚪ + n 표기로 판단 보류 처리", () => {
+    const result = {
+      responses: [
+        {
+          persona: { id: "p1", attrs: { 연령: "20대" }, weight: 1 },
+          answer: "쓴다",
+          choice: "쓴다",
+        },
+        {
+          persona: { id: "p2", attrs: { 연령: "20대" }, weight: 1 },
+          answer: "쓴다",
+          choice: "쓴다",
+        },
+      ],
+      signal: "consensus" as const,
+      dispersion: 0,
+      bySegment: {
+        연령: {
+          "20대": { signal: "consensus" as const, breakdown: { 쓴다: 2 } },
+        },
+      },
+    };
+    const out = formatResult(result, { minN: 8 });
+    expect(out).toContain("⚪");
+    expect(out).toContain("(n=2)");
+    expect(out).toContain("판단 보류");
   });
 });
