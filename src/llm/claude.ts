@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Persona } from "../types.js";
-import type { ChoiceReply, LLMProvider } from "./provider.js";
+import type { ChoiceReply, LLMProvider, ProviderUsage } from "./provider.js";
+
+export type { ProviderUsage } from "./provider.js";
 
 // 정확한 모델 ID는 claude-api 레퍼런스로 확정 — 기본값은 비용 우선
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
@@ -35,12 +37,6 @@ interface MessagesClient {
       usage?: { input_tokens: number; output_tokens: number };
     }>;
   };
-}
-
-export interface ProviderUsage {
-  calls: number;
-  inputTokens: number;
-  outputTokens: number;
 }
 
 export class ClaudeProvider implements LLMProvider {

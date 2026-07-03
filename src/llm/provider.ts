@@ -6,6 +6,12 @@ export interface ChoiceReply {
   reason?: string;
 }
 
+export interface ProviderUsage {
+  calls: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export interface LLMProvider {
   ask(persona: Persona, prompt: string): Promise<string>;
   /**
@@ -18,4 +24,9 @@ export interface LLMProvider {
     prompt: string,
     choices: string[],
   ): Promise<ChoiceReply>;
+  /**
+   * 누적 토큰 사용량(옵셔널). 비용이 드는 provider(또는 그 래퍼)가 노출하면
+   * CLI가 구체 클래스와 무관하게 사용량을 출력한다.
+   */
+  readonly usage?: ProviderUsage;
 }

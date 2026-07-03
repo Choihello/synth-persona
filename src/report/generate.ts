@@ -75,8 +75,11 @@ export function generateFounderInsightReport(
   }
 
   const minN = options.minN ?? DEFAULT_MIN_N;
-  const { opportunity, resistance, observedButHeld, atBaseline } =
-    rankSegments(result, positiveChoice, minN);
+  const { opportunity, resistance, observedButHeld, atBaseline } = rankSegments(
+    result,
+    positiveChoice,
+    minN,
+  );
   for (const s of atBaseline) {
     caveats.push(
       `세그먼트 ${s.segmentLabel}(n=${s.sampleCount})는 긍정 비율이 전체 평균과 동률이라 기회/저항 랭킹에서 제외됨 (신호 없음, 소실 아님)`,

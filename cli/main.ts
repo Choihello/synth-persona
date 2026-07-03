@@ -172,7 +172,7 @@ export async function main(): Promise<void> {
     });
   }
   console.log(formatResult(result));
-  if (provider instanceof ClaudeProvider && provider.usage.calls > 0) {
+  if (provider.usage && provider.usage.calls > 0) {
     const u = provider.usage;
     console.error(
       `\n토큰 사용: 입력 ${u.inputTokens.toLocaleString()} · 출력 ${u.outputTokens.toLocaleString()} (${u.calls}회 호출) — 단가는 콘솔 요금표 확인`,

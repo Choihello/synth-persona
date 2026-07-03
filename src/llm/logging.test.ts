@@ -27,6 +27,34 @@ describe("LoggingProvider", () => {
     expect(e.error).toBeUndefined();
   });
 
+  test("inner가 askChoice를 구현하면 포워딩하고 구조화 응답을 로그에 남긴다", async () => {
+    const inner = {
+      async ask() {
+        return "쓴다";
+      },
+      async askChoice() {
+        return { choice: "쓴다", reason: "필요해서" };
+      },
+      usage: { calls: 1, inputTokens: 10, outputTokens: 2 },
+    };
+    const lp = new LoggingProvider(inner, { runId: "run-1", model: "mock" });
+    expect(lp.askChoice).toBeDefined();
+    const reply = await lp.askChoice?.(persona, "쓸 의향?", ["쓴다", "안쓴다"]);
+    expect(reply).toEqual({ choice: "쓴다", reason: "필요해서" });
+    expect(lp.logs).toHaveLength(1);
+    expect(lp.logs[0].rawResponse).toContain("쓴다");
+    // usage는 inner에 위임 — 래핑해도 토큰 집계가 사라지지 않는다
+    expect(lp.usage).toEqual({ calls: 1, inputTokens: 10, outputTokens: 2 });
+  });
+
+  test("inner에 askChoice가 없으면 래퍼도 노출하지 않는다 (simulate 폴백 판정 보존)", () => {
+    const lp = new LoggingProvider(new MockProvider(() => "쓴다"), {
+      runId: "run-1",
+      model: "mock",
+    });
+    expect(lp.askChoice).toBeUndefined();
+  });
+
   test("같은 prompt는 같은 hash, 다른 prompt는 다른 hash", async () => {
     const lp = new LoggingProvider(new MockProvider(() => "x"), {
       runId: "r",
