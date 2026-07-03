@@ -96,7 +96,7 @@ npm install
 npm run build
 ```
 
-### 키 없이 바로 돌려보는 3가지 (전부 결정적·재현 가능)
+### 키 없이 바로 돌려보는 4가지 (전부 결정적·재현 가능)
 
 ```bash
 # 1) 번들 샘플 분포 + mock — 빠른 감 잡기
@@ -108,6 +108,9 @@ node dist/cli/main.js --question "월 9900원에 쓸 의향?" --choices "쓴다,
 
 # 3) 합성 인구 신뢰성 카드 — 1층 구성 신뢰도 + 2층 속성 provenance (자기검증)
 npm run reliability:demo
+
+# 4) 창업자 인사이트 리포트 — 진단(🔴/🟢)을 다음 행동(인터뷰·설문·랜딩 초안)으로 번역
+npm run report:demo
 ```
 
 키 없이도 `npm install && npm test` 가 항상 초록불이다 (테스트·CI는 mock/VCR만 사용). 위 mock 출력의 숫자는 **synthetic panel response**(가상 패널 응답)이지 실제 구매율·시장 예측이 아니다.
@@ -221,9 +224,10 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **합성 인구 fidelity 리포트 (Plan 3B)** — 합성 집단을 원본 대비 가중 재집계(MAE/TVD/smoothedKL)해 "1층 신뢰"를 숫자로. matched-core vs conditioned 분리, `npm run fidelity:demo` (실 스냅샷 core/conditional 전부 MAE≈0)
 - [x] **신뢰성 오버레이 (묶음 A)** — `StudyResult`에 4층 신뢰성 카드(1층 구성·2층 속성 provenance·3층 응답[placeholder]·4층 부정형 가드레일) 결합. provenance worst-wins 보수 집계, 숫자는 synthetic panel response로 라벨. `npm run reliability:demo` (키 불필요)
 - [x] **key-free census 파이프라인 (B0)** — `runCensusStudy`/`censusShareRunner` 공개 헬퍼 + CLI `--source census`로 번들 통계청 합성 인구를 키 없이 실행. probes/robustness를 provider 추상화 위에 배선(현재 mock로 검증)
+- [x] **창업자 인사이트 리포트 (Plan 4, heuristic v1)** — 진단을 창업자 행동으로 번역: 기회/저항 세그먼트 랭킹(+판단 보류) · 4층 신뢰도 카드 · heuristic 처방(인터뷰 대상/질문·설문·랜딩·7일 플랜, 전부 "AI 생성 초안" 라벨) · markdown 렌더 (`npm run report:demo`, 키 불필요). LLM 생성 v2는 issue #4.
 - [ ] **2층 응답 실측 (묶음 B)** — `--source census`에 `ClaudeProvider`를 붙여 실제 응답 추론. `ANTHROPIC_API_KEY` 필요 ([roadmap](docs/roadmap-bundle-B.md))
 - [ ] **3층 응답 신뢰도 실측 (묶음 B)** — probes(자기일관성·예스맨·평균회귀)·robustness 실측으로 `responseConsistency` placeholder 교체. 키 필요
-- [ ] **진단→처방: 다음 행동 생성물 (묶음 B)** — 끌릴/거부 이유·병목·인터뷰 질문·설문 초안·랜딩 메시지·최불확실 가정 (2층 LLM 생성). 키 필요
+- [ ] **진단→처방: 다음 행동 생성물 (묶음 B)** — 끌릴/거부 이유·병목·인터뷰 질문·설문 초안·랜딩 메시지·최불확실 가정 (2층 LLM 생성). 키 필요 (heuristic v1은 완료 — 남은 것은 2층 LLM 생성)
 - [ ] 웹 UI
 
 ## 라이선스
