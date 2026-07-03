@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import snapshotJson from "../data/census/kr-2024.json" with { type: "json" };
 import { SampleSource } from "../src/data/sample-source.js";
+import { formatDistribution, signalDot } from "../src/format.js";
 import { ClaudeProvider } from "../src/llm/claude.js";
 import { MockProvider } from "../src/llm/mock.js";
 import type { LLMProvider } from "../src/llm/provider.js";
@@ -55,7 +56,7 @@ export function formatResult(
   opts?: { minN?: number },
 ): string {
   const minN = opts?.minN ?? DEFAULT_MIN_N;
-  const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
+  const dot = signalDot;
   const lines: string[] = [];
   lines.push(
     "⚠️ synthetic panel response — 실제 시장 반응 아님 · 사람 대상 실측 전 가설 탐색용",
@@ -70,19 +71,13 @@ export function formatResult(
       const k = r.choice ?? r.answer;
       total[k] = (total[k] ?? 0) + 1;
     }
-    lines.push(
-      `응답 분포: ${Object.entries(total)
-        .map(([k, v]) => `${k}=${v}`)
-        .join(", ")}`,
-    );
+    lines.push(`응답 분포: ${formatDistribution(total)}`);
   }
   for (const [dim, segs] of Object.entries(result.bySegment)) {
     lines.push(`\n[${dim}별]`);
     for (const [val, s] of Object.entries(segs)) {
       const n = Object.values(s.breakdown).reduce((a, b) => a + b, 0);
-      const bd = Object.entries(s.breakdown)
-        .map(([k, v]) => `${k}=${v}`)
-        .join(", ");
+      const bd = formatDistribution(s.breakdown);
       if (n < minN) {
         lines.push(`  ⚪ ${val} (n=${n}): ${bd} — 표본 부족, 판단 보류`);
       } else {

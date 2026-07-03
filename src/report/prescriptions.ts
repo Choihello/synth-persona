@@ -132,27 +132,28 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
     };
   }
   interviews(ctx: PrescriptionContext): InterviewTarget[] {
-    const targets: InterviewTarget[] = [];
-    for (const s of ctx.opportunitySegments.slice(0, 2)) {
-      targets.push({
-        targetLabel: s.segmentLabel,
+    const groups = [
+      {
+        segments: ctx.opportunitySegments,
         whyInterview: "긍정 신호가 전체 평균보다 강함 — 끌리는 실제 이유 확인",
         whatToValidate: `"${ctx.positiveChoice}" 반응의 실제 동기와 사용/지불 맥락`,
-        suggestedRecruitingScreener: `${s.segmentDefinition} 조건으로 스크리닝`,
-        sampleSizeRecommendation: "5~8명 (질적 포화 최소선)",
-        ...INF,
-      });
-    }
-    for (const s of ctx.resistanceSegments.slice(0, 2)) {
-      targets.push({
-        targetLabel: s.segmentLabel,
+      },
+      {
+        segments: ctx.resistanceSegments,
         whyInterview: "저항이 전체 평균보다 강함 — 거부 이유·병목 확인",
         whatToValidate: "거부의 실제 이유(가격·신뢰·습관·대체재 중 무엇인지)",
+      },
+    ];
+    const targets: InterviewTarget[] = groups.flatMap((g) =>
+      g.segments.slice(0, 2).map((s) => ({
+        targetLabel: s.segmentLabel,
+        whyInterview: g.whyInterview,
+        whatToValidate: g.whatToValidate,
         suggestedRecruitingScreener: `${s.segmentDefinition} 조건으로 스크리닝`,
         sampleSizeRecommendation: "5~8명 (질적 포화 최소선)",
         ...INF,
-      });
-    }
+      })),
+    );
     if (targets.length < 3) {
       targets.push({
         targetLabel: "표본 최다 세그먼트 (탐색 보강)",

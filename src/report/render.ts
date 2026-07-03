@@ -1,3 +1,4 @@
+import { formatDistribution, pct as pctBase, signalDot } from "../format.js";
 import type {
   ConfidenceLayer,
   FounderInsightReport,
@@ -9,12 +10,10 @@ export const HELD_CAP = 10;
 export const AI_DRAFT_BANNER =
   "> ⚠️ **AI 생성 초안 · 검토 필요** — 아래 항목은 heuristic으로 생성된 추정 초안입니다. 그대로 쓰지 말고 반드시 검토·수정하세요.";
 
-const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
+const pct = (x: number) => pctBase(x, 1); // 리포트는 소수 1자리
 
 function segmentLines(s: SegmentInsight): string[] {
-  const dist = Object.entries(s.responseDistribution)
-    .map(([k, v]) => `${k}=${v}`)
-    .join(", ");
+  const dist = formatDistribution(s.responseDistribution);
   const lines = [
     `### ${s.segmentLabel}  (n=${s.sampleCount} · 긍정 ${pct(s.positiveRatio)} · 신뢰도 ${s.confidence})`,
     `- 분포: ${dist} · 인구 가중 비율 ≈ ${pct(s.sampleWeightShare)}`,
@@ -49,13 +48,11 @@ export function renderFounderInsightReport(
   );
   // ③ 전체 신호
   const o = report.overallSignal;
-  const dist = Object.entries(o.distribution)
-    .map(([k, v]) => `${k}=${v}`)
-    .join(", ");
+  const dist = formatDistribution(o.distribution);
   md.push(
     "## 전체 신호",
     "",
-    `- ${o.signal === "split" ? "🔴 split(분열)" : "🟢 consensus(합의)"} · 응답 분포: ${dist}`,
+    `- ${signalDot(o.signal)} ${o.signal === "split" ? "split(분열)" : "consensus(합의)"} · 응답 분포: ${dist}`,
     `- n=${o.n}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
     `- ${o.label}`,
     "",
