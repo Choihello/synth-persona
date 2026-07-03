@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import { MockProvider } from "../llm/mock.js";
 import type { Persona } from "../types.js";
 import { buildPrompt, matchChoice, simulate } from "./simulate.js";
@@ -123,6 +123,59 @@ describe("matchChoice 자연어/다지선다 robustness", () => {
     // 어미가 달라지면(있다 vs 있습니다) 부분문자열로 안 잡힘 → missing으로 집계됨
     expect(matchChoice("쓸 의향이 있습니다", two)).toBeUndefined();
     expect(matchChoice("잘 모르겠어요", three)).toBeUndefined();
+  });
+});
+
+describe("simulate — askChoice 구조화 경로", () => {
+  const question = { prompt: "q?", choices: ["쓴다", "안쓴다"] };
+  const ps = personas(2);
+
+  it("askChoice가 있으면 choice를 직접 쓰고 reason이 answer가 된다", async () => {
+    const provider = {
+      async ask() {
+        return "unused";
+      },
+      async askChoice() {
+        // reason에 다른 선택지 부분문자열("쓴다")이 있어도 오염되지 않아야 함
+        return { choice: "안쓴다", reason: "지금도 쓴다고 하기엔 비싸서" };
+      },
+    };
+    const { responses } = await simulate(ps, question, provider);
+    expect(responses[0].choice).toBe("안쓴다");
+    expect(responses[0].answer).toBe("지금도 쓴다고 하기엔 비싸서");
+  });
+
+  it("askChoice가 choices 밖의 값을 반환하면 missing 처리", async () => {
+    const provider = {
+      async ask() {
+        return "unused";
+      },
+      async askChoice() {
+        return { choice: "몰라요" };
+      },
+    };
+    const { responses, missing } = await simulate(ps, question, provider, {
+      retries: 0,
+    });
+    expect(responses).toEqual([]);
+    expect(missing).toHaveLength(2);
+    expect(missing[0].reason).toContain("choices에 없습니다");
+  });
+
+  it("자유응답 질문(choices 없음)에서는 askChoice를 쓰지 않는다", async () => {
+    let choiceCalls = 0;
+    const provider = {
+      async ask() {
+        return "자유 응답";
+      },
+      async askChoice() {
+        choiceCalls++;
+        return { choice: "X" };
+      },
+    };
+    const { responses } = await simulate(ps, { prompt: "q?" }, provider);
+    expect(choiceCalls).toBe(0);
+    expect(responses[0].answer).toBe("자유 응답");
   });
 });
 

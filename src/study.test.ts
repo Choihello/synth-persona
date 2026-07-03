@@ -35,8 +35,6 @@ describe("runStudy (end-to-end, mock)", () => {
     );
   });
 
-  // simulate() 기본 재시도(1회)+백오프(500ms)로 실패 10건 직렬 처리 시
-  // 기본 vitest 타임아웃(5s)에 근접하므로 여유를 둔다.
   test("모든 응답이 실패하면 runStudy가 throw (false consensus 방지)", async () => {
     const provider = new MockProvider(() => {
       throw new Error("rate limit");
@@ -48,9 +46,10 @@ describe("runStudy (end-to-end, mock)", () => {
         question: { prompt: "q", choices: ["A안", "B안"] },
         n: 10,
         seed: 1,
+        simulate: { backoffMs: 0 },
       }),
     ).rejects.toThrow(/응답/);
-  }, 15000);
+  });
 });
 
 describe("runCensusStudy (key-free, census 합성인구)", () => {

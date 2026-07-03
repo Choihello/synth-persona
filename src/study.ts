@@ -7,7 +7,11 @@ import {
   type PersonaSource,
   sampleForSimulation,
 } from "./population/source.js";
-import { type Question, simulate } from "./simulate/simulate.js";
+import {
+  type Question,
+  type SimulateOpts,
+  simulate,
+} from "./simulate/simulate.js";
 import type { StudyResult } from "./types.js";
 import type { ShareRunner } from "./verify/robustness.js";
 
@@ -18,6 +22,7 @@ export interface StudyConfig {
   n: number;
   seed?: number;
   splitThreshold?: number;
+  simulate?: SimulateOpts;
 }
 
 export async function runStudy(config: StudyConfig): Promise<StudyResult> {
@@ -28,6 +33,7 @@ export async function runStudy(config: StudyConfig): Promise<StudyResult> {
     personas,
     config.question,
     config.provider,
+    config.simulate,
   );
   return aggregate(responses, {
     splitThreshold: config.splitThreshold,
@@ -42,6 +48,7 @@ export interface CensusStudyConfig {
   n: number;
   seed?: number;
   splitThreshold?: number;
+  simulate?: SimulateOpts;
 }
 
 /**
@@ -58,6 +65,7 @@ export async function runCensusStudy(
     sample,
     config.question,
     config.provider,
+    config.simulate,
   );
   return aggregate(responses, {
     splitThreshold: config.splitThreshold,

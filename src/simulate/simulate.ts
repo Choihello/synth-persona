@@ -90,15 +90,38 @@ export async function simulate(
       if (i >= personas.length) return;
       const persona = personas[i];
       try {
-        const answer = await withRetry(
-          () => provider.ask(persona, prompt),
-          retries,
-          backoffMs,
-        );
-        const choice = question.choices
-          ? matchChoice(answer, question.choices)
-          : undefined;
-        slots[i] = { ok: true, res: { persona, answer, choice } };
+        if (question.choices && provider.askChoice) {
+          const choices = question.choices;
+          const askChoice = provider.askChoice;
+          const reply = await withRetry(
+            () => askChoice(persona, prompt, choices),
+            retries,
+            backoffMs,
+          );
+          if (!choices.includes(reply.choice)) {
+            throw new Error(
+              `구조화 응답의 choice "${reply.choice}"가 choices에 없습니다: [${choices.join(", ")}]`,
+            );
+          }
+          slots[i] = {
+            ok: true,
+            res: {
+              persona,
+              answer: reply.reason ?? reply.choice,
+              choice: reply.choice,
+            },
+          };
+        } else {
+          const answer = await withRetry(
+            () => provider.ask(persona, prompt),
+            retries,
+            backoffMs,
+          );
+          const choice = question.choices
+            ? matchChoice(answer, question.choices)
+            : undefined;
+          slots[i] = { ok: true, res: { persona, answer, choice } };
+        }
       } catch (e) {
         slots[i] = {
           ok: false,
