@@ -22,6 +22,7 @@ export type { KosisRow, KosisOpts, KosisAxis } from "./data/kosis-source.js";
 export type { LLMProvider, ChoiceReply } from "./llm/provider.js";
 export { MockProvider } from "./llm/mock.js";
 export { ClaudeProvider, personaSystemPrompt } from "./llm/claude.js";
+export type { ProviderUsage } from "./llm/claude.js";
 export { RecordedProvider } from "./llm/recorded.js";
 export { LoggingProvider, type LlmCallLog } from "./llm/logging.js";
 export {
