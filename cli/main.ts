@@ -6,25 +6,30 @@ import { MockProvider } from "../src/llm/mock.js";
 import type { LLMProvider } from "../src/llm/provider.js";
 import type { Snapshot } from "../src/population/schema.js";
 import { CensusPopulation } from "../src/population/source.js";
+import { DEFAULT_MIN_N } from "../src/report/generate.js";
 import { runCensusStudy, runStudy } from "../src/study.js";
 import type { Persona, StudyResult } from "../src/types.js";
 
-export function parseN(raw: string): number {
+export function parseIntArg(
+  raw: string,
+  flag: string,
+  opts?: { min?: number },
+): number {
   const n = Number(raw);
-  if (!Number.isInteger(n) || n <= 0) {
-    throw new Error(
-      `--n 은 1 이상의 정수여야 합니다 (입력: "${raw}"). 예: --n 50`,
-    );
+  const min = opts?.min;
+  if (!Number.isFinite(n) || !Number.isInteger(n) || (min != null && n < min)) {
+    const bound = min != null ? `${min} 이상의 ` : "";
+    throw new Error(`${flag} 은(는) ${bound}정수여야 합니다 (입력: "${raw}")`);
   }
   return n;
 }
 
+export function parseN(raw: string): number {
+  return parseIntArg(raw, "--n", { min: 1 });
+}
+
 export function parseSeed(raw: string): number {
-  const s = Number(raw);
-  if (!Number.isFinite(s) || !Number.isInteger(s)) {
-    throw new Error(`--seed 는 정수여야 합니다 (입력: "${raw}"). 예: --seed 7`);
-  }
-  return s;
+  return parseIntArg(raw, "--seed");
 }
 
 /**
@@ -49,7 +54,7 @@ export function formatResult(
   result: StudyResult,
   opts?: { minN?: number },
 ): string {
-  const minN = opts?.minN ?? 8;
+  const minN = opts?.minN ?? DEFAULT_MIN_N;
   const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
   const lines: string[] = [];
   lines.push(
@@ -124,7 +129,9 @@ export async function main(): Promise<void> {
   const question = { prompt: values.question, choices };
   const n = parseN(values.n ?? "50");
   const seed = values.seed ? parseSeed(values.seed) : undefined;
-  const concurrency = parseN(values.concurrency ?? "4");
+  const concurrency = parseIntArg(values.concurrency ?? "4", "--concurrency", {
+    min: 1,
+  });
   const provider: LLMProvider = values.mock
     ? new MockProvider(censusAwareDemoMock(choices))
     : new ClaudeProvider();

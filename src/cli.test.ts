@@ -2,6 +2,7 @@ import { describe, expect, it, test } from "vitest";
 import {
   censusAwareDemoMock,
   formatResult,
+  parseIntArg,
   parseN,
   parseSeed,
 } from "../cli/main.js";
@@ -92,6 +93,20 @@ describe("parseSeed", () => {
   it("숫자가 아니면 명확히 실패한다 (NaN 조용히 통과 금지)", () => {
     expect(() => parseSeed("abc")).toThrow(/--seed/);
     expect(() => parseSeed("1.5")).toThrow(/--seed/);
+  });
+});
+
+describe("parseIntArg", () => {
+  it("에러 메시지가 전달받은 플래그 이름을 지목한다 (--n 아님)", () => {
+    expect(() => parseIntArg("0", "--concurrency", { min: 1 })).toThrow(
+      /--concurrency/,
+    );
+    expect(() => parseIntArg("2.5", "--concurrency", { min: 1 })).toThrow(
+      /--concurrency/,
+    );
+  });
+  it("min 미지정 시 음수 정수도 허용한다 (seed 용도)", () => {
+    expect(parseIntArg("-3", "--seed")).toBe(-3);
   });
 });
 
