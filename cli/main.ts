@@ -132,6 +132,7 @@ export async function main(): Promise<void> {
   const isLive = !values.mock;
   const simulateOpts = {
     concurrency: isLive ? concurrency : 1, // mock은 순차(결정성·기존 데모 출력 보존)
+    retries: isLive ? 1 : 0, // 재시도는 실측 경로 전용 — 라이브러리 기본값(0)은 재호출 없음
     onProgress: isLive
       ? (done: number, total: number) => {
           process.stderr.write(`\r응답 수집 중 ${done}/${total}`);

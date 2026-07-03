@@ -37,7 +37,7 @@ export function matchChoice(
 export interface SimulateOpts {
   /** 동시 LLM 호출 수. 기본 1 = 기존 순차 동작과 동일(결정성 보존). */
   concurrency?: number;
-  /** simulate 레벨 재시도 횟수. SDK 자체 재시도(429/5xx, 2회) 위의 보조 레이어. 기본 1. */
+  /** simulate 레벨 재시도 횟수. SDK 자체 재시도(429/5xx, 2회) 위의 보조 레이어. 기본 0 = 기존 순차 동작과 동일(재호출 없음). */
   retries?: number;
   /** 지수 백오프 기본 간격(ms). 테스트에서 0으로 주입. 기본 500. */
   backoffMs?: number;
@@ -74,7 +74,7 @@ export async function simulate(
 }> {
   const prompt = buildPrompt(question);
   const concurrency = Math.max(1, opts?.concurrency ?? 1);
-  const retries = opts?.retries ?? 1;
+  const retries = opts?.retries ?? 0;
   const backoffMs = opts?.backoffMs ?? 500;
 
   type Slot =

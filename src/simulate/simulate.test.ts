@@ -224,6 +224,24 @@ describe("simulate — 동시성/재시도", () => {
     );
   });
 
+  test("opts 없는 기본 경로는 실패해도 재시도 없이 페르소나당 1회만 호출한다", async () => {
+    let calls = 0;
+    const provider = {
+      async ask() {
+        calls++;
+        throw new Error("boom");
+      },
+    };
+    const { responses, missing } = await simulate(
+      personas(2),
+      question,
+      provider,
+    );
+    expect(calls).toBe(2); // 기존 순차 루프와 동일 — 기본값에서 재호출 없음
+    expect(responses).toEqual([]);
+    expect(missing).toHaveLength(2);
+  });
+
   test("일시 오류는 재시도로 회복한다 (backoffMs=0)", async () => {
     const failedOnce = new Set<string>();
     let calls = 0;
