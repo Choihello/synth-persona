@@ -232,13 +232,97 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
     }
     return qs.slice(0, 12);
   }
-  survey(_ctx: PrescriptionContext): SurveyQuestion[] {
-    throw new Error("not implemented — Task 3");
+  survey(ctx: PrescriptionContext): SurveyQuestion[] {
+    const out: SurveyQuestion[] = [
+      { text: "연령대를 선택해 주세요.", kind: "segmentation", ...INF },
+      {
+        text: "이 질문의 상황을 한 달에 몇 번쯤 겪으시나요?",
+        kind: "problem-frequency",
+        ...INF,
+      },
+      {
+        text: "지금은 주로 어떻게 해결하시나요? (복수 선택)",
+        kind: "alternative",
+        ...INF,
+      },
+      {
+        text: `이 컨셉을 보고 어느 쪽에 가깝나요? (${ctx.options.choices.join(" / ")})`,
+        kind: "concept-reaction",
+        ...INF,
+      },
+      {
+        text: "그렇게 답한 가장 큰 이유를 자유롭게 적어 주세요.",
+        kind: "reason",
+        caution:
+          "synthetic panel에는 없는 free-text 이유 — 실측에서 반드시 수집",
+        ...INF,
+      },
+    ];
+    if (ctx.hasPriceSignal) {
+      out.push({
+        text: "제시된 가격은 어떻게 느껴지나요? (너무 싸다/적당하다/비싸지만 살 만하다/너무 비싸다)",
+        kind: "price",
+        optional: true,
+        caution: ctx.priceAxisMissing
+          ? "소득 축 없는 상태의 가격 반응은 참고용 — 단정 금지"
+          : undefined,
+        ...INF,
+      });
+    }
+    return out;
   }
-  landingTests(_ctx: PrescriptionContext): MessageTest[] {
-    throw new Error("not implemented — Task 3");
+
+  landingTests(ctx: PrescriptionContext): MessageTest[] {
+    const name = ctx.options.concept?.productName ?? "이 컨셉";
+    const tops = ctx.opportunitySegments.slice(0, 2);
+    if (tops.length === 0) {
+      return [
+        {
+          headline: `${name} — 핵심 효용 한 줄 (초안)`,
+          subcopy: "대상 세그먼트 미확정 — 광범위 카피로 세그먼트별 반응 수집",
+          targetSegment: "전체 (세그먼트 미확정)",
+          hypothesis: "특정 세그먼트에서 전환이 상대적으로 높게 나타날 것",
+          successMetric: "방문→이메일 등록 전환율 (세그먼트별 비교)",
+          caution: "AI 생성 초안 — 실제 카피는 검토·수정 필요",
+          ...INF,
+        },
+      ];
+    }
+    return tops.map((s) => ({
+      headline: `${name}, ${s.segmentLabel.split("=")[1]}을(를) 위한 핵심 효용 한 줄 (초안)`,
+      subcopy: `"${ctx.positiveChoice}" 반응이 강했던 세그먼트용 카피 초안 — 실제 효용 문구로 교체할 것`,
+      targetSegment: s.segmentLabel,
+      hypothesis:
+        "이 세그먼트 유입에서 등록 전환율이 다른 세그먼트보다 높을 것",
+      successMetric: "방문→이메일 등록 전환율 (세그먼트 간 상대 비교)",
+      caution: "AI 생성 초안 — 카피·타겟팅 모두 검토 필요",
+      ...INF,
+    }));
   }
-  validationPlan(_ctx: PrescriptionContext): ValidationAction[] {
-    throw new Error("not implemented — Task 3");
+
+  validationPlan(ctx: PrescriptionContext): ValidationAction[] {
+    const top = ctx.opportunitySegments[0]?.segmentLabel;
+    return [
+      {
+        day: "Day 1",
+        action: `인터뷰 대상 확정(${top ?? "표본 최다 세그먼트"}) + 리크루팅 스크리너 작성`,
+      },
+      {
+        day: "Day 2~3",
+        action: "5~8명 리크루팅 (지인 제외, 스크리너 통과자만)",
+      },
+      {
+        day: "Day 4~5",
+        action: "인터뷰 실행 — 과거 행동 중심, 가정형 질문 금지",
+      },
+      {
+        day: "Day 6",
+        action: "응답 태깅 — 끌림/거부 이유와 병목(가격·신뢰·습관·대체재) 분류",
+      },
+      {
+        day: "Day 7",
+        action: "다음 단계 결정 — 설문/랜딩 테스트 진행 또는 컨셉 수정(피벗)",
+      },
+    ];
   }
 }

@@ -145,3 +145,31 @@ describe("interviewQuestions", () => {
     expect(priceQ?.caution).toContain("소득");
   });
 });
+
+describe("survey / landingTests / validationPlan", () => {
+  const gen = new HeuristicPrescriptionGenerator();
+  it("설문에 free-text reason 문항이 있고, 가격 축 결핍 시 price 문항은 optional+caution", () => {
+    const out = gen.survey(baseCtx({ priceAxisMissing: true }));
+    expect(out.some((q) => q.kind === "reason")).toBe(true);
+    const price = out.find((q) => q.kind === "price");
+    expect(price?.optional).toBe(true);
+    expect(price?.caution).toContain("소득");
+  });
+  it("랜딩 테스트는 기회 세그먼트를 타겟팅하고 caution을 가진다", () => {
+    const tests = gen.landingTests(baseCtx());
+    expect(tests.length).toBeGreaterThanOrEqual(1);
+    expect(tests[0].targetSegment).toBe("연령=25~29세");
+    expect(tests[0].caution).toContain("검토");
+  });
+  it("기회 세그먼트가 없어도 랜딩 테스트 폴백 1개", () => {
+    const tests = gen.landingTests(baseCtx({ opportunitySegments: [] }));
+    expect(tests.length).toBe(1);
+    expect(tests[0].targetSegment).toContain("미확정");
+  });
+  it("검증 플랜은 Day 1~7을 덮는다", () => {
+    const plan = gen.validationPlan(baseCtx());
+    expect(plan.length).toBeGreaterThanOrEqual(5);
+    expect(plan[0].day).toContain("Day 1");
+    expect(plan[plan.length - 1].day).toContain("Day 7");
+  });
+});
