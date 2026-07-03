@@ -868,7 +868,7 @@ git commit -m "docs: B1 live inference evaluation notes"
 
 ## 완료 기준
 
-- [ ] simulate: 동시성·재시도·순서 보존·진행 콜백 (기본값에서 기존 동작 100% 보존) ⚠️ retries 기본값 1 — 기본 경로 동작 변화, 리뷰 C1 참조
+- [x] simulate: 동시성·재시도·순서 보존·진행 콜백 (기본값에서 기존 동작 100% 보존 — retries 기본 0으로 수정, 2026-07-04)
 - [x] ClaudeProvider: tool use 강제 선택 + reason 보존 + usage 누적 — matchChoice는 폴백으로만
 - [x] CLI: seed 검증 · `--concurrency` · 진행 표시 · 세그먼트 (n=X)/⚪ · 토큰 요약
 - [ ] B1 노트 작성 + go/no-go 판정
