@@ -121,6 +121,12 @@ describe("interviews", () => {
     expect(targets.length).toBeGreaterThanOrEqual(1);
     expect(targets[0].whyInterview).toContain("랭킹");
   });
+  it("기회 1 + 저항 1이면 폴백을 더해 3개를 채운다", () => {
+    const ctx = baseCtx(); // 기본 픽스처: opportunity 1개 + resistance 1개
+    const targets = gen.interviews(ctx);
+    expect(targets.length).toBe(3);
+    expect(targets[2].targetLabel).toContain("탐색 보강");
+  });
 });
 
 describe("interviewQuestions", () => {

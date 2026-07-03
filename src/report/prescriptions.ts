@@ -147,11 +147,11 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
         ...INF,
       });
     }
-    if (targets.length === 0) {
+    if (targets.length < 3) {
       targets.push({
-        targetLabel: "표본 최다 세그먼트 (판단 보류 상태)",
+        targetLabel: "표본 최다 세그먼트 (탐색 보강)",
         whyInterview:
-          "minN을 넘는 기회/저항 세그먼트가 없어 랭킹이 비어 있음 — 표본이 큰 집단부터 이유 수집",
+          "minN을 넘는 기회/저항 세그먼트가 3개 미만이라 랭킹이 부족함 — 표본이 큰 집단부터 이유 수집",
         whatToValidate: "반응 방향과 그 이유 (탐색적)",
         suggestedRecruitingScreener: "핵심 인구 축(연령/가구) 기준 광범위 모집",
         sampleSizeRecommendation: "5~8명 (질적 포화 최소선)",
