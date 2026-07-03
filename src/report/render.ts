@@ -113,7 +113,52 @@ export function renderFounderInsightReport(
     ...layerLines("4층 · 시장 판단", report.confidenceCard.marketJudgment),
     "",
   );
-  // ⑨~⑬ 처방 섹션은 Task 6에서 추가
-  md.push(`> ⚠️ ${report.disclaimer}`); // ⑬ 하단 라벨 (처방 섹션은 이 앞에 삽입됨)
+  // ⑨ 추천 인터뷰
+  md.push("## 추천 인터뷰 대상", "", AI_DRAFT_BANNER, "");
+  for (const t of report.recommendedInterviews) {
+    md.push(
+      `### ${t.targetLabel}`,
+      `- 왜: ${t.whyInterview}`,
+      `- 검증할 것: ${t.whatToValidate}`,
+      `- 모집 스크리너: ${t.suggestedRecruitingScreener}`,
+      `- 권장 인원: ${t.sampleSizeRecommendation}`,
+      "",
+    );
+  }
+  // ⑩ 인터뷰 질문
+  md.push("## 인터뷰 질문 초안", "", AI_DRAFT_BANNER, "");
+  report.interviewQuestions.forEach((q, i) => {
+    md.push(
+      `${i + 1}. ${q.text} _(${q.type})_${q.caution ? ` — ⚠️ ${q.caution}` : ""}`,
+    );
+  });
+  md.push("");
+  // ⑪ 설문 초안
+  md.push("## 설문 문항 초안", "", AI_DRAFT_BANNER, "");
+  report.surveyDraft.forEach((q, i) => {
+    md.push(
+      `${i + 1}. ${q.text} _(${q.kind}${q.optional ? " · optional" : ""})_${q.caution ? ` — ⚠️ ${q.caution}` : ""}`,
+    );
+  });
+  md.push("");
+  // ⑫ 랜딩 메시지 테스트
+  md.push("## 랜딩 메시지 테스트", "", AI_DRAFT_BANNER, "");
+  for (const t of report.landingPageMessageTests) {
+    md.push(
+      `### ${t.headline}`,
+      `- 서브카피: ${t.subcopy}`,
+      `- 타겟: ${t.targetSegment}`,
+      `- 가설: ${t.hypothesis}`,
+      `- 성공 지표: ${t.successMetric}`,
+      `- ⚠️ ${t.caution}`,
+      "",
+    );
+  }
+  // ⑬ 다음 7일
+  md.push("## 다음 7일", "");
+  for (const a of report.nextValidationPlan)
+    md.push(`- **${a.day}**: ${a.action}`);
+  md.push("");
+  md.push(`> ⚠️ ${report.disclaimer}`); // 하단 라벨
   return md.join("\n");
 }

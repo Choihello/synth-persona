@@ -105,6 +105,7 @@ export {
 } from "./assess/reliability.js";
 export { renderReliabilityCard } from "./assess/reliability-report.js";
 export { generateFounderInsightReport } from "./report/generate.js";
+export { renderFounderInsightReport, HELD_CAP } from "./report/render.js";
 export type {
   FounderReportOptions,
   FounderInsightReport,

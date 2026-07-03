@@ -59,3 +59,27 @@ describe("renderFounderInsightReport — 코어 섹션", () => {
     expect(md).toContain(`외 ${15 - HELD_CAP}개 (판단 보류)`);
   });
 });
+
+describe("renderFounderInsightReport — 처방 섹션", () => {
+  const report = generateFounderInsightReport(bigResult(), {
+    question: "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?",
+    choices: ["쓴다", "안쓴다"],
+  });
+  const md = renderFounderInsightReport(report);
+
+  it("처방 섹션 헤더가 모두 존재한다", () => {
+    for (const h of [
+      "## 추천 인터뷰 대상",
+      "## 인터뷰 질문 초안",
+      "## 설문 문항 초안",
+      "## 랜딩 메시지 테스트",
+      "## 다음 7일",
+    ]) {
+      expect(md).toContain(h);
+    }
+  });
+  it("AI 생성 초안 배너가 처방 섹션들에 나타난다", () => {
+    const count = md.split("AI 생성 초안").length - 1;
+    expect(count).toBeGreaterThanOrEqual(3); // ⑥ + 인터뷰/설문/랜딩 등
+  });
+});
