@@ -1,6 +1,6 @@
 # Founder Report P4-2(처방 heuristic) + P4-3(렌더러·데모·문서) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** P4-1에서 빈 배열로 남긴 처방 필드 7종을 heuristic v1으로 채우고, 리포트를 markdown으로 렌더하는 키 없는 데모까지 완성한다.
 
@@ -31,7 +31,7 @@
 - Consumes: `src/report/types.ts`의 `DriverInsight`, `SegmentInsight`, `ConfidenceCard`, `FounderReportOptions` (P4-1에서 정의됨, 수정 금지)
 - Produces: `PrescriptionContext`, `PrescriptionGenerator`, `HeuristicPrescriptionGenerator`(drivers만), `detectThemes(question: string): Theme[]` — Task 2~4가 이 타입/클래스에 메서드를 추가·사용한다
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 ```ts
 // src/report/prescriptions.test.ts
@@ -133,12 +133,12 @@ describe("drivers", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트가 실패하는지 확인**
+- [x] **Step 2: 테스트가 실패하는지 확인**
 
 Run: `npx vitest run src/report/prescriptions.test.ts`
 Expected: FAIL — `Cannot find module './prescriptions.js'`
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 ```ts
 // src/report/prescriptions.ts
@@ -288,12 +288,12 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/report/prescriptions.test.ts`
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm test && npm run lint && npx tsc --noEmit
@@ -313,7 +313,7 @@ git commit -m "feat(report): heuristic drivers/objections + theme detection"
 - Consumes: Task 1의 `PrescriptionContext`, `detectThemes`, `INF` 상수, 테스트 헬퍼 `baseCtx`/`seg`
 - Produces: `interviews(ctx): InterviewTarget[]` (3~5개, opportunity 없으면 폴백 1개 이상), `interviewQuestions(ctx): InterviewQuestion[]` (8~12개, 과거행동형 우선)
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/report/prescriptions.test.ts 에 추가
@@ -359,12 +359,12 @@ describe("interviewQuestions", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/report/prescriptions.test.ts`
 Expected: FAIL — `not implemented — Task 2`
 
-- [ ] **Step 3: 구현 (placeholder 메서드 교체)**
+- [x] **Step 3: 구현 (placeholder 메서드 교체)**
 
 ```ts
 // HeuristicPrescriptionGenerator 내부 — interviews/interviewQuestions 교체
@@ -473,12 +473,12 @@ interviewQuestions(ctx: PrescriptionContext): InterviewQuestion[] {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/report/prescriptions.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm test && npm run lint && npx tsc --noEmit
@@ -498,7 +498,7 @@ git commit -m "feat(report): heuristic interview targets and questions"
 - Consumes: Task 1~2와 동일
 - Produces: `survey(ctx): SurveyQuestion[]`, `landingTests(ctx): MessageTest[]`, `validationPlan(ctx): ValidationAction[]` (Day 1~7)
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/report/prescriptions.test.ts 에 추가
@@ -531,12 +531,12 @@ describe("survey / landingTests / validationPlan", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/report/prescriptions.test.ts`
 Expected: FAIL — `not implemented — Task 3`
 
-- [ ] **Step 3: 구현 (placeholder 메서드 교체)**
+- [x] **Step 3: 구현 (placeholder 메서드 교체)**
 
 ```ts
 // HeuristicPrescriptionGenerator 내부 — survey/landingTests/validationPlan 교체
@@ -628,12 +628,12 @@ validationPlan(ctx: PrescriptionContext): ValidationAction[] {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/report/prescriptions.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm test && npm run lint && npx tsc --noEmit
@@ -654,7 +654,7 @@ git commit -m "feat(report): heuristic survey, landing tests, validation plan"
 - Consumes: Task 1~3의 `PrescriptionGenerator`, `HeuristicPrescriptionGenerator`, `PrescriptionContext`
 - Produces: `generateFounderInsightReport(result, options, ctx?, generator?)` — 4번째 인자 기본값 `new HeuristicPrescriptionGenerator()`. P4-3 렌더러가 채워진 리포트를 소비한다.
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/report/generate.test.ts 에 추가 (기존 헬퍼로 StudyResult를 만드는 패턴 재사용)
@@ -697,12 +697,12 @@ it("커스텀 generator를 주입할 수 있다 (issue #4 LLM v2 스왑 지점)"
 
 주의: `fixtureResult()`는 기존 `generate.test.ts`에 이미 있는 StudyResult 생성 헬퍼를 지칭한다 — 실제 이름이 다르면 그 파일의 기존 헬퍼를 그대로 사용할 것 (새로 만들지 말 것).
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/report/generate.test.ts`
 Expected: FAIL — `keyDrivers.length` 0 (빈 배열)
 
-- [ ] **Step 3: generate.ts 수정**
+- [x] **Step 3: generate.ts 수정**
 
 시그니처와 처방 결선(기존 코드 유지, 아래만 변경):
 
@@ -756,12 +756,12 @@ export {
 } from "./report/prescriptions.js";
 ```
 
-- [ ] **Step 4: 테스트 통과 + 기존 테스트 회귀 확인**
+- [x] **Step 4: 테스트 통과 + 기존 테스트 회귀 확인**
 
 Run: `npm test`
 Expected: PASS 전체 (기존 P4-1 테스트 포함 — 처방이 빈 배열이라고 단언하는 기존 테스트가 있으면 "채워진다"로 업데이트)
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run build
@@ -783,7 +783,7 @@ git commit -m "feat(report): inject prescription generator, fill founder report"
 
 **렌더 순서 (13 섹션):** ① 제목+상단 disclaimer ② 한줄요약 ③ 전체 신호 ④ 기회 세그먼트 ⑤ 저항 세그먼트(+판단 보류 cap) ⑥ 관심/거부 이유 ⑦ 위험한 가정 ⑧ 신뢰도 카드 ⑨ 추천 인터뷰 ⑩ 인터뷰 질문 ⑪ 설문 초안 ⑫ 랜딩 메시지 테스트 ⑬ 다음 7일 + 하단 라벨. 이 태스크는 ①~⑧, Task 6이 ⑨~⑬.
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 ```ts
 // src/report/render.test.ts
@@ -850,12 +850,12 @@ describe("renderFounderInsightReport — 코어 섹션", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/report/render.test.ts`
 Expected: FAIL — `Cannot find module './render.js'`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 ```ts
 // src/report/render.ts
@@ -975,12 +975,12 @@ export function renderFounderInsightReport(
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/report/render.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm test && npm run lint && npx tsc --noEmit
@@ -1001,7 +1001,7 @@ git commit -m "feat(report): markdown renderer core sections with held-cap"
 - Consumes: Task 4로 처방이 채워진 `FounderInsightReport`
 - Produces: 13 섹션 완성된 markdown. Task 7 데모가 그대로 출력.
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/report/render.test.ts 에 추가
@@ -1030,12 +1030,12 @@ describe("renderFounderInsightReport — 처방 섹션", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/report/render.test.ts`
 Expected: FAIL — "## 추천 인터뷰 대상" 없음
 
-- [ ] **Step 3: 구현 — 하단 라벨 push 직전에 삽입**
+- [x] **Step 3: 구현 — 하단 라벨 push 직전에 삽입**
 
 ```ts
   // ⑨ 추천 인터뷰
@@ -1091,12 +1091,12 @@ Expected: FAIL — "## 추천 인터뷰 대상" 없음
 export { renderFounderInsightReport, HELD_CAP } from "./report/render.js";
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/report/render.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm test && npm run lint && npx tsc --noEmit && npm run build
@@ -1118,7 +1118,7 @@ git commit -m "feat(report): renderer prescription sections with AI-draft banner
 - Consumes: `generateFounderInsightReport`, `renderFounderInsightReport`, 기존 census 파이프라인 (`loadSnapshot`/`synthesizePopulation`/`sampleForSimulation`/`simulate`/`aggregate`/`populationFidelity`) — `eval/reliability-demo.ts`와 동일 패턴
 - Produces: `runReportDemo(): Promise<string>` — markdown 리포트 문자열
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 ```ts
 // eval/report-demo.test.ts
@@ -1136,12 +1136,12 @@ describe("report-demo", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run eval/report-demo.test.ts`
 Expected: FAIL — `Cannot find module './report-demo.js'`
 
-- [ ] **Step 3: 구현 (reliability-demo 패턴)**
+- [x] **Step 3: 구현 (reliability-demo 패턴)**
 
 ```ts
 // eval/report-demo.ts
@@ -1204,7 +1204,7 @@ if (
 
 `tsup.config.ts` entry 배열에 `"eval/report-demo.ts"` 추가. `package.json` scripts에 `"report:demo": "node dist/eval/report-demo.js"` 추가.
 
-- [ ] **Step 4: 테스트 + 실제 데모 실행 확인 (실행·관찰)**
+- [x] **Step 4: 테스트 + 실제 데모 실행 확인 (실행·관찰)**
 
 ```bash
 npx vitest run eval/report-demo.test.ts   # PASS
@@ -1213,7 +1213,7 @@ npm run build && npm run report:demo      # markdown 리포트가 stdout에 출�
 
 Expected: 13 섹션 리포트 출력, 처방 섹션에 배너, 상·하단 disclaimer.
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm test && npm run lint && npx tsc --noEmit
@@ -1231,7 +1231,7 @@ git commit -m "feat(eval): founder report demo (census + mock, key-free)"
 
 **Interfaces:** 없음 (문서만)
 
-- [ ] **Step 1: README.md 빠른 시작에 4번째 항목 추가**
+- [x] **Step 1: README.md 빠른 시작에 4번째 항목 추가**
 
 "키 없이 바로 돌려보는 3가지" 절의 코드블록에 추가하고 제목을 "4가지"로 수정:
 
@@ -1240,9 +1240,9 @@ git commit -m "feat(eval): founder report demo (census + mock, key-free)"
 npm run report:demo
 ```
 
-- [ ] **Step 2: README.md 로드맵 항목 갱신**
+- [x] **Step 2: README.md 로드맵 항목 갱신**
 
-`- [ ] **진단→처방: 다음 행동 생성물 (묶음 B)**` 항목 **앞에** 새 항목 추가:
+`- [x] **진단→처방: 다음 행동 생성물 (묶음 B)**` 항목 **앞에** 새 항목 추가:
 
 ```markdown
 - [x] **창업자 인사이트 리포트 (Plan 4, heuristic v1)** — 진단을 창업자 행동으로 번역: 기회/저항 세그먼트 랭킹(+판단 보류) · 4층 신뢰도 카드 · heuristic 처방(인터뷰 대상/질문·설문·랜딩·7일 플랜, 전부 "AI 생성 초안" 라벨) · markdown 렌더 (`npm run report:demo`, 키 불필요). LLM 생성 v2는 issue #4.
@@ -1250,7 +1250,7 @@ npm run report:demo
 
 기존 "진단→처방 (묶음 B)" 항목의 설명 끝에 `(heuristic v1은 완료 — 남은 것은 2층 LLM 생성)` 을 덧붙인다.
 
-- [ ] **Step 3: docs/README-intro.md 끝에 데모 소개 절 추가**
+- [x] **Step 3: docs/README-intro.md 끝에 데모 소개 절 추가**
 
 ```markdown
 ## 창업자 리포트 데모
@@ -1258,7 +1258,7 @@ npm run report:demo
 `npm run report:demo` 는 번들 합성 인구(2024 인구총조사) + 결정적 mock으로 "0차 시장검증 리포트"를 출력한다 — 기회/저항 세그먼트 랭킹, 4층 신뢰도 카드, 그리고 인터뷰 대상·질문지·설문 초안·랜딩 메시지·7일 검증 플랜까지. 처방은 전부 heuristic 초안("AI 생성 초안 · 검토 필요" 라벨)이며, LLM 기반 생성은 후속(issue #4)이다.
 ```
 
-- [ ] **Step 4: 최종 게이트 (전 스크립트 실행·관찰)**
+- [x] **Step 4: 최종 게이트 (전 스크립트 실행·관찰)**
 
 ```bash
 npm test && npm run lint && npx tsc --noEmit && npm run build
@@ -1267,7 +1267,7 @@ npm run report:demo && npm run reliability:demo && npm run fidelity:demo
 
 Expected: 전부 그린, 데모 3종 정상 출력.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add README.md docs/README-intro.md
@@ -1278,8 +1278,8 @@ git commit -m "docs: founder report demo + roadmap update (Plan 4 complete)"
 
 ## 완료 기준
 
-- [ ] `FounderInsightReport`의 처방 필드 7종이 전부 채워짐 (heuristic, 전부 inferred 라벨)
-- [ ] `renderFounderInsightReport` 13 섹션 + AI 초안 배너 + held cap
-- [ ] `npm run report:demo` 키 없이 동작
-- [ ] `npm test`/`lint`/`tsc`/`build` 전부 그린, 코어 타입·aggregate diff 없음
-- [ ] 다음 단계: `2026-07-03-live-inference-readiness.md` 플랜 (Claude 실측 준비 + B1)
+- [x] `FounderInsightReport`의 처방 필드 7종이 전부 채워짐 (heuristic, 전부 inferred 라벨)
+- [x] `renderFounderInsightReport` 13 섹션 + AI 초안 배너 + held cap
+- [x] `npm run report:demo` 키 없이 동작
+- [x] `npm test`/`lint`/`tsc`/`build` 전부 그린, 코어 타입·aggregate diff 없음
+- [x] 다음 단계: `2026-07-03-live-inference-readiness.md` 플랜 (Claude 실측 준비 + B1)

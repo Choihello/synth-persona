@@ -1,6 +1,6 @@
 # Live Inference Readiness (실측 준비 + B1) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** `--source census`에 실제 Claude를 붙일 수 있게 simulate 동시성·재시도, 구조화 선택 응답(tool use), CLI 안전장치를 갖춘 뒤, B1 실측(n=30)으로 "신호가 유의미한가"를 냉정 평가한다.
 
@@ -31,7 +31,7 @@
 - Consumes: 기존 `LLMProvider.ask`, `matchChoice`, `buildPrompt`
 - Produces: `simulate(personas, question, provider, opts?: SimulateOpts)` — `SimulateOpts = { concurrency?; retries?; backoffMs?; onProgress? }`. 4번째 인자 생략 시 기존 시그니처/동작과 100% 호환. Task 2가 `withRetry` 헬퍼를 재사용, Task 4 CLI가 `SimulateOpts`를 전달.
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/simulate/simulate.test.ts 에 추가
@@ -134,12 +134,12 @@ describe("simulate — 동시성/재시도", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/simulate/simulate.test.ts`
 Expected: FAIL — simulate가 4번째 인자를 받지 않음 (opts 무시로 concurrency 테스트 실패)
 
-- [ ] **Step 3: 구현 — simulate.ts의 simulate 함수 교체**
+- [x] **Step 3: 구현 — simulate.ts의 simulate 함수 교체**
 
 ```ts
 // src/simulate/simulate.ts — buildPrompt/matchChoice는 그대로 두고 아래 추가/교체
@@ -238,12 +238,12 @@ export async function simulate(
 
 주의: 재시도 기본값이 1이 되면서 기존 "실패→missing" 테스트가 있다면 provider가 **항상** 실패하는지 확인 (한 번만 실패하는 mock이면 이제 회복됨). 기존 테스트가 깨지면 해당 mock을 항상-실패로 유지한 채 통과 확인.
 
-- [ ] **Step 4: 테스트 통과 + 회귀 확인**
+- [x] **Step 4: 테스트 통과 + 회귀 확인**
 
 Run: `npm test`
 Expected: 신규 5개 포함 전체 PASS (기존 simulate/study/데모 테스트 결과 불변 — 기본 concurrency=1)
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm run lint && npx tsc --noEmit
@@ -269,7 +269,7 @@ git commit -m "feat(simulate): order-preserving worker pool with retry/backoff"
   - simulate: askChoice 경로에서 `Response.choice = reply.choice`(검증됨), `Response.answer = reply.reason ?? reply.choice`
   - `StudyConfig.simulate?: SimulateOpts` / `CensusStudyConfig.simulate?: SimulateOpts` — Task 4 CLI가 사용
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/simulate/simulate.test.ts 에 추가
@@ -316,12 +316,12 @@ describe("simulate — askChoice 구조화 경로", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/simulate/simulate.test.ts`
 Expected: FAIL — askChoice가 무시되어 choice가 matchChoice 결과("쓴다" 오매칭 가능성)로 나옴
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/llm/provider.ts`:
 
@@ -413,12 +413,12 @@ export type { ChoiceReply } from "./llm/provider.js";
 export { withRetry, type SimulateOpts } from "./simulate/simulate.js";
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm test`
 Expected: 전체 PASS (Mock/Recorded/Logging provider는 askChoice 미구현 → 폴백 경로, 기존 결과 불변)
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm run lint && npx tsc --noEmit
@@ -440,7 +440,7 @@ git commit -m "feat(llm): optional askChoice structured-choice path in provider 
   - `ClaudeProvider.askChoice(persona, prompt, choices): Promise<ChoiceReply>` — tool use `strict: true` + `enum` + `tool_choice: {type:"tool"}` 로 선택지 강제
   - `ClaudeProvider.usage: { calls: number; inputTokens: number; outputTokens: number }` — 누적 사용량 (Task 4 CLI가 출력)
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/llm/claude.test.ts 에 추가 (기존 fake client 패턴 활용)
@@ -505,12 +505,12 @@ describe("ClaudeProvider.askChoice", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/llm/claude.test.ts`
 Expected: FAIL — `askChoice is not a function`
 
-- [ ] **Step 3: 구현 — claude.ts 수정**
+- [x] **Step 3: 구현 — claude.ts 수정**
 
 ```ts
 // src/llm/claude.ts — MessagesClient 확장 + askChoice/usage 추가
@@ -610,12 +610,12 @@ export class ClaudeProvider implements LLMProvider {
 
 `src/index.ts`에 `export type { ProviderUsage } from "./llm/claude.js";` 추가.
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm test`
 Expected: 전체 PASS (키 없이 — fake client만 사용)
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run build
@@ -636,7 +636,7 @@ git commit -m "feat(llm): ClaudeProvider structured askChoice via forced tool us
 - Consumes: Task 1~3의 `SimulateOpts`, `StudyConfig.simulate`, `ClaudeProvider.usage`
 - Produces: `parseSeed(raw): number` export, `formatResult(result, opts?: { minN?: number })` 시그니처 확장, CLI 플래그 `--concurrency`(기본 4, 실측 경로에만 의미)
 
-- [ ] **Step 1: 실패하는 테스트 추가**
+- [x] **Step 1: 실패하는 테스트 추가**
 
 ```ts
 // src/cli.test.ts 에 추가
@@ -673,12 +673,12 @@ describe("formatResult — 소표본 세그먼트", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/cli.test.ts`
 Expected: FAIL — `parseSeed` 미존재
 
-- [ ] **Step 3: 구현 — cli/main.ts 수정**
+- [x] **Step 3: 구현 — cli/main.ts 수정**
 
 `parseSeed` 추가 (`parseN` 아래):
 
@@ -761,7 +761,7 @@ README CLI 옵션 표에 행 추가:
 
 `--seed` 행의 설명을 "재현용 시드 (정수)"로 갱신.
 
-- [ ] **Step 4: 테스트 + 실제 CLI 실행 확인 (실행·관찰)**
+- [x] **Step 4: 테스트 + 실제 CLI 실행 확인 (실행·관찰)**
 
 ```bash
 npm test && npm run build
@@ -771,7 +771,7 @@ node dist/cli/main.js --question "q?" --choices "A,B" --n 10 --seed abc --mock  
 
 Expected: mock 출력에 세그먼트 `(n=X)` 표기와 소표본 ⚪ 표시. seed abc → 친절한 에러로 종료. 기존 README 데모와 숫자 동일(순차 mock 경로 보존).
 
-- [ ] **Step 5: 전체 게이트 + 커밋**
+- [x] **Step 5: 전체 게이트 + 커밋**
 
 ```bash
 npm run lint && npx tsc --noEmit
@@ -864,8 +864,8 @@ git commit -m "docs: B1 live inference evaluation notes"
 
 ## 완료 기준
 
-- [ ] simulate: 동시성·재시도·순서 보존·진행 콜백 (기본값에서 기존 동작 100% 보존)
-- [ ] ClaudeProvider: tool use 강제 선택 + reason 보존 + usage 누적 — matchChoice는 폴백으로만
-- [ ] CLI: seed 검증 · `--concurrency` · 진행 표시 · 세그먼트 (n=X)/⚪ · 토큰 요약
+- [ ] simulate: 동시성·재시도·순서 보존·진행 콜백 (기본값에서 기존 동작 100% 보존) ⚠️ retries 기본값 1 — 기본 경로 동작 변화, 리뷰 C1 참조
+- [x] ClaudeProvider: tool use 강제 선택 + reason 보존 + usage 누적 — matchChoice는 폴백으로만
+- [x] CLI: seed 검증 · `--concurrency` · 진행 표시 · 세그먼트 (n=X)/⚪ · 토큰 요약
 - [ ] B1 노트 작성 + go/no-go 판정
-- [ ] 전 과정 `npm test`/`lint`/`tsc`/`build` 그린, 테스트는 키 없이 통과
+- [x] 전 과정 `npm test`/`lint`/`tsc`/`build` 그린, 테스트는 키 없이 통과 (2026-07-04, 189 tests)
