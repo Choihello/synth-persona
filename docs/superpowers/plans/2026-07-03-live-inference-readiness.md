@@ -830,6 +830,10 @@ node --env-file=.env dist/cli/main.js --question "동네 반찬가게 정기배�
 ## 환경
 - 모델: claude-haiku-4-5-20251001 · n=30 · seed=7 · --source census · concurrency 4
 
+> ⚠️ 집계 기준: askChoice(구조화) 경로에서는 선택지 비매칭·tool_use 미반환 응답이 **missing**으로 빠진다.
+> 구 ask+matchChoice 경로는 이런 응답을 choice=undefined인 채 responses(n의 분모)에 남겼으므로,
+> 과거 기록과 n·missing rate를 직접 비교하지 말 것. missing rate가 높으면 응답 품질 신호로 해석.
+
 ## 실행 결과
 | 질문 | 신호 | 긍정 비율 | 순서 뒤집기 후 긍정 비율 | 토큰(입력/출력) | 시간 |
 |---|---|---|---|---|---|
