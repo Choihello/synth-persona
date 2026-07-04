@@ -230,7 +230,7 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **창업자 인사이트 리포트 (Plan 4, heuristic v1)** — 진단을 창업자 행동으로 번역: 기회/저항 세그먼트 랭킹(+판단 보류) · 4층 신뢰도 카드 · heuristic 처방(인터뷰 대상/질문·설문·랜딩·7일 플랜, 전부 "AI 생성 초안" 라벨) · markdown 렌더 (`npm run report:demo`, 키 불필요). LLM 생성 v2는 issue #4.
 - [x] **2층 응답 실측 (묶음 B)** — B1 완료(go 조건부, gpt-4o-mini · `--provider openai|anthropic`): 예스맨·순서 편향 게이트 통과, 가격 저항 분화 확인 ([노트](docs/b1-live-notes-2026-07-04.md))
 - [x] **3층 응답 신뢰도 실측 (묶음 B)** — `measureResponseConsistency` + `npm run b2:live`로 자기일관성·예스맨·순서·패러프레이즈·붕괴 계측, `responseConsistency`가 measured(medium|low)로 교체됨. 실측(gpt-4o-mini): 순서·문구 민감 → low ([노트](docs/b2-live-notes-2026-07-04.md))
-- [ ] **진단→처방: 다음 행동 생성물 (묶음 B)** — 끌릴/거부 이유·병목·인터뷰 질문·설문 초안·랜딩 메시지·최불확실 가정 (2층 LLM 생성). 키 필요 (heuristic v1은 완료 — 남은 것은 2층 LLM 생성)
+- [x] **진단→처방: 다음 행동 생성물 (묶음 B)** — B3 완료: `buildLLMPrescriptions`가 실측 reason 층화 샘플에 근거해 drivers/objections(병목 태그)/인터뷰 질문을 LLM 생성(basis:llm), 나머지는 heuristic 위임. `npm run report:live`로 end-to-end ([노트](docs/b3-live-notes-2026-07-04.md), issue #4)
 - [ ] 웹 UI
 
 ## 라이선스

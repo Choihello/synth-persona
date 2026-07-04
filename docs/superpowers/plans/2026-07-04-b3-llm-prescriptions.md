@@ -28,11 +28,11 @@
 **Interfaces:**
 - Produces: `generateJson?(system: string, user: string, schema: { name: string; schema: Record<string, unknown> }): Promise<unknown>` — Task 2가 Claude에 동일 시그니처 구현, Task 4가 소비.
 
-- [ ] **Step 1: 실패하는 테스트** — openai.test.ts에 추가: fakeFetch로 `response_format.json_schema.name/strict/schema` 전달 검증 + content JSON 파싱 반환 + usage 누적.
-- [ ] **Step 2: RED 확인** `npx vitest run src/llm/openai.test.ts`
-- [ ] **Step 3: 구현** — `chat()` 재사용, `max_completion_tokens: 2048`, content JSON.parse 실패 시 throw.
-- [ ] **Step 4: GREEN + lint/tsc**
-- [ ] **Step 5: 커밋** `feat(llm): generateJson structured-output contract + OpenAI impl`
+- [x] **Step 1: 실패하는 테스트** — openai.test.ts에 추가: fakeFetch로 `response_format.json_schema.name/strict/schema` 전달 검증 + content JSON 파싱 반환 + usage 누적.
+- [x] **Step 2: RED 확인** `npx vitest run src/llm/openai.test.ts`
+- [x] **Step 3: 구현** — `chat()` 재사용, `max_completion_tokens: 2048`, content JSON.parse 실패 시 throw.
+- [x] **Step 4: GREEN + lint/tsc**
+- [x] **Step 5: 커밋** `feat(llm): generateJson structured-output contract + OpenAI impl`
 
 ### Task 2: ClaudeProvider.generateJson (tool use 강제)
 
@@ -43,8 +43,8 @@
 **Interfaces:**
 - Consumes/Produces: Task 1의 시그니처와 동일 — tool 정의 `{name: schema.name, strict: true, input_schema: schema.schema}` + `tool_choice: {type:"tool", name: schema.name}`, tool_use input 반환, usage 누적(track 재사용).
 
-- [ ] **Step 1: 실패하는 테스트** (fake client, askChoice 테스트 패턴 복제)
-- [ ] **Step 2: RED 확인** → **Step 3: 구현** → **Step 4: GREEN** → **Step 5: 커밋** `feat(llm): ClaudeProvider.generateJson via forced tool use`
+- [x] **Step 1: 실패하는 테스트** (fake client, askChoice 테스트 패턴 복제)
+- [x] **Step 2: RED 확인** → **Step 3: 구현** → **Step 4: GREEN** → **Step 5: 커밋** `feat(llm): ClaudeProvider.generateJson via forced tool use`
 
 ### Task 3: `sampleReasons` 순수 함수
 
@@ -55,8 +55,8 @@
 **Interfaces:**
 - Produces: `sampleReasons(responses: Response[], positiveChoice: string, opts?: { maxPerSide?: number; seed?: number }): { positive: string[]; negative: string[] }` — Task 4가 소비. 규칙: `r.answer === r.choice`(reason 미수집) 제외, 중복 제거, 200자 절단, side당 기본 20개, seed 결정적(makeRng 스타일 mulberry32 인라인).
 
-- [ ] **Step 1: 실패하는 테스트** — 긍/부정 분리·미수집 제외·상한·중복 제거·같은 seed 같은 결과.
-- [ ] **Step 2~5: RED → 구현 → GREEN → 커밋** `feat(report): stratified reason sampler for LLM prescriptions`
+- [x] **Step 1: 실패하는 테스트** — 긍/부정 분리·미수집 제외·상한·중복 제거·같은 seed 같은 결과.
+- [x] **Step 2~5: RED → 구현 → GREEN → 커밋** `feat(report): stratified reason sampler for LLM prescriptions`
 
 ### Task 4: `buildLLMPrescriptions` + 하이브리드 generator + Basis "llm"
 
@@ -70,8 +70,8 @@
 - Consumes: Task 1/2 `generateJson`, Task 3 `sampleReasons`, 기존 `HeuristicPrescriptionGenerator`/`PrescriptionContext`.
 - Produces: `buildLLMPrescriptions(opts: { provider: LLMProvider; result: StudyResult; options: FounderReportOptions; seed?: number }): Promise<PrescriptionGenerator | null>` — null이면 호출자가 heuristic 사용. LLM json_schema: `{drivers:[{label,rationale}], objections:[{label,rationale}], interviewQuestions:[{text,type}]}` (objections label에 `[가격|신뢰|습관|대체재]` 태그 지시). 반환 generator: drivers/objections/interviewQuestions는 LLM 데이터(+라벨 규칙), interviews/survey/landingTests/validationPlan은 heuristic 위임.
 
-- [ ] **Step 1: 실패하는 테스트** — fake provider(고정 JSON) → basis "llm"·confidence 규칙·rationale N건 표기·heuristic 위임 4종 확인; malformed JSON → null; generateJson 미구현 provider → null.
-- [ ] **Step 2~5: RED → 구현 → GREEN → 커밋** `feat(report): LLM prescription generator grounded on measured reasons`
+- [x] **Step 1: 실패하는 테스트** — fake provider(고정 JSON) → basis "llm"·confidence 규칙·rationale N건 표기·heuristic 위임 4종 확인; malformed JSON → null; generateJson 미구현 provider → null.
+- [x] **Step 2~5: RED → 구현 → GREEN → 커밋** `feat(report): LLM prescription generator grounded on measured reasons`
 
 ### Task 5: `eval/report-live.ts` + npm script
 
@@ -83,11 +83,11 @@
 - Consumes: `runCensusStudy(repeats)`, `buildLLMPrescriptions`, `generateFounderInsightReport`, `renderFounderInsightReport`, CLI 플래그 파싱은 b2-live 패턴.
 - Produces: `runReportLive(opts: { provider: LLMProvider; question?; choices?; n?; seed?; repeats?; counterbalance?; concurrency? }): Promise<string>` — LLM null 폴백 시 렌더 결과 앞에 `> ⚠️ LLM 처방 생성 실패 — heuristic 초안으로 대체` 한 줄 prepend.
 
-- [ ] **Step 1: 실패하는 테스트** — MockProvider(generateJson 없음) → heuristic 폴백 + 경고 라인 + 13섹션 존재.
-- [ ] **Step 2~5: RED → 구현 → GREEN(build 포함) → 커밋** `feat(eval): report:live — end-to-end measured report with LLM prescriptions`
+- [x] **Step 1: 실패하는 테스트** — MockProvider(generateJson 없음) → heuristic 폴백 + 경고 라인 + 13섹션 존재.
+- [x] **Step 2~5: RED → 구현 → GREEN(build 포함) → 커밋** `feat(eval): report:live — end-to-end measured report with LLM prescriptions`
 
 ### Task 6: 라이브 실행 + 기록 (수동)
 
-- [ ] `npm run report:live -- --provider openai --n 30 --repeats 3 --counterbalance` (~$0.012)
-- [ ] 산출 리포트 발췌·비용·품질 관찰을 `docs/b3-live-notes-2026-07-04.md`에 기록, issue #4에 결과 코멘트 남길 준비(사용자 승인 후), README 묶음 B3 체크.
-- [ ] 커밋 `docs: B3 live report notes` + push
+- [x] `npm run report:live -- --provider openai --n 30 --repeats 3 --counterbalance` (~$0.012)
+- [x] 산출 리포트 발췌·비용·품질 관찰을 `docs/b3-live-notes-2026-07-04.md`에 기록, issue #4에 결과 코멘트 남길 준비(사용자 승인 후), README 묶음 B3 체크.
+- [x] 커밋 `docs: B3 live report notes` + push
