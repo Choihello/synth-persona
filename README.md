@@ -117,14 +117,27 @@ npm run report:demo
 
 키 없이도 `npm install && npm test` 가 항상 초록불이다 (테스트·CI는 mock/VCR만 사용). 위 mock 출력의 숫자는 **synthetic panel response**(가상 패널 응답)이지 실제 구매율·시장 예측이 아니다.
 
-### 실제 LLM(Claude)으로 돌리기
+### 실제 LLM으로 돌리기 (기본: OpenAI)
 
 ```bash
-cp .env.example .env   # ANTHROPIC_API_KEY 채우기
-node --env-file=.env dist/cli/main.js --question "..." --choices "...,..." --n 50
+cp .env.example .env   # OPENAI_API_KEY 채우기 (platform.openai.com → API Keys, 크레딧 선불 충전 필요)
+node --env-file=.env dist/cli/main.js --question "..." --choices "...,..." --n 30 --source census --repeats 3
 ```
 
-기본 모델은 비용을 고려해 Haiku이며, 라이브러리에서 다른 Claude 모델로 교체 가능하다.
+- 기본 모델은 비용을 고려해 gpt-4o-mini (`OPENAI_MODEL`로 교체 가능). **n=30 1회 ≈ $0.006, 반복 3회 풀링해도 ≈ $0.02** — 콘솔에서 지출 한도를 걸어두면 안전하다.
+- Claude를 쓰려면 `--provider anthropic` + `ANTHROPIC_API_KEY` (기본 Haiku).
+- 라이브 실행은 선택지 순서를 절반씩 뒤집는 **counterbalance가 기본 on**이다 — 실측에서 LLM의 마지막 선택지 편향(~18%p 과소평가)이 계측되어서다(`docs/b2-live-notes-2026-07-04.md`). 끄려면 `--no-counterbalance`.
+- 매 실행 끝에 토큰 사용량 영수증이 출력된다.
+
+**실측→리포트 한 방에** (실측 + LLM 처방 + 13섹션 창업자 리포트):
+
+```bash
+npm run report:live -- --question "..." --choices "쓴다,안쓴다" --n 30
+```
+
+#### 실사례 (2026-07, gpt-4o-mini, n=300, ~$0.09)
+
+"신선식품 새벽배송 구독, 월 9900원" 질문에서 — 긍정 41.7%로 3만원 반찬배달(22.7%)·5만원 EV 배터리(24.3%)와 뚜렷이 분화했고, **1인가구가 오히려 최대 저항**(긍정 33% vs 5인가구 78%, n=138)이라는 통념 반대 신호가 재현됐다. 리포트는 이걸 "1인분 소비량엔 구독이 비효율인가?"라는 다음 인터뷰 질문으로 번역한다. 상세: `docs/b1-live-notes-2026-07-04.md`.
 
 ### 실제 통계청 데이터(KOSIS)로
 
@@ -159,7 +172,11 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
 | `--seed` | 재현용 시드 (정수) | 1 |
 | `--source` | `sample` (번들 샘플 분포) 또는 `census` (번들 통계청 합성 인구). KOSIS 라이브는 라이브러리 전용 | sample |
 | `--mock` | 키 없이 결정적 mock | off |
+| `--provider` | `openai` 또는 `anthropic` | openai |
 | `--concurrency` | 실측(비-mock) 시 동시 LLM 호출 수 | 4 |
+| `--repeats` | 반복 실행 풀링 (run간 분산 완화, 실측 3 권장) | 1 |
+| `--no-counterbalance` | 선택지 순서 상쇄 해제 (라이브 기본 on) | — |
+| `--help` | 도움말 | — |
 
 ## 동작 원리
 
