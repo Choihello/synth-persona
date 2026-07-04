@@ -125,4 +125,30 @@ export class ClaudeProvider implements LLMProvider {
     }
     return { choice: input.choice, reason: input.reason };
   }
+
+  async generateJson(
+    system: string,
+    user: string,
+    schema: { name: string; schema: Record<string, unknown> },
+  ): Promise<unknown> {
+    const res = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2048,
+      system,
+      messages: [{ role: "user", content: user }],
+      tools: [
+        {
+          name: schema.name,
+          description: "요청된 스키마에 맞는 구조화 결과를 반환한다.",
+          strict: true,
+          input_schema: schema.schema,
+        },
+      ],
+      tool_choice: { type: "tool", name: schema.name },
+    });
+    this.track(res);
+    const tu = res.content.find((c) => c.type === "tool_use");
+    if (!tu) throw new Error("구조화 응답에 tool_use 블록이 없습니다");
+    return tu.input;
+  }
 }
