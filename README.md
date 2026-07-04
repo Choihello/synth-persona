@@ -178,6 +178,16 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
 | `--no-counterbalance` | 선택지 순서 상쇄 해제 (라이브 기본 on) | — |
 | `--help` | 도움말 | — |
 
+## 웹 서비스 (web/)
+
+질문 하나 입력 → 진행 표시 → 리포트 + 공유 링크(`/r/<id>`)를 제공하는 호스팅 웹 (방문자 키 불필요, IP당 일 3회 + 전역 일일 상한).
+
+```bash
+npm run web:dev            # localhost:8787 (.env의 OPENAI_API_KEY 사용)
+```
+
+배포는 Dockerfile + fly.toml 참조 (secrets: `OPENAI_API_KEY`, `IP_SALT`; 볼륨에 SQLite). 상세 설계: `docs/superpowers/specs/2026-07-04-web-v1-design.md`.
+
 ## 동작 원리
 
 ```
