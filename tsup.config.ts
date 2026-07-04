@@ -9,6 +9,7 @@ export default defineConfig({
     "eval/report-demo.ts",
     "eval/b2-live.ts",
     "eval/report-live.ts",
+    "web/main.ts",
     "scripts/refresh-census.ts",
   ],
   format: ["esm"],
