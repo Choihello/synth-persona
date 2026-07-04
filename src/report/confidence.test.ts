@@ -25,6 +25,27 @@ describe("confidence mapping", () => {
     expect(cc.composition.label).toBe("high");
   });
 
+  test("측정된 응답 신뢰도는 measured label과 reason을 그대로 노출한다", () => {
+    const cc = buildConfidenceCard({
+      ...base,
+      responseConsistency: {
+        status: "measured",
+        label: "medium",
+        reason: "자기일관성 0.90 · 예스맨 0.10",
+        selfConsistency: 0.9,
+        positivitySkew: 0.1,
+        meanDispersion: 0.8,
+        collapsed: false,
+        orderBiased: false,
+        paraphraseStable: true,
+        detail: { runs: 6, calls: 180, n: 30, repeats: 3 },
+      },
+    });
+    expect(cc.responseConsistency.label).toBe("medium");
+    expect(cc.responseConsistency.reason).toContain("자기일관성");
+    expect(cc.responseConsistency.whatThisAllows).toContain("예스맨");
+  });
+
   test("응답 신뢰도는 항상 unknown(미측정), 시장판단은 low(부정형)", () => {
     const cc = buildConfidenceCard(base);
     expect(cc.responseConsistency.label).toBe("unknown");

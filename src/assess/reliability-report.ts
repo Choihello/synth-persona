@@ -32,7 +32,9 @@ export function renderReliabilityCard(card: ReliabilityCard): string {
 
   lines.push("### 3층 · 응답 신뢰도 (LLM 일관성)");
   lines.push(
-    `- _${card.responseConsistency.status} — ${card.responseConsistency.reason}_`,
+    card.responseConsistency.status === "measured"
+      ? `- **${card.responseConsistency.label}** (실측) — ${card.responseConsistency.reason}`
+      : `- _${card.responseConsistency.status} — ${card.responseConsistency.reason}_`,
   );
   lines.push("");
 

@@ -36,12 +36,26 @@ export function buildConfidenceCard(card: ReliabilityCard): ConfidenceCard {
     whatThisDoesNotAllow: "conditioned/inferred 속성에 기댄 결론의 확신",
   };
 
-  const responseConsistency = {
-    label: "unknown" as Confidence,
-    reason: card.responseConsistency.reason,
-    whatThisAllows: "구조·파이프라인 점검",
-    whatThisDoesNotAllow: "LLM 응답 일관성(예스맨/평균회귀) 판단 — 미측정",
-  };
+  const rc = card.responseConsistency;
+  const responseConsistency =
+    rc.status === "measured"
+      ? {
+          label: rc.label as Confidence,
+          reason: rc.reason,
+          whatThisAllows:
+            "이 실행의 예스맨/순서 편향/반복 안정성 판단 (실측 기반)",
+          whatThisDoesNotAllow:
+            rc.label === "low"
+              ? "이 실행의 분포를 신호로 사용 — 실측 경고 존재"
+              : "소표본 실측이므로 high 수준의 확신",
+        }
+      : {
+          label: "unknown" as Confidence,
+          reason: rc.reason,
+          whatThisAllows: "구조·파이프라인 점검",
+          whatThisDoesNotAllow:
+            "LLM 응답 일관성(예스맨/평균회귀) 판단 — 미측정",
+        };
 
   const marketJudgment = {
     label: "low" as Confidence,
