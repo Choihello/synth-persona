@@ -788,7 +788,7 @@ git commit -m "feat(cli): seed validation, concurrency flag, progress, small-sam
 
 **선결조건:** `.env`에 실제 `ANTHROPIC_API_KEY`. 예상 비용: n=30 × (입력 ~600tok + 출력 ~100tok) ≈ 입력 18K·출력 3K 토큰 → **Haiku 4.5 기준 약 $0.03** (질문 4종 반복해도 $1 미만).
 
-- [ ] **Step 1: 빌드 + 키 확인**
+- [x] **Step 1: 빌드 + 키 확인**
 
 ```bash
 npm run build
@@ -797,7 +797,7 @@ node --env-file=.env -e "console.log(process.env.ANTHROPIC_API_KEY ? 'key ok' : 
 
 Expected: `key ok`
 
-- [ ] **Step 2: 첫 실측 (n=30, census)**
+- [x] **Step 2: 첫 실측 (n=30, census)**
 
 ```bash
 node --env-file=.env dist/cli/main.js --question "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?" --choices "쓴다,안쓴다" --n 30 --seed 7 --source census --concurrency 4
@@ -805,7 +805,7 @@ node --env-file=.env dist/cli/main.js --question "신선식품 새벽배송 구�
 
 기록: 전체 신호, 첫 선택지 비율, 세그먼트별 결과, 소요 시간, 토큰 사용량.
 
-- [ ] **Step 3: 예스맨/순서 편향 점검 — 선택지 순서 뒤집기**
+- [x] **Step 3: 예스맨/순서 편향 점검 — 선택지 순서 뒤집기**
 
 ```bash
 node --env-file=.env dist/cli/main.js --question "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?" --choices "안쓴다,쓴다" --n 30 --seed 7 --source census --concurrency 4
@@ -813,7 +813,7 @@ node --env-file=.env dist/cli/main.js --question "신선식품 새벽배송 구�
 
 판정: Step 2와 "쓴다" 비율 차이가 ±15%p 이내면 순서 편향 통과. 두 실행 모두에서 **첫 선택지** 비율이 85% 이상이면 예스맨 의심 🔴.
 
-- [ ] **Step 4: 도메인 상이한 질문 2종 반복**
+- [x] **Step 4: 도메인 상이한 질문 2종 반복**
 
 ```bash
 node --env-file=.env dist/cli/main.js --question "구독형 전기차 배터리 교체 서비스, 월 5만원에 쓸 의향?" --choices "쓴다,안쓴다" --n 30 --seed 7 --source census --concurrency 4
@@ -822,7 +822,7 @@ node --env-file=.env dist/cli/main.js --question "동네 반찬가게 정기배�
 
 판정: 세 질문의 응답 분포가 서로 달라야 함(전부 비슷하면 평균회귀/무차별 🔴). 세그먼트(연령·혼인·가구원수) 간 차이가 상식과 결이 맞는지 눈으로 평가.
 
-- [ ] **Step 5: 결과 기록 — `docs/b1-live-notes-2026-07-XX.md` 작성**
+- [x] **Step 5: 결과 기록 — `docs/b1-live-notes-2026-07-04.md` 작성** (gpt-4o-mini로 실행 — 크레딧 이슈로 모델 대체)
 
 ```markdown
 # B1 실측 노트 (YYYY-MM-DD)
@@ -853,7 +853,7 @@ node --env-file=.env dist/cli/main.js --question "동네 반찬가게 정기배�
 - 근거:
 ```
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add docs/b1-live-notes-*.md
@@ -871,5 +871,5 @@ git commit -m "docs: B1 live inference evaluation notes"
 - [x] simulate: 동시성·재시도·순서 보존·진행 콜백 (기본값에서 기존 동작 100% 보존 — retries 기본 0으로 수정, 2026-07-04)
 - [x] ClaudeProvider: tool use 강제 선택 + reason 보존 + usage 누적 — matchChoice는 폴백으로만
 - [x] CLI: seed 검증 · `--concurrency` · 진행 표시 · 세그먼트 (n=X)/⚪ · 토큰 요약
-- [ ] B1 노트 작성 + go/no-go 판정
+- [x] B1 노트 작성 + go/no-go 판정 — **go (조건부)**, gpt-4o-mini 기준 (2026-07-04)
 - [x] 전 과정 `npm test`/`lint`/`tsc`/`build` 그린, 테스트는 키 없이 통과 (2026-07-04, 189 tests)
