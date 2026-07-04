@@ -52,6 +52,21 @@ export function censusAwareDemoMock(
   };
 }
 
+/**
+ * 순서 편향 상쇄 기본 정책: 라이브는 기본 on (B2 실측 — 마지막 선택지 편향으로
+ * 정방향 단일 실행이 긍정을 ~18%p 과소평가). --no-counterbalance로 해제.
+ * mock은 결정성·기존 데모 출력 보존을 위해 기본 off, --counterbalance로만 on.
+ */
+export function resolveCounterbalance(opts: {
+  mock: boolean;
+  counterbalance?: boolean;
+  noCounterbalance?: boolean;
+}): boolean {
+  if (opts.noCounterbalance) return false;
+  if (opts.mock) return opts.counterbalance ?? false;
+  return true;
+}
+
 /** --mock이면 결정적 mock, 아니면 --provider(anthropic|openai)로 라이브 프로바이더 선택. */
 export function resolveProvider(opts: {
   mock: boolean;
@@ -123,6 +138,7 @@ export async function main(): Promise<void> {
       provider: { type: "string", default: "openai" },
       concurrency: { type: "string", default: "4" },
       counterbalance: { type: "boolean", default: false },
+      "no-counterbalance": { type: "boolean", default: false },
       repeats: { type: "string", default: "1" },
     },
   });
@@ -157,7 +173,11 @@ export async function main(): Promise<void> {
   const simulateOpts = {
     concurrency: isLive ? concurrency : 1, // mock은 순차(결정성·기존 데모 출력 보존)
     retries: isLive ? 1 : 0, // 재시도는 실측 경로 전용 — 라이브러리 기본값(0)은 재호출 없음
-    counterbalance: values.counterbalance ?? false,
+    counterbalance: resolveCounterbalance({
+      mock: values.mock ?? false,
+      counterbalance: values.counterbalance,
+      noCounterbalance: values["no-counterbalance"],
+    }),
     onProgress: isLive
       ? (done: number, total: number) => {
           process.stderr.write(`\r응답 수집 중 ${done}/${total}`);

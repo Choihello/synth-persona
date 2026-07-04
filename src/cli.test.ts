@@ -5,6 +5,7 @@ import {
   parseIntArg,
   parseN,
   parseSeed,
+  resolveCounterbalance,
   resolveProvider,
 } from "../cli/main.js";
 import { ClaudeProvider } from "./llm/claude.js";
@@ -114,6 +115,23 @@ describe("resolveProvider", () => {
   it("지원하지 않는 값은 --provider를 지목하며 throw", () => {
     expect(() => resolveProvider({ mock: false, provider: "gemini" })).toThrow(
       /--provider/,
+    );
+  });
+});
+
+describe("resolveCounterbalance", () => {
+  it("라이브 경로는 기본 on (B2 실측: 순서 편향 상쇄)", () => {
+    expect(resolveCounterbalance({ mock: false })).toBe(true);
+  });
+  it("--no-counterbalance로 끌 수 있다", () => {
+    expect(resolveCounterbalance({ mock: false, noCounterbalance: true })).toBe(
+      false,
+    );
+  });
+  it("mock은 기본 off (결정성·기존 데모 출력 보존), 명시하면 on", () => {
+    expect(resolveCounterbalance({ mock: true })).toBe(false);
+    expect(resolveCounterbalance({ mock: true, counterbalance: true })).toBe(
+      true,
     );
   });
 });

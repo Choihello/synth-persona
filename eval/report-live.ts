@@ -42,7 +42,7 @@ export async function runReportLive(opts: ReportLiveOptions): Promise<string> {
     simulate: {
       concurrency: opts.concurrency ?? 4,
       retries: 1,
-      counterbalance: opts.counterbalance ?? false,
+      counterbalance: opts.counterbalance ?? true, // 라이브 기본 on (B2 실측 근거)
     },
   });
 
@@ -79,6 +79,7 @@ async function main(): Promise<void> {
       seed: { type: "string", default: "7" },
       repeats: { type: "string", default: "3" },
       counterbalance: { type: "boolean", default: false },
+      "no-counterbalance": { type: "boolean", default: false },
       concurrency: { type: "string", default: "4" },
     },
   });
@@ -101,7 +102,9 @@ async function main(): Promise<void> {
       n: Number(values.n),
       seed: Number(values.seed),
       repeats: Number(values.repeats),
-      counterbalance: values.counterbalance ?? false,
+      counterbalance: values["no-counterbalance"]
+        ? false
+        : (values.counterbalance ?? true),
       concurrency: Number(values.concurrency),
     }),
   );
