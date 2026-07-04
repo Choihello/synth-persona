@@ -41,6 +41,12 @@ export interface SimulateOpts {
   retries?: number;
   /** 지수 백오프 기본 간격(ms). 테스트에서 0으로 주입. 기본 500. */
   backoffMs?: number;
+  /**
+   * 순서 편향 상쇄: 페르소나 절반(홀수 인덱스)에게 선택지를 역순으로 제시한다.
+   * 기록되는 choice 값(문구)은 순서와 무관하므로 집계는 그대로. B2 실측에서
+   * 마지막 선택지 편향이 관측되어 추가 (docs/b2-live-notes-2026-07-04.md).
+   */
+  counterbalance?: boolean;
   onProgress?: (done: number, total: number) => void;
 }
 
@@ -72,10 +78,23 @@ export async function simulate(
   responses: Response[];
   missing: { personaId: string; reason: string }[];
 }> {
-  const prompt = buildPrompt(question);
   const concurrency = Math.max(1, opts?.concurrency ?? 1);
   const retries = opts?.retries ?? 0;
   const backoffMs = opts?.backoffMs ?? 500;
+
+  // counterbalance면 홀수 인덱스 페르소나에게 역순 선택지/프롬프트 제시
+  const forwardChoices = question.choices;
+  const reversedChoices = forwardChoices
+    ? [...forwardChoices].reverse()
+    : undefined;
+  const forwardPrompt = buildPrompt(question);
+  const reversedPrompt = reversedChoices
+    ? buildPrompt({ prompt: question.prompt, choices: reversedChoices })
+    : forwardPrompt;
+  const variantFor = (i: number): { prompt: string; choices?: string[] } =>
+    opts?.counterbalance && reversedChoices && i % 2 === 1
+      ? { prompt: reversedPrompt, choices: reversedChoices }
+      : { prompt: forwardPrompt, choices: forwardChoices };
 
   type Slot =
     | { ok: true; res: Response }
@@ -89,12 +108,13 @@ export async function simulate(
       const i = next++;
       if (i >= personas.length) return;
       const persona = personas[i];
+      const variant = variantFor(i);
       try {
-        if (question.choices && provider.askChoice) {
-          const choices = question.choices;
+        if (variant.choices && provider.askChoice) {
+          const choices = variant.choices;
           const askChoice = provider.askChoice.bind(provider);
           const reply = await withRetry(
-            () => askChoice(persona, prompt, choices),
+            () => askChoice(persona, variant.prompt, choices),
             retries,
             backoffMs,
           );
@@ -113,12 +133,12 @@ export async function simulate(
           };
         } else {
           const answer = await withRetry(
-            () => provider.ask(persona, prompt),
+            () => provider.ask(persona, variant.prompt),
             retries,
             backoffMs,
           );
-          const choice = question.choices
-            ? matchChoice(answer, question.choices)
+          const choice = variant.choices
+            ? matchChoice(answer, variant.choices)
             : undefined;
           slots[i] = { ok: true, res: { persona, answer, choice } };
         }

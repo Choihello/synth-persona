@@ -23,17 +23,37 @@ export interface StudyConfig {
   seed?: number;
   splitThreshold?: number;
   simulate?: SimulateOpts;
+  /** k회 반복 실행 후 응답을 풀링해 집계 (run간 분산 완화). 기본 1. */
+  repeats?: number;
+}
+
+async function simulatePooled(
+  personas: Parameters<typeof simulate>[0],
+  question: Question,
+  provider: LLMProvider,
+  opts: SimulateOpts | undefined,
+  repeats: number,
+): Promise<Awaited<ReturnType<typeof simulate>>> {
+  const responses: Awaited<ReturnType<typeof simulate>>["responses"] = [];
+  const missing: Awaited<ReturnType<typeof simulate>>["missing"] = [];
+  for (let i = 0; i < Math.max(1, repeats); i++) {
+    const r = await simulate(personas, question, provider, opts);
+    responses.push(...r.responses);
+    missing.push(...r.missing);
+  }
+  return { responses, missing };
 }
 
 export async function runStudy(config: StudyConfig): Promise<StudyResult> {
   const dist = await config.source.getDistribution();
   const joint = ipf(dist);
   const personas = samplePersonas(joint, config.n, config.seed ?? 1);
-  const { responses, missing } = await simulate(
+  const { responses, missing } = await simulatePooled(
     personas,
     config.question,
     config.provider,
     config.simulate,
+    config.repeats ?? 1,
   );
   return aggregate(responses, {
     splitThreshold: config.splitThreshold,
@@ -49,6 +69,8 @@ export interface CensusStudyConfig {
   seed?: number;
   splitThreshold?: number;
   simulate?: SimulateOpts;
+  /** k회 반복 실행 후 응답을 풀링해 집계 (run간 분산 완화). 기본 1. */
+  repeats?: number;
 }
 
 /**
@@ -61,11 +83,12 @@ export async function runCensusStudy(
 ): Promise<StudyResult> {
   const all = await config.population.population();
   const sample = sampleForSimulation(all, config.n, config.seed ?? 1);
-  const { responses, missing } = await simulate(
+  const { responses, missing } = await simulatePooled(
     sample,
     config.question,
     config.provider,
     config.simulate,
+    config.repeats ?? 1,
   );
   return aggregate(responses, {
     splitThreshold: config.splitThreshold,

@@ -5,6 +5,7 @@ import { MockProvider } from "./llm/mock.js";
 import type { Snapshot } from "./population/schema.js";
 import { CensusPopulation } from "./population/source.js";
 import { censusShareRunner, runCensusStudy, runStudy } from "./study.js";
+import type { Persona } from "./types.js";
 import { orderBias } from "./verify/robustness.js";
 
 describe("runStudy (end-to-end, mock)", () => {
@@ -87,6 +88,26 @@ describe("runCensusStudy (key-free, census 합성인구)", () => {
     expect(again.responses.map((r) => r.choice)).toEqual(
       result.responses.map((r) => r.choice),
     );
+  });
+
+  test("repeats: k회 실행 응답을 풀링해 집계한다 (n×k 응답)", async () => {
+    let calls = 0;
+    const countingMock = {
+      async ask(p: Persona) {
+        calls++;
+        return young.has(p.attrs.연령) ? "쓴다" : "안쓴다";
+      },
+    };
+    const result = await runCensusStudy({
+      population,
+      provider: countingMock,
+      question,
+      n: 20,
+      seed: 7,
+      repeats: 3,
+    });
+    expect(calls).toBe(60); // 20 × 3
+    expect(result.responses.length).toBe(60); // 풀링된 전체 응답
   });
 
   test("censusShareRunner는 provider abstraction 위에서 robustness(orderBias)를 구동한다", async () => {

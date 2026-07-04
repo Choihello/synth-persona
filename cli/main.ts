@@ -122,6 +122,8 @@ export async function main(): Promise<void> {
       mock: { type: "boolean", default: false },
       provider: { type: "string", default: "anthropic" },
       concurrency: { type: "string", default: "4" },
+      counterbalance: { type: "boolean", default: false },
+      repeats: { type: "string", default: "1" },
     },
   });
   if (!values.question) {
@@ -144,6 +146,7 @@ export async function main(): Promise<void> {
   const concurrency = parseIntArg(values.concurrency ?? "4", "--concurrency", {
     min: 1,
   });
+  const repeats = parseIntArg(values.repeats ?? "1", "--repeats", { min: 1 });
   const provider: LLMProvider = resolveProvider({
     mock: values.mock ?? false,
     provider: values.provider,
@@ -154,6 +157,7 @@ export async function main(): Promise<void> {
   const simulateOpts = {
     concurrency: isLive ? concurrency : 1, // mock은 순차(결정성·기존 데모 출력 보존)
     retries: isLive ? 1 : 0, // 재시도는 실측 경로 전용 — 라이브러리 기본값(0)은 재호출 없음
+    counterbalance: values.counterbalance ?? false,
     onProgress: isLive
       ? (done: number, total: number) => {
           process.stderr.write(`\r응답 수집 중 ${done}/${total}`);
@@ -173,6 +177,7 @@ export async function main(): Promise<void> {
       question,
       n,
       seed,
+      repeats,
       simulate: simulateOpts,
     });
   } else {
@@ -182,6 +187,7 @@ export async function main(): Promise<void> {
       question,
       n,
       seed,
+      repeats,
       simulate: simulateOpts,
     });
   }

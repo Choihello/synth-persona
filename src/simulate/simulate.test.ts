@@ -224,6 +224,63 @@ describe("simulate — 동시성/재시도", () => {
     );
   });
 
+  test("counterbalance: 페르소나 절반은 선택지 역순으로 받는다 (askChoice 경로)", async () => {
+    const seenOrders: string[][] = [];
+    const provider = {
+      async ask() {
+        return "A";
+      },
+      async askChoice(_p: Persona, _prompt: string, choices: string[]) {
+        seenOrders.push(choices);
+        return { choice: "A" };
+      },
+    };
+    const { responses, missing } = await simulate(
+      personas(4),
+      question,
+      provider,
+      { counterbalance: true },
+    );
+    expect(missing).toEqual([]);
+    expect(responses).toHaveLength(4);
+    const forward = seenOrders.filter((c) => c[0] === "A").length;
+    const reversed = seenOrders.filter((c) => c[0] === "B").length;
+    expect(forward).toBe(2);
+    expect(reversed).toBe(2);
+    // 선택지 의미는 순서와 무관 — choice 값은 그대로
+    expect(responses.every((r) => r.choice === "A")).toBe(true);
+  });
+
+  test("counterbalance: ask 폴백 경로도 프롬프트의 선택지 나열 순서가 절반 뒤집힌다", async () => {
+    const prompts: string[] = [];
+    const provider = {
+      async ask(_p: Persona, prompt: string) {
+        prompts.push(prompt);
+        return "A";
+      },
+    };
+    await simulate(personas(4), question, provider, { counterbalance: true });
+    const reversedCount = prompts.filter(
+      (p) => p.indexOf("- B") < p.indexOf("- A"),
+    ).length;
+    expect(reversedCount).toBe(2);
+  });
+
+  test("counterbalance 미지정이면 전원 정방향 (기본 동작 보존)", async () => {
+    const seenOrders: string[][] = [];
+    const provider = {
+      async ask() {
+        return "A";
+      },
+      async askChoice(_p: Persona, _prompt: string, choices: string[]) {
+        seenOrders.push(choices);
+        return { choice: "A" };
+      },
+    };
+    await simulate(personas(4), question, provider);
+    expect(seenOrders.every((c) => c[0] === "A")).toBe(true);
+  });
+
   test("클래스 기반 provider의 askChoice도 this를 잃지 않는다 (unbound 호출 금지)", async () => {
     class ClassProvider {
       inner = { value: "A" };
