@@ -105,11 +105,11 @@ describe("resolveProvider", () => {
     const p = resolveProvider({ mock: true, provider: "openai" });
     expect(p).toBeInstanceOf(MockProvider);
   });
-  it("anthropic(기본)/openai를 선택할 수 있다", () => {
-    expect(resolveProvider({ mock: false })).toBeInstanceOf(ClaudeProvider);
-    expect(resolveProvider({ mock: false, provider: "openai" })).toBeInstanceOf(
-      OpenAIProvider,
-    );
+  it("openai(기본)/anthropic을 선택할 수 있다", () => {
+    expect(resolveProvider({ mock: false })).toBeInstanceOf(OpenAIProvider);
+    expect(
+      resolveProvider({ mock: false, provider: "anthropic" }),
+    ).toBeInstanceOf(ClaudeProvider);
   });
   it("지원하지 않는 값은 --provider를 지목하며 throw", () => {
     expect(() => resolveProvider({ mock: false, provider: "gemini" })).toThrow(

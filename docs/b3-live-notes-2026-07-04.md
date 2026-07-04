@@ -22,5 +22,5 @@ v2: "신선도 유지 — 신선한 식품을 쉽게 받고 신선도를 유지�
 ## 남은 관찰 항목
 
 - LLM 처방도 synthetic reason 기반 — 실제 고객 인터뷰 대체 아님 (배너·disclaimer 유지 확인).
-- Claude 교차: `--provider anthropic` 하나로 처방 LLM까지 교체됨 (generateJson 구현 완료) — 크레딧 확보 시 1회 재실행 권장.
+- Claude 교차: 운용 결정(2026-07-04)으로 **보류** — OpenAI 단독 운용. 코드는 `--provider anthropic`으로 언제든 교차 가능 상태 유지.
 - issue #4 클로즈 코멘트는 사용자 승인 후.

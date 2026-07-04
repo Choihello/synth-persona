@@ -63,13 +63,13 @@ export async function runB2(opts: B2Options): Promise<string> {
 async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
-      provider: { type: "string", default: "anthropic" },
+      provider: { type: "string", default: "openai" },
       n: { type: "string", default: "30" },
       repeats: { type: "string", default: "3" },
       seed: { type: "string", default: "7" },
     },
   });
-  const name = values.provider ?? "anthropic";
+  const name = values.provider ?? "openai";
   let provider: LLMProvider;
   if (name === "anthropic") {
     const { ClaudeProvider } = await import("../src/llm/claude.js");

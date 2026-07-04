@@ -59,7 +59,7 @@ export function resolveProvider(opts: {
   choices?: string[];
 }): LLMProvider {
   if (opts.mock) return new MockProvider(censusAwareDemoMock(opts.choices));
-  const name = opts.provider ?? "anthropic";
+  const name = opts.provider ?? "openai"; // 운용 결정(2026-07-04): OpenAI 단독 — anthropic은 명시 선택 시만
   if (name === "anthropic") return new ClaudeProvider();
   if (name === "openai") return new OpenAIProvider();
   throw new Error(
@@ -120,7 +120,7 @@ export async function main(): Promise<void> {
       seed: { type: "string" },
       source: { type: "string", default: "sample" },
       mock: { type: "boolean", default: false },
-      provider: { type: "string", default: "anthropic" },
+      provider: { type: "string", default: "openai" },
       concurrency: { type: "string", default: "4" },
       counterbalance: { type: "boolean", default: false },
       repeats: { type: "string", default: "1" },

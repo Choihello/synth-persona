@@ -72,7 +72,7 @@ export async function runReportLive(opts: ReportLiveOptions): Promise<string> {
 async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
-      provider: { type: "string", default: "anthropic" },
+      provider: { type: "string", default: "openai" },
       question: { type: "string" },
       choices: { type: "string" },
       n: { type: "string", default: "30" },
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
       concurrency: { type: "string", default: "4" },
     },
   });
-  const name = values.provider ?? "anthropic";
+  const name = values.provider ?? "openai";
   let provider: LLMProvider;
   if (name === "anthropic") {
     const { ClaudeProvider } = await import("../src/llm/claude.js");

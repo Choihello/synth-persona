@@ -1,12 +1,13 @@
 # 로드맵 — 묶음 B (Claude 실측: 진단 → 처방)
 
-> 묶음 A(신뢰성 오버레이)와 B0(key-free census 파이프라인)까지는 **키 없이** 완료되어 `main`에 병합돼 있다. 묶음 B는 **실제 Claude 응답 추론**이 필요한 단계로, 전부 `ANTHROPIC_API_KEY`를 선결조건으로 한다. 아직 시작하지 않았다.
+> 묶음 A(신뢰성 오버레이)와 B0(key-free census 파이프라인)까지는 **키 없이** 완료되어 `main`에 병합돼 있다.
+> **2026-07-04 갱신**: 묶음 B(B1·B2·B3) 전부 완료. 운용 결정에 따라 기본 라이브 프로바이더는 **OpenAI(`OPENAI_API_KEY`)** — Claude는 `--provider anthropic`으로 선택 시에만. 실측 노트: b1/b2/b3-live-notes-2026-07-04.md
 
 관련 설계: [product-reorientation-design](superpowers/specs/2026-06-30-product-reorientation-design.md) · [reliability-overlay-bundle-A plan](superpowers/plans/2026-06-30-reliability-overlay-bundle-A.md)
 
 ## 선결조건
 
-- `.env`에 실제 `ANTHROPIC_API_KEY` (현재 `.env.example`은 빈 placeholder).
+- `.env`에 실제 `OPENAI_API_KEY` (기본). `ANTHROPIC_API_KEY`는 `--provider anthropic` 선택 시에만.
 - 파이프라인은 B0에서 이미 완성됨 — `--source census`의 mock 자리에 `ClaudeProvider`를 붙이면 실데이터로 동작한다(`runCensusStudy`).
 
 ## 항목
