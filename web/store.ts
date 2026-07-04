@@ -75,10 +75,19 @@ export function rowToReport(row: Record<string, unknown>): ReportRow {
 }
 
 // vite/vitest가 node:sqlite를 아직 리졸브하지 못해 정적 import 대신
-// 런타임 내장 모듈 API로 로드한다 (Node 22.3+).
-const { DatabaseSync } = process.getBuiltinModule(
-  "node:sqlite",
-) as typeof import("node:sqlite");
+// 런타임 내장 모듈 API로 로드한다. SqliteStore 생성 시점까지 지연해,
+// Turso를 쓰는 프로덕션은 node:sqlite 없는 런타임(Node <22.13)에서도 동작한다.
+function loadSqlite(): typeof import("node:sqlite") {
+  const mod = process.getBuiltinModule("node:sqlite") as
+    | typeof import("node:sqlite")
+    | undefined;
+  if (!mod) {
+    throw new Error(
+      "node:sqlite unavailable — SqliteStore needs Node 22.13+ (or set TURSO_DATABASE_URL to use Turso)",
+    );
+  }
+  return mod;
+}
 type DatabaseSync = DatabaseSyncT;
 
 /** 로컬 파일/메모리용 구현 (Node 내장 node:sqlite — 외부 의존성 불필요). */
@@ -86,6 +95,7 @@ export class SqliteStore implements ReportStore {
   private db: DatabaseSync;
 
   constructor(path: string) {
+    const { DatabaseSync } = loadSqlite();
     this.db = new DatabaseSync(path);
     this.db.exec(SCHEMA);
     this.db.exec(
