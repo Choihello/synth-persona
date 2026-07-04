@@ -36,5 +36,5 @@
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   },
-  "workspaces": ["web"]
+  "workspaces": ["web", "app"]
 }

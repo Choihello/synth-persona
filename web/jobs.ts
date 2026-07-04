@@ -1,3 +1,4 @@
+import { executeReport } from "./run-report.js";
 import type { ReportStore } from "./store.js";
 
 /** 리포트 1건 생성 러너 — 실제 구현은 pipeline.ts, 테스트는 fake 주입. */
@@ -74,23 +75,8 @@ export class JobQueue {
   }
 
   private async run(id: string): Promise<void> {
-    const row = await this.store.get(id);
-    if (!row) return;
-    await this.store.setStatus(id, "running");
     try {
-      const md = await this.runner(row.question, row.choices, (d, t, phase) => {
-        this.emit(id, { type: "progress", done: d, total: t, phase });
-        // 서버리스 대비: 진행률을 DB에도 기록 (5단위 스로틀 — 원격 DB 쓰기 절약)
-        if (d % 5 === 0 || d === t) {
-          void this.store.setProgress(id, d, t, phase);
-        }
-      });
-      await this.store.markDone(id, md);
-      this.emit(id, { type: "done" });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      await this.store.markFailed(id, msg);
-      this.emit(id, { type: "error", error: msg });
+      await executeReport(this.store, id, this.runner, (e) => this.emit(id, e));
     } finally {
       this.listeners.delete(id);
     }

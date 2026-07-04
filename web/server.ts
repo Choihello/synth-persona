@@ -6,13 +6,8 @@ import { nanoid } from "nanoid";
 import { JobQueue, type ReportRunner } from "./jobs.js";
 import { type LimitPolicy, checkLimit } from "./limits.js";
 import type { ReportStore } from "./store.js";
-import {
-  escapeHtml,
-  failedPage,
-  homePage,
-  pendingPage,
-  reportPage,
-} from "./views.js";
+import { validateReportInput } from "./validate.js";
+import { failedPage, homePage, pendingPage, reportPage } from "./views.js";
 
 const PANEL_N = 90; // n=30 × repeats 3 — 공유 페이지 메타 표기용
 
@@ -21,21 +16,6 @@ export interface AppDeps {
   runner: ReportRunner;
   policy: LimitPolicy;
   ipSalt: string;
-}
-
-function validate(body: unknown): { question: string; choices: string[] } {
-  const b = (body ?? {}) as { question?: unknown; choices?: unknown };
-  const question = typeof b.question === "string" ? b.question.trim() : "";
-  if (!question) throw new Error("question이 필요합니다.");
-  if (question.length > 200) throw new Error("질문은 200자 이내여야 합니다.");
-  const choices = Array.isArray(b.choices)
-    ? b.choices.map((c) => String(c).trim()).filter(Boolean)
-    : [];
-  if (choices.length < 2 || choices.length > 4)
-    throw new Error("선택지는 2~4개여야 합니다.");
-  if (choices.some((c) => c.length > 20))
-    throw new Error("선택지는 각 20자 이내여야 합니다.");
-  return { question: escapeHtml(question), choices: choices.map(escapeHtml) };
 }
 
 export function createApp(deps: AppDeps): { app: Hono; queue: JobQueue } {
@@ -58,7 +38,7 @@ export function createApp(deps: AppDeps): { app: Hono; queue: JobQueue } {
   app.post("/api/reports", async (c) => {
     let input: { question: string; choices: string[] };
     try {
-      input = validate(await c.req.json().catch(() => ({})));
+      input = validateReportInput(await c.req.json().catch(() => ({})));
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
