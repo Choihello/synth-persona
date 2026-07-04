@@ -44,6 +44,11 @@
 - **주의**: 정적 페이지라 빌드 시점 env 사용 — Vercel에서 `GALLERY_IDS` 변경 후 재배포 필요
 - 큐레이션 후보: `1zt5RRsfUs` (스모크 리포트)
 
+### 쉬운 요약 카드 ("한눈에 보기")
+- `web/easy-summary.ts` 결정적 템플릿(판정 5단계 + 4블록, LLM 없음) → `pipeline.ts`가 "## 한 줄 요약" 앞에 주입
+- 신규 리포트에만 적용 (저장된 기존 md는 불변 — 카드 없는 게 정상). 라이브 검증: /r/BAJnsFMKrF
+- 스펙: `docs/superpowers/specs/2026-07-05-easy-summary-design.md` · 플랜: `docs/superpowers/plans/2026-07-05-easy-summary.md`
+
 ### 기타
 - 기존 main에 있던 biome lint 오류 10건 정리 (eval/b2-live.ts 템플릿 리터럴, llm-prescriptions.test.ts non-null 단언 → 가드로 교체)
 - `.claude/launch.json` 추가 (프리뷰 서버 `next start app -p 3211`)
