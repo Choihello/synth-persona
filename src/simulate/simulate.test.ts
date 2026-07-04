@@ -226,7 +226,7 @@ describe("simulate — 동시성/재시도", () => {
 
   test("클래스 기반 provider의 askChoice도 this를 잃지 않는다 (unbound 호출 금지)", async () => {
     class ClassProvider {
-      inner = { value: "쓴다" };
+      inner = { value: "A" };
       async ask(): Promise<string> {
         return this.inner.value;
       }
@@ -241,7 +241,7 @@ describe("simulate — 동시성/재시도", () => {
       new ClassProvider(),
     );
     expect(missing).toEqual([]);
-    expect(responses.map((r) => r.choice)).toEqual(["쓴다", "쓴다"]);
+    expect(responses.map((r) => r.choice)).toEqual(["A", "A"]);
   });
 
   test("opts 없는 기본 경로는 실패해도 재시도 없이 페르소나당 1회만 호출한다", async () => {
