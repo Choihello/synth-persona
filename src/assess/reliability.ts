@@ -1,4 +1,5 @@
 import type { Provenance, StudyResult } from "../types.js";
+import type { ConsistencyMeasurement } from "../verify/consistency.js";
 import type { FidelityReport } from "../verify/fidelity.js";
 
 export type Confidence = "high" | "medium" | "low" | "unknown";
@@ -10,12 +11,38 @@ export interface AttributeReliability {
   note?: string;
 }
 
+export type ResponseConsistencyAssessment =
+  | { status: "not-measured"; reason: string }
+  | ({
+      status: "measured";
+      /** n이 작은 실측이라 high는 부여하지 않는다 — medium이 상한 */
+      label: "medium" | "low";
+      reason: string;
+    } & ConsistencyMeasurement);
+
 export interface ReliabilityCard {
   composition: { signal: "🟢" | "🔴"; mae: number; tvd: number } | null;
   attributes: AttributeReliability[];
-  responseConsistency: { status: "not-measured"; reason: string };
+  responseConsistency: ResponseConsistencyAssessment;
   guardrails: string[];
   missingAxes: string[];
+}
+
+/** B2 실측값 → 창업자용 판정. 하나라도 빨간 신호면 low. */
+export function assessConsistency(
+  m: ConsistencyMeasurement,
+): Extract<ResponseConsistencyAssessment, { status: "measured" }> {
+  const flags: string[] = [];
+  if (m.collapsed) flags.push("분포 붕괴(무차별)");
+  if (m.orderBiased) flags.push("선택지 순서 편향");
+  if (m.positivitySkew > 0.5) flags.push("첫 선택지 쏠림(예스맨)");
+  if (m.selfConsistency < 0.6) flags.push("반복 응답 불안정");
+  if (!m.paraphraseStable) flags.push("패러프레이즈 불안정");
+  const label = flags.length ? "low" : "medium";
+  const reason = flags.length
+    ? `실측 경고: ${flags.join(" · ")} (반복 ${m.detail.repeats}회 × n=${m.detail.n})`
+    : `자기일관성 ${m.selfConsistency.toFixed(2)} · 예스맨 ${m.positivitySkew.toFixed(2)} · 순서/패러프레이즈 안정 (반복 ${m.detail.repeats}회 × n=${m.detail.n} — 소표본이라 medium 상한)`;
+  return { status: "measured", label, reason, ...m };
 }
 
 const CONFIDENCE_BY_PROVENANCE: Record<Provenance, Confidence> = {
@@ -47,6 +74,7 @@ export function assessReliability(
     fidelity?: FidelityReport;
     bridges?: Record<string, string>;
     priceCriticalAxes?: string[];
+    consistency?: ConsistencyMeasurement;
   },
 ): ReliabilityCard {
   const dims = Object.keys(result.bySegment);
@@ -107,10 +135,22 @@ export function assessReliability(
     );
   }
 
+  const responseConsistency: ResponseConsistencyAssessment = ctx?.consistency
+    ? assessConsistency(ctx.consistency)
+    : { status: "not-measured", reason: "키 필요(묶음 B)" };
+  if (
+    responseConsistency.status === "measured" &&
+    responseConsistency.label === "low"
+  ) {
+    guardrails.push(
+      `응답 신뢰도 실측 경고 — ${responseConsistency.reason}. 이 실행의 분포는 참고만 하세요.`,
+    );
+  }
+
   return {
     composition,
     attributes,
-    responseConsistency: { status: "not-measured", reason: "키 필요(묶음 B)" },
+    responseConsistency,
     guardrails,
     missingAxes,
   };

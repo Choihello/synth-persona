@@ -19,16 +19,20 @@ export {
   rowsToCrossTable,
 } from "./data/kosis-source.js";
 export type { KosisRow, KosisOpts, KosisAxis } from "./data/kosis-source.js";
-export type { LLMProvider } from "./llm/provider.js";
+export type { LLMProvider, ChoiceReply } from "./llm/provider.js";
 export { MockProvider } from "./llm/mock.js";
 export { ClaudeProvider, personaSystemPrompt } from "./llm/claude.js";
+export { OpenAIProvider } from "./llm/openai.js";
+export type { ProviderUsage } from "./llm/claude.js";
 export { RecordedProvider } from "./llm/recorded.js";
 export { LoggingProvider, type LlmCallLog } from "./llm/logging.js";
 export {
   simulate,
   matchChoice,
   buildPrompt,
+  withRetry,
   type Question,
+  type SimulateOpts,
 } from "./simulate/simulate.js";
 export { aggregate, normalizedEntropy } from "./aggregate/uncertainty.js";
 export {
@@ -104,3 +108,34 @@ export {
   type Confidence,
 } from "./assess/reliability.js";
 export { renderReliabilityCard } from "./assess/reliability-report.js";
+export { generateFounderInsightReport } from "./report/generate.js";
+export {
+  buildLLMPrescriptions,
+  sampleReasons,
+} from "./report/llm-prescriptions.js";
+export { renderFounderInsightReport, HELD_CAP } from "./report/render.js";
+export type {
+  FounderReportOptions,
+  FounderInsightReport,
+  SegmentInsight,
+  ConfidenceCard,
+  ConfidenceLayer,
+  RiskyAssumption,
+  DriverInsight,
+  InterviewTarget,
+  InterviewQuestion,
+  SurveyQuestion,
+  MessageTest,
+  ValidationAction,
+  ReportAppendix,
+  Basis,
+  FounderGoal,
+  ConceptMeta,
+} from "./report/types.js";
+export {
+  HeuristicPrescriptionGenerator,
+  detectThemes,
+  type PrescriptionGenerator,
+  type PrescriptionContext,
+  type Theme,
+} from "./report/prescriptions.js";

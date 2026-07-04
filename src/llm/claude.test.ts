@@ -64,3 +64,115 @@ describe("ClaudeProvider", () => {
     expect(out).toBe("살래요");
   });
 });
+
+describe("ClaudeProvider.askChoice", () => {
+  const persona = { id: "p1", attrs: { 연령: "25~29세" }, weight: 1 };
+
+  function fakeClient(captured: unknown[]) {
+    return {
+      messages: {
+        create: async (args: unknown) => {
+          captured.push(args);
+          return {
+            content: [
+              {
+                type: "tool_use",
+                input: { choice: "안쓴다", reason: "가격이 부담돼서" },
+              },
+            ],
+            usage: { input_tokens: 100, output_tokens: 20 },
+          };
+        },
+      },
+    };
+  }
+
+  test("tool_choice로 강제하고 enum에 choices를 넣는다", async () => {
+    const captured: unknown[] = [];
+    const p = new ClaudeProvider({ client: fakeClient(captured) as never });
+    const reply = await p.askChoice(persona, "q?", ["쓴다", "안쓴다"]);
+    expect(reply).toEqual({ choice: "안쓴다", reason: "가격이 부담돼서" });
+
+    const req = captured[0] as {
+      tools: Array<{
+        strict: boolean;
+        input_schema: { properties: { choice: { enum: string[] } } };
+      }>;
+      tool_choice: { type: string; name: string };
+    };
+    expect(req.tool_choice).toEqual({ type: "tool", name: "answer" });
+    expect(req.tools[0].strict).toBe(true);
+    expect(req.tools[0].input_schema.properties.choice.enum).toEqual([
+      "쓴다",
+      "안쓴다",
+    ]);
+  });
+
+  test("usage를 ask/askChoice에 걸쳐 누적한다", async () => {
+    const p = new ClaudeProvider({ client: fakeClient([]) as never });
+    await p.askChoice(persona, "q?", ["쓴다", "안쓴다"]);
+    await p.askChoice(persona, "q?", ["쓴다", "안쓴다"]);
+    expect(p.usage).toEqual({ calls: 2, inputTokens: 200, outputTokens: 40 });
+  });
+
+  test("tool_use 블록이 없으면 명확한 에러", async () => {
+    const broken = {
+      messages: {
+        create: async () => ({
+          content: [{ type: "text", text: "그냥 텍스트" }],
+        }),
+      },
+    };
+    const p = new ClaudeProvider({ client: broken as never });
+    await expect(
+      p.askChoice(persona, "q?", ["쓴다", "안쓴다"]),
+    ).rejects.toThrow(/tool_use/);
+  });
+});
+
+describe("ClaudeProvider.generateJson", () => {
+  test("tool use 강제로 스키마 이름·strict를 전달하고 input을 반환한다", async () => {
+    const captured: unknown[] = [];
+    const client = {
+      messages: {
+        create: async (args: unknown) => {
+          captured.push(args);
+          return {
+            content: [
+              { type: "tool_use", input: { drivers: [{ label: "x" }] } },
+            ],
+            usage: { input_tokens: 50, output_tokens: 10 },
+          };
+        },
+      },
+    };
+    const p = new ClaudeProvider({ client: client as never });
+    const out = await p.generateJson("시스템", "유저", {
+      name: "prescriptions",
+      schema: { type: "object", additionalProperties: false },
+    });
+    expect(out).toEqual({ drivers: [{ label: "x" }] });
+    const req = captured[0] as {
+      system: string;
+      tools: Array<{ name: string; strict: boolean }>;
+      tool_choice: { type: string; name: string };
+    };
+    expect(req.system).toBe("시스템");
+    expect(req.tools[0].name).toBe("prescriptions");
+    expect(req.tools[0].strict).toBe(true);
+    expect(req.tool_choice).toEqual({ type: "tool", name: "prescriptions" });
+    expect(p.usage.calls).toBe(1);
+  });
+
+  test("tool_use 블록이 없으면 throw", async () => {
+    const client = {
+      messages: {
+        create: async () => ({ content: [{ type: "text", text: "no" }] }),
+      },
+    };
+    const p = new ClaudeProvider({ client: client as never });
+    await expect(
+      p.generateJson("s", "u", { name: "x", schema: {} }),
+    ).rejects.toThrow(/tool_use/);
+  });
+});

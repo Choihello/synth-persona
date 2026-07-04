@@ -119,6 +119,46 @@ describe("assessReliability", () => {
     expect(a?.note).toBe("bridge:householder_age_as_proxy");
   });
 
+  test("consistency 측정값을 주면 responseConsistency가 measured로 바뀐다", () => {
+    const result = studyWith([resp({ 연령: "30대" }, { 연령: "matched" })]);
+    const card = assessReliability(result, {
+      consistency: {
+        selfConsistency: 0.9,
+        positivitySkew: 0.1,
+        meanDispersion: 0.8,
+        collapsed: false,
+        orderBiased: false,
+        paraphraseStable: true,
+        detail: { runs: 6, calls: 180, n: 30, repeats: 3 },
+      },
+    });
+    expect(card.responseConsistency.status).toBe("measured");
+    if (card.responseConsistency.status === "measured") {
+      expect(card.responseConsistency.label).toBe("medium"); // n 작음 — high 금지
+      expect(card.responseConsistency.selfConsistency).toBe(0.9);
+    }
+  });
+
+  test("붕괴/순서편향/예스맨이면 measured label=low + 가드레일 추가", () => {
+    const result = studyWith([resp({ 연령: "30대" }, { 연령: "matched" })]);
+    const card = assessReliability(result, {
+      consistency: {
+        selfConsistency: 0.9,
+        positivitySkew: 0.8, // 예스맨
+        meanDispersion: 0.1,
+        collapsed: true,
+        orderBiased: true,
+        paraphraseStable: false,
+        detail: { runs: 6, calls: 180, n: 30, repeats: 3 },
+      },
+    });
+    expect(card.responseConsistency.status).toBe("measured");
+    if (card.responseConsistency.status === "measured") {
+      expect(card.responseConsistency.label).toBe("low");
+    }
+    expect(card.guardrails.some((g) => g.includes("응답 신뢰도"))).toBe(true);
+  });
+
   test("항상 synthetic panel response 가드레일 포함", () => {
     const result = studyWith([resp({ 연령: "30대" }, { 연령: "matched" })]);
     const card = assessReliability(result);

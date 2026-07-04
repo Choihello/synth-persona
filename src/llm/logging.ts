@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Persona } from "../types.js";
-import type { LLMProvider } from "./provider.js";
+import type { ChoiceReply, LLMProvider, ProviderUsage } from "./provider.js";
 
 export interface LlmCallLog {
   runId: string;
@@ -24,12 +24,40 @@ function promptHash(prompt: string): string {
  */
 export class LoggingProvider implements LLMProvider {
   readonly logs: LlmCallLog[] = [];
+  /**
+   * inner가 askChoice를 구현할 때만 노출 — simulate는 askChoice 존재 여부로
+   * 구조화/폴백 경로를 고르므로, 없는데 노출하면 폴백 판정이 깨진다.
+   */
+  askChoice?: (
+    persona: Persona,
+    prompt: string,
+    choices: string[],
+  ) => Promise<ChoiceReply>;
+
   constructor(
     private inner: LLMProvider,
     private opts: { runId: string; model: string },
-  ) {}
+  ) {
+    if (inner.askChoice) {
+      const forward = inner.askChoice.bind(inner);
+      this.askChoice = (persona, prompt, choices) =>
+        this.logged(persona, prompt, async () => {
+          const reply = await forward(persona, prompt, choices);
+          return { result: reply, raw: JSON.stringify(reply) };
+        });
+    }
+  }
 
-  async ask(persona: Persona, prompt: string): Promise<string> {
+  /** inner의 누적 사용량을 그대로 노출 (래핑해도 토큰 집계 유지). */
+  get usage(): ProviderUsage | undefined {
+    return this.inner.usage;
+  }
+
+  private async logged<T>(
+    persona: Persona,
+    prompt: string,
+    run: () => Promise<{ result: T; raw: string }>,
+  ): Promise<T> {
     const start = Date.now();
     const base = {
       runId: this.opts.runId,
@@ -39,13 +67,13 @@ export class LoggingProvider implements LLMProvider {
       promptHash: promptHash(prompt),
     };
     try {
-      const rawResponse = await this.inner.ask(persona, prompt);
+      const { result, raw } = await run();
       this.logs.push({
         ...base,
-        rawResponse,
+        rawResponse: raw,
         latencyMs: Date.now() - start,
       });
-      return rawResponse;
+      return result;
     } catch (e) {
       this.logs.push({
         ...base,
@@ -54,6 +82,13 @@ export class LoggingProvider implements LLMProvider {
       });
       throw e;
     }
+  }
+
+  async ask(persona: Persona, prompt: string): Promise<string> {
+    return this.logged(persona, prompt, async () => {
+      const raw = await this.inner.ask(persona, prompt);
+      return { result: raw, raw };
+    });
   }
 
   /** 에러로 끝난 호출 수 (전원 실패/한도 모니터링용). */

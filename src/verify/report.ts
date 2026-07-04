@@ -1,5 +1,6 @@
 import { renderReliabilityCard } from "../assess/reliability-report.js";
 import type { ReliabilityCard } from "../assess/reliability.js";
+import { signalDot as dot, formatDistribution, pct } from "../format.js";
 import type { StudyResult } from "../types.js";
 import type { CalibrationReport } from "./calibrate.js";
 
@@ -9,9 +10,6 @@ export interface ReportInput {
   calibration?: CalibrationReport;
   reliability?: ReliabilityCard;
 }
-
-const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
-const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
 
 function renderResult(result: StudyResult): string {
   const lines: string[] = [];
@@ -27,9 +25,7 @@ function renderResult(result: StudyResult): string {
     lines.push("| 세그먼트 | 신호 | 분포 |");
     lines.push("|---|---|---|");
     for (const [val, s] of Object.entries(segs)) {
-      const bd = Object.entries(s.breakdown)
-        .map(([k, v]) => `${k}=${v}`)
-        .join(", ");
+      const bd = formatDistribution(s.breakdown);
       lines.push(`| ${val} | ${dot(s.signal)} ${s.signal} | ${bd} |`);
     }
     lines.push("");

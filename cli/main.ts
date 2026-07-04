@@ -1,22 +1,37 @@
 import { parseArgs } from "node:util";
 import snapshotJson from "../data/census/kr-2024.json" with { type: "json" };
 import { SampleSource } from "../src/data/sample-source.js";
+import { formatDistribution, signalDot } from "../src/format.js";
 import { ClaudeProvider } from "../src/llm/claude.js";
 import { MockProvider } from "../src/llm/mock.js";
+import { OpenAIProvider } from "../src/llm/openai.js";
 import type { LLMProvider } from "../src/llm/provider.js";
 import type { Snapshot } from "../src/population/schema.js";
 import { CensusPopulation } from "../src/population/source.js";
+import { DEFAULT_MIN_N } from "../src/report/generate.js";
 import { runCensusStudy, runStudy } from "../src/study.js";
 import type { Persona, StudyResult } from "../src/types.js";
 
-export function parseN(raw: string): number {
+export function parseIntArg(
+  raw: string,
+  flag: string,
+  opts?: { min?: number },
+): number {
   const n = Number(raw);
-  if (!Number.isInteger(n) || n <= 0) {
-    throw new Error(
-      `--n 은 1 이상의 정수여야 합니다 (입력: "${raw}"). 예: --n 50`,
-    );
+  const min = opts?.min;
+  if (!Number.isFinite(n) || !Number.isInteger(n) || (min != null && n < min)) {
+    const bound = min != null ? `${min} 이상의 ` : "";
+    throw new Error(`${flag} 은(는) ${bound}정수여야 합니다 (입력: "${raw}")`);
   }
   return n;
+}
+
+export function parseN(raw: string): number {
+  return parseIntArg(raw, "--n", { min: 1 });
+}
+
+export function parseSeed(raw: string): number {
+  return parseIntArg(raw, "--seed");
 }
 
 /**
@@ -37,8 +52,27 @@ export function censusAwareDemoMock(
   };
 }
 
-export function formatResult(result: StudyResult): string {
-  const dot = (s: string) => (s === "split" ? "🔴" : "🟢");
+/** --mock이면 결정적 mock, 아니면 --provider(anthropic|openai)로 라이브 프로바이더 선택. */
+export function resolveProvider(opts: {
+  mock: boolean;
+  provider?: string;
+  choices?: string[];
+}): LLMProvider {
+  if (opts.mock) return new MockProvider(censusAwareDemoMock(opts.choices));
+  const name = opts.provider ?? "openai"; // 운용 결정(2026-07-04): OpenAI 단독 — anthropic은 명시 선택 시만
+  if (name === "anthropic") return new ClaudeProvider();
+  if (name === "openai") return new OpenAIProvider();
+  throw new Error(
+    `--provider 는 anthropic 또는 openai 여야 합니다 (입력: "${name}")`,
+  );
+}
+
+export function formatResult(
+  result: StudyResult,
+  opts?: { minN?: number },
+): string {
+  const minN = opts?.minN ?? DEFAULT_MIN_N;
+  const dot = signalDot;
   const lines: string[] = [];
   lines.push(
     "⚠️ synthetic panel response — 실제 시장 반응 아님 · 사람 대상 실측 전 가설 탐색용",
@@ -53,19 +87,18 @@ export function formatResult(result: StudyResult): string {
       const k = r.choice ?? r.answer;
       total[k] = (total[k] ?? 0) + 1;
     }
-    lines.push(
-      `응답 분포: ${Object.entries(total)
-        .map(([k, v]) => `${k}=${v}`)
-        .join(", ")}`,
-    );
+    lines.push(`응답 분포: ${formatDistribution(total)}`);
   }
   for (const [dim, segs] of Object.entries(result.bySegment)) {
     lines.push(`\n[${dim}별]`);
     for (const [val, s] of Object.entries(segs)) {
-      const bd = Object.entries(s.breakdown)
-        .map(([k, v]) => `${k}=${v}`)
-        .join(", ");
-      lines.push(`  ${dot(s.signal)} ${val}: ${bd}`);
+      const n = Object.values(s.breakdown).reduce((a, b) => a + b, 0);
+      const bd = formatDistribution(s.breakdown);
+      if (n < minN) {
+        lines.push(`  ⚪ ${val} (n=${n}): ${bd} — 표본 부족, 판단 보류`);
+      } else {
+        lines.push(`  ${dot(s.signal)} ${val} (n=${n}): ${bd}`);
+      }
     }
   }
   if (result.missing?.length) {
@@ -87,6 +120,10 @@ export async function main(): Promise<void> {
       seed: { type: "string" },
       source: { type: "string", default: "sample" },
       mock: { type: "boolean", default: false },
+      provider: { type: "string", default: "openai" },
+      concurrency: { type: "string", default: "4" },
+      counterbalance: { type: "boolean", default: false },
+      repeats: { type: "string", default: "1" },
     },
   });
   if (!values.question) {
@@ -105,17 +142,44 @@ export async function main(): Promise<void> {
   const choices = values.choices?.split(",").map((c) => c.trim());
   const question = { prompt: values.question, choices };
   const n = parseN(values.n ?? "50");
-  const seed = values.seed ? Number(values.seed) : undefined;
-  const provider: LLMProvider = values.mock
-    ? new MockProvider(censusAwareDemoMock(choices))
-    : new ClaudeProvider();
+  const seed = values.seed ? parseSeed(values.seed) : undefined;
+  const concurrency = parseIntArg(values.concurrency ?? "4", "--concurrency", {
+    min: 1,
+  });
+  const repeats = parseIntArg(values.repeats ?? "1", "--repeats", { min: 1 });
+  const provider: LLMProvider = resolveProvider({
+    mock: values.mock ?? false,
+    provider: values.provider,
+    choices,
+  });
+
+  const isLive = !values.mock;
+  const simulateOpts = {
+    concurrency: isLive ? concurrency : 1, // mock은 순차(결정성·기존 데모 출력 보존)
+    retries: isLive ? 1 : 0, // 재시도는 실측 경로 전용 — 라이브러리 기본값(0)은 재호출 없음
+    counterbalance: values.counterbalance ?? false,
+    onProgress: isLive
+      ? (done: number, total: number) => {
+          process.stderr.write(`\r응답 수집 중 ${done}/${total}`);
+          if (done === total) process.stderr.write("\n");
+        }
+      : undefined,
+  };
 
   let result: StudyResult;
   if (source === "census") {
     const population = new CensusPopulation(
       snapshotJson as unknown as Snapshot,
     );
-    result = await runCensusStudy({ population, provider, question, n, seed });
+    result = await runCensusStudy({
+      population,
+      provider,
+      question,
+      n,
+      seed,
+      repeats,
+      simulate: simulateOpts,
+    });
   } else {
     result = await runStudy({
       source: new SampleSource(),
@@ -123,9 +187,17 @@ export async function main(): Promise<void> {
       question,
       n,
       seed,
+      repeats,
+      simulate: simulateOpts,
     });
   }
   console.log(formatResult(result));
+  if (provider.usage && provider.usage.calls > 0) {
+    const u = provider.usage;
+    console.error(
+      `\n토큰 사용: 입력 ${u.inputTokens.toLocaleString()} · 출력 ${u.outputTokens.toLocaleString()} (${u.calls}회 호출) — 단가는 콘솔 요금표 확인`,
+    );
+  }
 }
 
 if (

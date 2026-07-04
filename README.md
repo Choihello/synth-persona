@@ -43,25 +43,27 @@ $ node dist/cli/main.js --question "신선식품 새벽배송 구독, 월 9900�
 응답 분포: 쓴다=34, 안쓴다=26
 
 [age별]
-  🟢 20대: 쓴다=16
-  🟢 50대: 안쓴다=12
-  🟢 40대: 안쓴다=14
-  🟢 30대: 쓴다=18
+  🟢 20대 (n=16): 쓴다=16
+  🟢 50대 (n=12): 안쓴다=12
+  🟢 40대 (n=14): 안쓴다=14
+  🟢 30대 (n=18): 쓴다=18
 
 [sex별]
-  🔴 남: 쓴다=16, 안쓴다=10
-  🔴 여: 안쓴다=16, 쓴다=18
+  🔴 남 (n=26): 쓴다=16, 안쓴다=10
+  🔴 여 (n=34): 안쓴다=16, 쓴다=18
 
 [region별]
-  🔴 수도권: 쓴다=17, 안쓴다=13
-  🔴 비수도권: 쓴다=17, 안쓴다=13
+  🔴 수도권 (n=30): 쓴다=17, 안쓴다=13
+  🔴 비수도권 (n=30): 쓴다=17, 안쓴다=13
 
 [hh별]
-  🔴 1인가구: 쓴다=21, 안쓴다=5
-  🔴 3인가구: 안쓴다=6, 쓴다=2
-  🔴 2인가구: 안쓴다=11, 쓴다=8
-  🔴 4인이상: 안쓴다=4, 쓴다=3
+  🔴 1인가구 (n=26): 쓴다=21, 안쓴다=5
+  🔴 3인가구 (n=8): 안쓴다=6, 쓴다=2
+  🔴 2인가구 (n=19): 안쓴다=11, 쓴다=8
+  ⚪ 4인이상 (n=7): 안쓴다=4, 쓴다=3 — 표본 부족, 판단 보류
 ```
+
+세그먼트 앞의 `(n=X)`는 해당 세그먼트에 응답한 표본 크기다. 기본 `minN=8` 미만이면 색상 신호(🔴/🟢) 대신 ⚪로 판단을 보류한다 — 표본이 적을 때 성급히 결론 내리지 않기 위함이다.
 
 읽는 법: **전체는 🔴 분열**이지만 **연령(age)으로 보면 각 세그먼트가 🟢 합의** — 20·30대는 "쓴다", 40·50대는 "안쓴다". 즉 *"이 서비스의 운명은 연령이 가른다"* 가 한눈에 보인다. (위 출력은 데모용 결정적 mock 결과이고, 실제 인사이트는 Claude 제공자로 얻는다.)
 
@@ -77,13 +79,13 @@ $ node dist/cli/main.js --question "신선식품 새벽배송 구독, 월 9900�
 응답 분포: 안쓴다=41, 쓴다=19
 
 [성별]
-  🔴 남자: 안쓴다=24, 쓴다=10
-  🔴 여자: 안쓴다=17, 쓴다=9
+  🔴 남자 (n=34): 안쓴다=24, 쓴다=10
+  🔴 여자 (n=26): 안쓴다=17, 쓴다=9
 
 [연령별]
-  🟢 15~19세: 안쓴다=2
-  🟢 25~29세: 쓴다=5
-  ... (연령 15구간 · 혼인 · 가구원수 세그먼트 계속)
+  ⚪ 15~19세 (n=2): 안쓴다=2 — 표본 부족, 판단 보류
+  ⚪ 25~29세 (n=5): 쓴다=5 — 표본 부족, 판단 보류
+  ... (연령 15구간 · 혼인 · 가구원수 세그먼트 계속 — 다수는 n<8 소표본으로 ⚪ 표시된다)
 ```
 
 > 위 숫자는 **synthetic panel response**(가상 패널 응답)이지 실제 구매율·시장 예측이 아니다. census 경로의 페르소나는 provenance(matched/conditioned/inferred)와 weight를 보존하므로, 합성 인구 자기검증은 `npm run reliability:demo`(키 불필요)로 1·2층 신뢰성 카드까지 확인할 수 있다. 실제 응답 추론(2층)은 Claude 제공자를 붙일 때 동작한다.
@@ -96,7 +98,7 @@ npm install
 npm run build
 ```
 
-### 키 없이 바로 돌려보는 3가지 (전부 결정적·재현 가능)
+### 키 없이 바로 돌려보는 4가지 (전부 결정적·재현 가능)
 
 ```bash
 # 1) 번들 샘플 분포 + mock — 빠른 감 잡기
@@ -108,6 +110,9 @@ node dist/cli/main.js --question "월 9900원에 쓸 의향?" --choices "쓴다,
 
 # 3) 합성 인구 신뢰성 카드 — 1층 구성 신뢰도 + 2층 속성 provenance (자기검증)
 npm run reliability:demo
+
+# 4) 창업자 인사이트 리포트 — 진단(🔴/🟢)을 다음 행동(인터뷰·설문·랜딩 초안)으로 번역
+npm run report:demo
 ```
 
 키 없이도 `npm install && npm test` 가 항상 초록불이다 (테스트·CI는 mock/VCR만 사용). 위 mock 출력의 숫자는 **synthetic panel response**(가상 패널 응답)이지 실제 구매율·시장 예측이 아니다.
@@ -151,9 +156,10 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
 | `--question` | 던질 질문 (필수) | — |
 | `--choices` | 상대 비교 선택지 `"A,B"` | 없음(자유응답) |
 | `--n` | 페르소나 수 | 50 |
-| `--seed` | 재현용 시드 | 1 |
+| `--seed` | 재현용 시드 (정수) | 1 |
 | `--source` | `sample` (번들 샘플 분포) 또는 `census` (번들 통계청 합성 인구). KOSIS 라이브는 라이브러리 전용 | sample |
 | `--mock` | 키 없이 결정적 mock | off |
+| `--concurrency` | 실측(비-mock) 시 동시 LLM 호출 수 | 4 |
 
 ## 동작 원리
 
@@ -221,9 +227,10 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **합성 인구 fidelity 리포트 (Plan 3B)** — 합성 집단을 원본 대비 가중 재집계(MAE/TVD/smoothedKL)해 "1층 신뢰"를 숫자로. matched-core vs conditioned 분리, `npm run fidelity:demo` (실 스냅샷 core/conditional 전부 MAE≈0)
 - [x] **신뢰성 오버레이 (묶음 A)** — `StudyResult`에 4층 신뢰성 카드(1층 구성·2층 속성 provenance·3층 응답[placeholder]·4층 부정형 가드레일) 결합. provenance worst-wins 보수 집계, 숫자는 synthetic panel response로 라벨. `npm run reliability:demo` (키 불필요)
 - [x] **key-free census 파이프라인 (B0)** — `runCensusStudy`/`censusShareRunner` 공개 헬퍼 + CLI `--source census`로 번들 통계청 합성 인구를 키 없이 실행. probes/robustness를 provider 추상화 위에 배선(현재 mock로 검증)
-- [ ] **2층 응답 실측 (묶음 B)** — `--source census`에 `ClaudeProvider`를 붙여 실제 응답 추론. `ANTHROPIC_API_KEY` 필요 ([roadmap](docs/roadmap-bundle-B.md))
-- [ ] **3층 응답 신뢰도 실측 (묶음 B)** — probes(자기일관성·예스맨·평균회귀)·robustness 실측으로 `responseConsistency` placeholder 교체. 키 필요
-- [ ] **진단→처방: 다음 행동 생성물 (묶음 B)** — 끌릴/거부 이유·병목·인터뷰 질문·설문 초안·랜딩 메시지·최불확실 가정 (2층 LLM 생성). 키 필요
+- [x] **창업자 인사이트 리포트 (Plan 4, heuristic v1)** — 진단을 창업자 행동으로 번역: 기회/저항 세그먼트 랭킹(+판단 보류) · 4층 신뢰도 카드 · heuristic 처방(인터뷰 대상/질문·설문·랜딩·7일 플랜, 전부 "AI 생성 초안" 라벨) · markdown 렌더 (`npm run report:demo`, 키 불필요). LLM 생성 v2는 issue #4.
+- [x] **2층 응답 실측 (묶음 B)** — B1 완료(go 조건부, gpt-4o-mini · `--provider openai|anthropic`): 예스맨·순서 편향 게이트 통과, 가격 저항 분화 확인 ([노트](docs/b1-live-notes-2026-07-04.md))
+- [x] **3층 응답 신뢰도 실측 (묶음 B)** — `measureResponseConsistency` + `npm run b2:live`로 자기일관성·예스맨·순서·패러프레이즈·붕괴 계측, `responseConsistency`가 measured(medium|low)로 교체됨. 실측(gpt-4o-mini): 순서·문구 민감 → low ([노트](docs/b2-live-notes-2026-07-04.md))
+- [x] **진단→처방: 다음 행동 생성물 (묶음 B)** — B3 완료: `buildLLMPrescriptions`가 실측 reason 층화 샘플에 근거해 drivers/objections(병목 태그)/인터뷰 질문을 LLM 생성(basis:llm), 나머지는 heuristic 위임. `npm run report:live`로 end-to-end ([노트](docs/b3-live-notes-2026-07-04.md), issue #4)
 - [ ] 웹 UI
 
 ## 라이선스
