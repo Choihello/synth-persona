@@ -1,7 +1,7 @@
 import type { ReliabilityCard } from "../assess/reliability.js";
 
 export type Confidence = "high" | "medium" | "low" | "unknown";
-export type Basis = "measured" | "heuristic";
+export type Basis = "measured" | "heuristic" | "llm";
 export type FounderGoal =
   | "targeting"
   | "pricing"

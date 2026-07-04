@@ -130,7 +130,10 @@ describe("OpenAIProvider.generateJson", () => {
     expect(out).toEqual({ drivers: [{ label: "x" }] });
     const body = calls[0].body as {
       messages: Array<{ role: string; content: string }>;
-      response_format: { type: string; json_schema: { name: string; strict: boolean } };
+      response_format: {
+        type: string;
+        json_schema: { name: string; strict: boolean };
+      };
     };
     expect(body.messages[0]).toEqual({ role: "system", content: "시스템" });
     expect(body.response_format.type).toBe("json_schema");

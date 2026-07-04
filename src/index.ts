@@ -109,6 +109,10 @@ export {
 } from "./assess/reliability.js";
 export { renderReliabilityCard } from "./assess/reliability-report.js";
 export { generateFounderInsightReport } from "./report/generate.js";
+export {
+  buildLLMPrescriptions,
+  sampleReasons,
+} from "./report/llm-prescriptions.js";
 export { renderFounderInsightReport, HELD_CAP } from "./report/render.js";
 export type {
   FounderReportOptions,
