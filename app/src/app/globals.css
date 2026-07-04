@@ -1,6 +1,7 @@
 /* 리서치 에디토리얼 — 크림 서피스 + 잉크 텍스트 + 세리프 헤드라인.
    차트 팔레트(#2a78d6/#e34948)는 이 서피스 대비 검증기 ALL PASS. */
 :root {
+  color-scheme: light;
   --surface: #faf6ef;
   --surface-raised: #ffffff;
   --ink: #1f1d1a;
@@ -300,4 +301,79 @@ button[type="submit"]:disabled {
 
 .backlink a {
   color: var(--ink-secondary);
+}
+
+/* ── 홈 갤러리 ─────────────────────────────── */
+.gallery {
+  margin-top: 56px;
+}
+
+.gallery h2 {
+  font-size: 21px;
+  margin: 0 0 14px;
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
+}
+
+.gallery ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gallery li {
+  margin: 10px 0;
+  font-size: 15.5px;
+}
+
+.gallery a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 4px;
+}
+
+.gallery a:hover {
+  text-decoration-color: var(--ink-secondary);
+}
+
+/* ── 다크 모드 ─────────────────────────────── */
+/* 페이지 크롬만 웜 잉크로 반전. 차트 SVG는 검증된 크림 서피스 카드 위에
+   그대로 얹는다(팔레트 자동 플립 금지, dataviz 검증기 통과분 유지). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface: #191613;
+    --surface-raised: #221e19;
+    --ink: #ece7dc;
+    --ink-secondary: #beb8aa;
+    --ink-muted: #97917f;
+    --hairline: #37332c;
+    --accent: #5b9be0;
+    --negative: #e07a72;
+    --amber: #d4a017;
+  }
+
+  button[type="submit"] {
+    color: var(--surface);
+  }
+
+  button[type="submit"]:hover:not(:disabled) {
+    background: #fff;
+  }
+
+  .report svg {
+    background: #faf6ef;
+    padding: 14px 16px;
+    border-radius: 10px;
+  }
+
+  .report code {
+    background: rgba(236, 231, 220, 0.09);
+  }
+
+  .disclaimer,
+  .report blockquote {
+    background: rgba(212, 160, 23, 0.09);
+  }
 }
