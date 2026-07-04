@@ -90,6 +90,23 @@ describe("runCensusStudy (key-free, census 합성인구)", () => {
     );
   });
 
+  test("전원 실패 시 첫 실패 사유가 에러에 포함된다 (키/크레딧 진단 가능)", async () => {
+    const failing = {
+      async ask(): Promise<string> {
+        throw new Error("401 Incorrect API key provided");
+      },
+    };
+    await expect(
+      runCensusStudy({
+        population,
+        provider: failing,
+        question,
+        n: 5,
+        seed: 7,
+      }),
+    ).rejects.toThrow(/Incorrect API key/);
+  });
+
   test("repeats: k회 실행 응답을 풀링해 집계한다 (n×k 응답)", async () => {
     let calls = 0;
     const countingMock = {

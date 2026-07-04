@@ -4,6 +4,7 @@ import {
   formatResult,
   parseIntArg,
   parseN,
+  USAGE,
   parseSeed,
   resolveCounterbalance,
   resolveProvider,
@@ -116,6 +117,27 @@ describe("resolveProvider", () => {
     expect(() => resolveProvider({ mock: false, provider: "gemini" })).toThrow(
       /--provider/,
     );
+  });
+});
+
+describe("USAGE", () => {
+  it("모든 플래그가 도움말에 설명된다", () => {
+    for (const flag of [
+      "--question",
+      "--choices",
+      "--n",
+      "--seed",
+      "--source",
+      "--mock",
+      "--provider",
+      "--concurrency",
+      "--repeats",
+      "--no-counterbalance",
+      "--help",
+    ]) {
+      expect(USAGE).toContain(flag);
+    }
+    expect(USAGE).toContain("OPENAI_API_KEY");
   });
 });
 

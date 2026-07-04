@@ -12,6 +12,29 @@ import { DEFAULT_MIN_N } from "../src/report/generate.js";
 import { runCensusStudy, runStudy } from "../src/study.js";
 import type { Persona, StudyResult } from "../src/types.js";
 
+export const USAGE = `synth-persona — 통계청 합성 인구 기반 0차 시장검증 (synthetic panel)
+
+사용법:
+  synth-persona --question "월 9900원에 쓸 의향?" --choices "쓴다,안쓴다" [옵션]
+
+필수:
+  --question <문장>      물어볼 질문
+  --choices <a,b[,c]>    쉼표 구분 선택지 (권장 — 없으면 자유응답)
+
+옵션:
+  --n <수>               표본 크기 (기본 50)
+  --seed <정수>          재현용 시드
+  --source sample|census 인구 소스 (기본 sample; census = 번들 통계청 합성 인구)
+  --mock                 키 없이 결정적 데모 실행
+  --provider openai|anthropic  라이브 프로바이더 (기본 openai — OPENAI_API_KEY 필요)
+  --concurrency <수>     동시 호출 수 (기본 4)
+  --repeats <수>         반복 실행 풀링 (기본 1; 실측은 3 권장 — run간 분산 완화)
+  --no-counterbalance    선택지 순서 상쇄 해제 (라이브 기본 on — 순서 편향 방지)
+  --help                 이 도움말
+
+환경변수: OPENAI_API_KEY (기본) · ANTHROPIC_API_KEY (--provider anthropic 시)
+비용 참고: gpt-4o-mini 기준 n=30 1회 ≈ \$0.006. 출력은 synthetic panel response이며 실제 시장 반응이 아닙니다.`;
+
 export function parseIntArg(
   raw: string,
   flag: string,
@@ -139,13 +162,16 @@ export async function main(): Promise<void> {
       concurrency: { type: "string", default: "4" },
       counterbalance: { type: "boolean", default: false },
       "no-counterbalance": { type: "boolean", default: false },
+      help: { type: "boolean", default: false },
       repeats: { type: "string", default: "1" },
     },
   });
+  if (values.help) {
+    console.log(USAGE);
+    return;
+  }
   if (!values.question) {
-    console.error(
-      '사용법: synth-persona --question "A안 vs B안?" --choices "A안,B안" [--n 50] [--source sample|census] [--mock]',
-    );
+    console.error(USAGE);
     process.exit(1);
   }
   const source = values.source ?? "sample";

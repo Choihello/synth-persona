@@ -41,6 +41,12 @@ async function simulatePooled(
     responses.push(...r.responses);
     missing.push(...r.missing);
   }
+  // 전원 실패면 집계 에러(aggregate) 전에 실제 원인을 드러낸다 — 키/크레딧/한도 진단용
+  if (responses.length === 0 && missing.length > 0) {
+    throw new Error(
+      `모든 페르소나 응답이 실패했습니다(${missing.length}건). 첫 실패 사유: ${missing[0].reason}`,
+    );
+  }
   return { responses, missing };
 }
 
