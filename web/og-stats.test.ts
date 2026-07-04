@@ -7,6 +7,8 @@ const SAMPLE_MD = `# 컨셉 — 0차 시장검증 리포트
 
 ## 전체 신호
 
+<svg viewBox="0 0 640 64" width="100%" role="img" aria-label="전체 응답 분포: 찬성 87%, 반대·유보 13%" xmlns="http://www.w3.org/2000/svg"></svg>
+
 - 🟢 consensus(합의) · 응답 분포: 찬성=78, 반대=4, 유보=8
 - n=90 · seed=999846 · provider=web · 누락률 0.0%
 

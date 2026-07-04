@@ -10,7 +10,8 @@ export interface OgStats {
 }
 
 export function extractOgStats(md: string): OgStats | undefined {
-  const distLine = md.match(/응답 분포: ([^\n]+)/);
+  // 불릿 줄만 매칭 — 차트 SVG의 aria-label("전체 응답 분포: 찬성 87%…")을 피한다
+  const distLine = md.match(/^- .*?· 응답 분포: ([^\n]+)/m);
   if (!distLine) return undefined;
 
   const dist: [string, number][] = [];
