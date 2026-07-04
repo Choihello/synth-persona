@@ -4,6 +4,7 @@ import { SampleSource } from "../src/data/sample-source.js";
 import { formatDistribution, signalDot } from "../src/format.js";
 import { ClaudeProvider } from "../src/llm/claude.js";
 import { MockProvider } from "../src/llm/mock.js";
+import { OpenAIProvider } from "../src/llm/openai.js";
 import type { LLMProvider } from "../src/llm/provider.js";
 import type { Snapshot } from "../src/population/schema.js";
 import { CensusPopulation } from "../src/population/source.js";
@@ -49,6 +50,21 @@ export function censusAwareDemoMock(
     const young = age === "20대" || age === "30대" || youngCensus.has(age);
     return young ? yes : no;
   };
+}
+
+/** --mock이면 결정적 mock, 아니면 --provider(anthropic|openai)로 라이브 프로바이더 선택. */
+export function resolveProvider(opts: {
+  mock: boolean;
+  provider?: string;
+  choices?: string[];
+}): LLMProvider {
+  if (opts.mock) return new MockProvider(censusAwareDemoMock(opts.choices));
+  const name = opts.provider ?? "anthropic";
+  if (name === "anthropic") return new ClaudeProvider();
+  if (name === "openai") return new OpenAIProvider();
+  throw new Error(
+    `--provider 는 anthropic 또는 openai 여야 합니다 (입력: "${name}")`,
+  );
 }
 
 export function formatResult(
@@ -104,6 +120,7 @@ export async function main(): Promise<void> {
       seed: { type: "string" },
       source: { type: "string", default: "sample" },
       mock: { type: "boolean", default: false },
+      provider: { type: "string", default: "anthropic" },
       concurrency: { type: "string", default: "4" },
     },
   });
@@ -127,9 +144,11 @@ export async function main(): Promise<void> {
   const concurrency = parseIntArg(values.concurrency ?? "4", "--concurrency", {
     min: 1,
   });
-  const provider: LLMProvider = values.mock
-    ? new MockProvider(censusAwareDemoMock(choices))
-    : new ClaudeProvider();
+  const provider: LLMProvider = resolveProvider({
+    mock: values.mock ?? false,
+    provider: values.provider,
+    choices,
+  });
 
   const isLive = !values.mock;
   const simulateOpts = {

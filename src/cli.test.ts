@@ -5,7 +5,11 @@ import {
   parseIntArg,
   parseN,
   parseSeed,
+  resolveProvider,
 } from "../cli/main.js";
+import { ClaudeProvider } from "./llm/claude.js";
+import { MockProvider } from "./llm/mock.js";
+import { OpenAIProvider } from "./llm/openai.js";
 import type { Persona, StudyResult } from "./types.js";
 
 const result: StudyResult = {
@@ -93,6 +97,24 @@ describe("parseSeed", () => {
   it("숫자가 아니면 명확히 실패한다 (NaN 조용히 통과 금지)", () => {
     expect(() => parseSeed("abc")).toThrow(/--seed/);
     expect(() => parseSeed("1.5")).toThrow(/--seed/);
+  });
+});
+
+describe("resolveProvider", () => {
+  it("--mock이면 프로바이더 지정과 무관하게 MockProvider", () => {
+    const p = resolveProvider({ mock: true, provider: "openai" });
+    expect(p).toBeInstanceOf(MockProvider);
+  });
+  it("anthropic(기본)/openai를 선택할 수 있다", () => {
+    expect(resolveProvider({ mock: false })).toBeInstanceOf(ClaudeProvider);
+    expect(resolveProvider({ mock: false, provider: "openai" })).toBeInstanceOf(
+      OpenAIProvider,
+    );
+  });
+  it("지원하지 않는 값은 --provider를 지목하며 throw", () => {
+    expect(() => resolveProvider({ mock: false, provider: "gemini" })).toThrow(
+      /--provider/,
+    );
   });
 });
 
