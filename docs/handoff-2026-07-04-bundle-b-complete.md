@@ -21,13 +21,17 @@ npm run b2:live                                            # 응답 신뢰도 �
 node dist/cli/main.js --question "..." --choices "A,B" --n 30 --seed 7 --source census --counterbalance --repeats 3
 ```
 
-## 3. 다음 후보 (우선순위 미정 — 사용자 결정)
+## 3. 다음 후보 — 2026-07-04 오후 갱신
 
-1. **n=100+ 재확인**: B1의 새벽배송·반찬 동률(7/30)이 우연인지 — Batches API(50% 할인) 도입 검토 시점
-2. **counterbalance/repeats 기본값화**: 실측 경로에서 기본 on으로 할지 (현재 opt-in)
-3. **오픈소스/BYOK 정리**: README 사용자용 문서, 키 안내, 라이선스
-4. **플랫폼화 탐색**: humanize-web-architect류 웹 UI — 사용자 키 vs 호스팅 모델 결정 필요
-5. Claude 교차 실측 (보류 중 — 크레딧 확보 시 명령 3개로 즉시 가능, b3 노트 참조)
+~~1. n=100+ 재확인~~ ✅ 완료 — 동률 해소(41.7% vs 22.7%), 1인가구 저항 n=138 재현 (b1 노트 후속 섹션)
+~~2. counterbalance 기본값화~~ ✅ 완료 — 라이브 기본 on, --no-counterbalance로 해제
+~~3. 오픈소스 정리~~ ✅ 대부분 완료 — 사용자용 README·CHANGELOG·--help·친절한 전원실패 에러·**v0.2.0 릴리스** (https://github.com/Choihello/synth-persona/releases/tag/v0.2.0)
+
+남은 결정/후보:
+1. **npm 배포 여부** — package.json은 private:true 유지 중. 배포하려면 name 충돌 확인·files 필드·prepublish 정리 필요 (사용자 결정 대기)
+2. **플랫폼화 탐색** — 웹 UI. 별도 brainstorming 사이클 권장, 키 모델(BYOK vs 호스팅) 결정 선행
+3. Batches API — n=1000+ 상시 운용이 보이면 (현재 비용 수준에선 YAGNI)
+4. Claude 교차 실측 (보류 — --provider anthropic으로 즉시 가능)
 
 ## 4. 실측 노트
 
