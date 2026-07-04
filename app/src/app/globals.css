@@ -1,0 +1,303 @@
+/* 리서치 에디토리얼 — 크림 서피스 + 잉크 텍스트 + 세리프 헤드라인.
+   차트 팔레트(#2a78d6/#e34948)는 이 서피스 대비 검증기 ALL PASS. */
+:root {
+  --surface: #faf6ef;
+  --surface-raised: #ffffff;
+  --ink: #1f1d1a;
+  --ink-secondary: #52504a;
+  --ink-muted: #8a8578;
+  --hairline: #e4ddd0;
+  --accent: #2a78d6;
+  --negative: #b3362f;
+  --amber: #b98500;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--surface);
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-sans), "Apple SD Gothic Neo", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px 96px;
+}
+
+/* ── 헤더/푸터 ─────────────────────────────── */
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 28px 0 16px;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 40px;
+}
+
+.masthead a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark {
+  font-family: var(--font-serif), serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+.masthead .tag {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.colophon {
+  margin-top: 72px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.colophon a {
+  color: var(--ink-secondary);
+}
+
+/* ── 타이포그래피 ──────────────────────────── */
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif), serif;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+h1 {
+  font-size: 34px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.lede {
+  font-size: 17.5px;
+  color: var(--ink-secondary);
+  margin: 0 0 20px;
+}
+
+.disclaimer {
+  margin: 24px 0 32px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--amber);
+  background: rgba(185, 133, 0, 0.06);
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+
+/* ── 폼 ────────────────────────────────────── */
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 1px 2px rgba(31, 29, 26, 0.04);
+}
+
+.field {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.field span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-secondary);
+  margin-bottom: 6px;
+}
+
+textarea,
+input[type="text"] {
+  width: 100%;
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 15.5px;
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+textarea:focus,
+input[type="text"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+button[type="submit"] {
+  padding: 12px 22px;
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--ink);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background: #000;
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.hint {
+  margin-left: 12px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.error-text {
+  color: var(--negative);
+  font-size: 14.5px;
+}
+
+/* ── 진행 ──────────────────────────────────── */
+.progress-panel {
+  margin-top: 28px;
+  padding: 20px 24px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface-raised);
+}
+
+.progress-phase {
+  font-size: 14.5px;
+  color: var(--ink-secondary);
+  margin: 0 0 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--hairline);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.progress-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+/* ── 리포트 본문 (marked 출력) ──────────────── */
+.report {
+  font-size: 16px;
+}
+
+.report h1 {
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+
+.report h2 {
+  font-size: 21px;
+  margin: 44px 0 14px;
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
+}
+
+.report h3 {
+  font-size: 17px;
+  margin: 26px 0 8px;
+}
+
+.report blockquote {
+  margin: 16px 0;
+  padding: 10px 16px;
+  border-left: 3px solid var(--amber);
+  background: rgba(185, 133, 0, 0.06);
+  color: var(--ink-secondary);
+  font-size: 14.5px;
+}
+
+.report blockquote p {
+  margin: 0;
+}
+
+.report table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  display: block;
+  overflow-x: auto;
+}
+
+.report th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  border-bottom: 2px solid var(--ink);
+  padding: 6px 10px;
+}
+
+.report td {
+  border-bottom: 1px solid var(--hairline);
+  padding: 7px 10px;
+  vertical-align: top;
+}
+
+.report li {
+  margin: 4px 0;
+}
+
+.report hr {
+  border: 0;
+  border-top: 1px solid var(--hairline);
+  margin: 40px 0;
+}
+
+.report svg {
+  margin: 8px 0 4px;
+}
+
+.report code {
+  background: rgba(31, 29, 26, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.backlink {
+  font-size: 14px;
+}
+
+.backlink a {
+  color: var(--ink-secondary);
+}

@@ -6,6 +6,7 @@ import { generateFounderInsightReport } from "../src/report/generate.js";
 import { buildLLMPrescriptions } from "../src/report/llm-prescriptions.js";
 import { renderFounderInsightReport } from "../src/report/render.js";
 import { runCensusStudy } from "../src/study.js";
+import { segmentBarsSVG, shareBarSVG } from "./charts.js";
 import type { ReportRunner } from "./jobs.js";
 
 export interface RunnerParams {
@@ -74,6 +75,40 @@ export function makeReportRunner(
       undefined,
       llmGen ?? undefined,
     );
-    return renderFounderInsightReport(report);
+    let md = renderFounderInsightReport(report);
+
+    // 인라인 SVG 차트 주입 (marked가 HTML 블록으로 통과시킴 — 저장본에 포함되어 공유 페이지 재생성 비용 0)
+    const positiveChoice = options.choices[0];
+    const shareSvg = shareBarSVG(
+      report.overallSignal.distribution,
+      positiveChoice,
+    );
+    if (shareSvg) {
+      md = md.replace("## 전체 신호\n", `## 전체 신호\n\n${shareSvg}\n`);
+    }
+    const segData = [
+      ...report.opportunitySegments,
+      ...report.resistanceSegments,
+    ].map((s) => ({
+      label: s.segmentLabel,
+      ratio: s.positiveRatio,
+      n: s.sampleCount,
+    }));
+    const globalRatio =
+      Object.values(report.overallSignal.distribution).reduce(
+        (a, b) => a + b,
+        0,
+      ) > 0
+        ? (report.overallSignal.distribution[positiveChoice] ?? 0) /
+          Object.values(report.overallSignal.distribution).reduce(
+            (a, b) => a + b,
+            0,
+          )
+        : 0;
+    const segSvg = segmentBarsSVG(segData, globalRatio);
+    if (segSvg) {
+      md = md.replace("## 기회 세그먼트\n", `${segSvg}\n\n## 기회 세그먼트\n`);
+    }
+    return md;
   };
 }
