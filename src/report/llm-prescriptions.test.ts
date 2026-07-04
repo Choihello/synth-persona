@@ -92,6 +92,7 @@ describe("buildLLMPrescriptions", () => {
       options,
     });
     expect(gen).not.toBeNull();
+    if (!gen) throw new Error("unreachable");
     const ctx = {
       options,
       positiveChoice: "쓴다",
@@ -101,20 +102,20 @@ describe("buildLLMPrescriptions", () => {
       hasPriceSignal: true,
       priceAxisMissing: true,
     };
-    const { drivers, objections } = gen!.drivers(ctx);
+    const { drivers, objections } = gen.drivers(ctx);
     expect(drivers[0].label).toBe("시간 절약");
     expect(drivers[0].basis).toBe("llm");
     expect(drivers[0].provenance).toBe("inferred");
     expect(drivers[0].confidence).toBe("medium"); // reason 25+25 ≥ 20
     expect(drivers[0].rationale).toContain("응답 이유");
     expect(objections[0].label).toContain("[가격]");
-    const qs = gen!.interviewQuestions(ctx);
+    const qs = gen.interviewQuestions(ctx);
     expect(qs[0].basis).toBe("llm");
     // heuristic 위임 확인 — 기계적 처방은 v1 그대로
-    expect(gen!.validationPlan(ctx).length).toBeGreaterThanOrEqual(5);
-    expect(gen!.survey(ctx).some((q) => q.kind === "reason")).toBe(true);
-    expect(gen!.interviews(ctx).length).toBeGreaterThanOrEqual(1); // 세그먼트 없음 → 탐색 폴백 1개
-    expect(gen!.landingTests(ctx).length).toBeGreaterThanOrEqual(1);
+    expect(gen.validationPlan(ctx).length).toBeGreaterThanOrEqual(5);
+    expect(gen.survey(ctx).some((q) => q.kind === "reason")).toBe(true);
+    expect(gen.interviews(ctx).length).toBeGreaterThanOrEqual(1); // 세그먼트 없음 → 탐색 폴백 1개
+    expect(gen.landingTests(ctx).length).toBeGreaterThanOrEqual(1);
   });
 
   test("reason 표본이 20개 미만이면 confidence low", async () => {
@@ -127,7 +128,9 @@ describe("buildLLMPrescriptions", () => {
       result: studyWith(few),
       options,
     });
-    const { drivers } = gen!.drivers({
+    expect(gen).not.toBeNull();
+    if (!gen) throw new Error("unreachable");
+    const { drivers } = gen.drivers({
       options,
       positiveChoice: "쓴다",
       opportunitySegments: [],

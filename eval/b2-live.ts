@@ -47,8 +47,8 @@ export async function runB2(opts: B2Options): Promise<string> {
     `- 질문: ${question} (${choices.join("/")})`,
     `- 실행: ${m.detail.runs}회 (반복 ${m.detail.repeats} + 순서뒤집기 1 + 패러프레이즈 ${paraphrases.length}) × n=${m.detail.n} = ${m.detail.calls}콜`,
     "",
-    `| 지표 | 값 | 판정 기준 |`,
-    `|---|---|---|`,
+    "| 지표 | 값 | 판정 기준 |",
+    "|---|---|---|",
     `| 자기일관성 | ${m.selfConsistency.toFixed(3)} | < 0.6 경고 |`,
     `| 예스맨(첫 선택지 쏠림) | ${m.positivitySkew.toFixed(3)} | > 0.5 경고 |`,
     `| 분포 다양성(평균) | ${m.meanDispersion.toFixed(3)} | 붕괴: ${m.collapsed ? "🔴 예" : "🟢 아니오"} |`,
@@ -78,7 +78,7 @@ async function main(): Promise<void> {
     const { OpenAIProvider } = await import("../src/llm/openai.js");
     provider = new OpenAIProvider();
   } else {
-    throw new Error(`--provider 는 anthropic 또는 openai 여야 합니다`);
+    throw new Error("--provider 는 anthropic 또는 openai 여야 합니다");
   }
   console.log(
     await runB2({
