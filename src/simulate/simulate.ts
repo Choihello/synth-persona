@@ -92,7 +92,7 @@ export async function simulate(
       try {
         if (question.choices && provider.askChoice) {
           const choices = question.choices;
-          const askChoice = provider.askChoice;
+          const askChoice = provider.askChoice.bind(provider);
           const reply = await withRetry(
             () => askChoice(persona, prompt, choices),
             retries,

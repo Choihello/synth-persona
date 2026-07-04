@@ -224,6 +224,26 @@ describe("simulate — 동시성/재시도", () => {
     );
   });
 
+  test("클래스 기반 provider의 askChoice도 this를 잃지 않는다 (unbound 호출 금지)", async () => {
+    class ClassProvider {
+      inner = { value: "쓴다" };
+      async ask(): Promise<string> {
+        return this.inner.value;
+      }
+      async askChoice(): Promise<{ choice: string }> {
+        // 실제 프로바이더(Claude/OpenAI)처럼 this의 필드에 접근한다
+        return { choice: this.inner.value };
+      }
+    }
+    const { responses, missing } = await simulate(
+      personas(2),
+      question,
+      new ClassProvider(),
+    );
+    expect(missing).toEqual([]);
+    expect(responses.map((r) => r.choice)).toEqual(["쓴다", "쓴다"]);
+  });
+
   test("opts 없는 기본 경로는 실패해도 재시도 없이 페르소나당 1회만 호출한다", async () => {
     let calls = 0;
     const provider = {
