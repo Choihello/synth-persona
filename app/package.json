@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@libsql/client": "^0.17.4",
     "marked": "^15.0.4",
     "nanoid": "^5.0.9",
     "next": "^15.1.6",
