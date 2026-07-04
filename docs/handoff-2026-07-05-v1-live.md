@@ -17,6 +17,7 @@
 1. **Vercel은 Root Directory 안에서만 npm install** — 워크스페이스 호이스팅에 의존하면 안 됨. `app/`이 쓰는 의존성은 전부 `app/package.json`에 직접 선언 (`@anthropic-ai/sdk`, `@libsql/client`, devDeps `typescript`·`@types/node` 포함. Next는 로컬에선 typescript를 자동 설치해주지만 CI에선 에러).
 2. **`.gitignore`의 비앵커 `reports/` 규칙이 `app/src/app/api/reports/`까지 무시** → API 라우트가 GitHub에 안 올라갔었음. `/reports/`로 앵커링해 해결.
 3. **Vercel CLI는 한글 경로("바탕 화면")에서 ByteString 오류로 사용 불가** → 배포는 GitHub 연동으로만.
+4. **Vercel은 커밋이 Root Directory(`app/`) 밖만 건드리면 배포를 스킵** ("Skipped - Not affected") — `web/`·`src/`는 app이 import하는데도 스킵된다 (og-stats 수정이 실제로 안 나갔던 사례). 확인: `gh api repos/Choihello/synth-persona/commits/<sha>/status`. **영구 해결: Vercel Settings → Git → Ignored Build Step을 항상 빌드로**(예: Custom `exit 1`). 설정 전까지는 web/·src/ 변경 시 app/ 파일도 함께 커밋하거나 대시보드 Redeploy.
 
 또한 `web/store.ts`의 `node:sqlite` 로드를 SqliteStore 생성 시점으로 지연 — Turso 프로덕션은 실험적 내장 모듈 없이 동작.
 
@@ -55,6 +56,7 @@
 
 ## 4. 남은 후속 후보
 
+- **Ignored Build Step 설정** (§1-4): web/·src/ 변경도 배포되게 — 대시보드에서 1분
 - **GALLERY_IDS 설정**: Vercel 환경변수에 `1zt5RRsfUs` 추가 + 재배포하면 홈에 샘플 노출
 - **npm 배포 (코어)**: npm 계정 필요 — 사용자 결정 대기
 - **Claude 교차 실측**: API 비용 발생 — 보류 중
