@@ -5,6 +5,7 @@ export default defineConfig({
       "src/**/*.test.ts",
       "test/**/*.test.ts",
       "eval/**/*.test.ts",
+      "web/**/*.test.ts",
       "scripts/**/*.test.ts",
     ],
   },

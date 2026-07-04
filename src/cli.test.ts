@@ -1,10 +1,10 @@
 import { describe, expect, it, test } from "vitest";
 import {
+  USAGE,
   censusAwareDemoMock,
   formatResult,
   parseIntArg,
   parseN,
-  USAGE,
   parseSeed,
   resolveCounterbalance,
   resolveProvider,
