@@ -1,6 +1,12 @@
-import { escapeHtml } from "./views.js";
+export function escapeHtml(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
 
-/** 웹 입력 검증 + XSS 이스케이프. Hono 서버와 Next API 라우트가 공유한다. */
+/** 웹 입력 검증 + XSS 이스케이프. Next API 라우트가 사용한다. */
 export function validateReportInput(body: unknown): {
   question: string;
   choices: string[];

@@ -19,9 +19,7 @@
     "b2:live": "node dist/eval/b2-live.js",
     "report:live": "node dist/eval/report-live.js",
     "lint": "biome check .",
-    "format": "biome format --write .",
-    "web:dev": "npm run build && node --env-file=.env dist/web/main.js",
-    "web:start": "node dist/web/main.js"
+    "format": "biome format --write ."
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0"
