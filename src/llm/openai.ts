@@ -114,4 +114,28 @@ export class OpenAIProvider implements LLMProvider {
     }
     return { choice: parsed.choice, reason: parsed.reason };
   }
+
+  async generateJson(
+    system: string,
+    user: string,
+    schema: { name: string; schema: Record<string, unknown> },
+  ): Promise<unknown> {
+    const res = await this.chat({
+      max_completion_tokens: 2048,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: schema.name, strict: true, schema: schema.schema },
+      },
+    });
+    const content = res.choices?.[0]?.message?.content ?? "";
+    try {
+      return JSON.parse(content);
+    } catch {
+      throw new Error(`구조화 JSON 파싱 실패: ${content.slice(0, 120)}`);
+    }
+  }
 }

@@ -116,3 +116,34 @@ describe("OpenAIProvider.askChoice", () => {
     expect(p.usage).toEqual({ calls: 2, inputTokens: 200, outputTokens: 40 });
   });
 });
+
+describe("OpenAIProvider.generateJson", () => {
+  test("json_schema strict로 요청하고 파싱된 객체를 반환하며 usage를 누적한다", async () => {
+    const { fetchFn, calls } = fakeFetch(() => ({
+      json: chatResponse(JSON.stringify({ drivers: [{ label: "x" }] })),
+    }));
+    const p = new OpenAIProvider({ apiKey: "sk-test", fetchFn });
+    const out = await p.generateJson("시스템", "유저 입력", {
+      name: "prescriptions",
+      schema: { type: "object", additionalProperties: false },
+    });
+    expect(out).toEqual({ drivers: [{ label: "x" }] });
+    const body = calls[0].body as {
+      messages: Array<{ role: string; content: string }>;
+      response_format: { type: string; json_schema: { name: string; strict: boolean } };
+    };
+    expect(body.messages[0]).toEqual({ role: "system", content: "시스템" });
+    expect(body.response_format.type).toBe("json_schema");
+    expect(body.response_format.json_schema.name).toBe("prescriptions");
+    expect(body.response_format.json_schema.strict).toBe(true);
+    expect(p.usage.calls).toBe(1);
+  });
+
+  test("JSON 파싱 실패는 throw", async () => {
+    const { fetchFn } = fakeFetch(() => ({ json: chatResponse("not-json") }));
+    const p = new OpenAIProvider({ apiKey: "sk-test", fetchFn });
+    await expect(
+      p.generateJson("s", "u", { name: "x", schema: {} }),
+    ).rejects.toThrow(/JSON/);
+  });
+});
