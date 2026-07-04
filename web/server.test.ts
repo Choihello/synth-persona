@@ -2,13 +2,13 @@ import type { Hono } from "hono";
 import { describe, expect, test } from "vitest";
 import type { ReportRunner } from "./jobs.js";
 import { createApp } from "./server.js";
-import { ReportStore } from "./store.js";
+import { SqliteStore } from "./store.js";
 
 function appWith(
   runner: ReportRunner,
   policy = { perIpDaily: 3, globalDaily: 100 },
 ) {
-  const store = new ReportStore(":memory:");
+  const store = new SqliteStore(":memory:");
   return { store, ...createApp({ store, runner, policy, ipSalt: "test" }) };
 }
 
@@ -36,7 +36,7 @@ describe("POST /api/reports", () => {
     const { id } = (await res.json()) as { id: string };
     expect(id).toBeTruthy();
     await queue.idle();
-    expect(store.get(id)?.status).toBe("done");
+    expect((await store.get(id))?.status).toBe("done");
   });
 
   test.each([

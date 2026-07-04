@@ -2,7 +2,7 @@ import { serve } from "@hono/node-server";
 import { OpenAIProvider } from "../src/llm/openai.js";
 import { makeReportRunner } from "./pipeline.js";
 import { createApp } from "./server.js";
-import { ReportStore } from "./store.js";
+import { SqliteStore } from "./store.js";
 
 function main(): void {
   if (!process.env.OPENAI_API_KEY) {
@@ -12,7 +12,7 @@ function main(): void {
     process.exit(1);
   }
   const port = Number(process.env.PORT ?? 8787);
-  const store = new ReportStore(process.env.DB_PATH ?? "web-reports.db");
+  const store = new SqliteStore(process.env.DB_PATH ?? "web-reports.db");
   const { app } = createApp({
     store,
     runner: makeReportRunner(new OpenAIProvider()),

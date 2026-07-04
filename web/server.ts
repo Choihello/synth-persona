@@ -63,11 +63,11 @@ export function createApp(deps: AppDeps): { app: Hono; queue: JobQueue } {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
     const ipHash = ipHashOf(c);
-    const limit = checkLimit(store, ipHash, new Date(), policy);
+    const limit = await checkLimit(store, ipHash, new Date(), policy);
     if (!limit.ok) return c.json({ error: limit.reason }, 429);
 
     const id = nanoid(10);
-    store.create({
+    await store.create({
       id,
       question: input.question,
       choices: input.choices,
@@ -78,15 +78,21 @@ export function createApp(deps: AppDeps): { app: Hono; queue: JobQueue } {
     return c.json({ id }, 201);
   });
 
-  app.get("/api/reports/:id", (c) => {
-    const row = store.get(c.req.param("id"));
+  app.get("/api/reports/:id", async (c) => {
+    const row = await store.get(c.req.param("id"));
     if (!row) return c.json({ error: "not found" }, 404);
-    return c.json({ status: row.status, error: row.error });
+    return c.json({
+      status: row.status,
+      error: row.error,
+      done: row.progressDone,
+      total: row.progressTotal,
+      phase: row.phase,
+    });
   });
 
-  app.get("/api/reports/:id/events", (c) => {
+  app.get("/api/reports/:id/events", async (c) => {
     const id = c.req.param("id");
-    const row = store.get(id);
+    const row = await store.get(id);
     if (!row) return c.json({ error: "not found" }, 404);
     return streamSSE(c, async (stream) => {
       if (row.status === "done" || row.status === "failed") {
@@ -112,8 +118,8 @@ export function createApp(deps: AppDeps): { app: Hono; queue: JobQueue } {
     });
   });
 
-  app.get("/r/:id", (c) => {
-    const row = store.get(c.req.param("id"));
+  app.get("/r/:id", async (c) => {
+    const row = await store.get(c.req.param("id"));
     if (!row) return c.html(failedPage("리포트를 찾을 수 없습니다."), 404);
     if (row.status === "failed")
       return c.html(failedPage(row.error ?? "알 수 없는 오류"));
