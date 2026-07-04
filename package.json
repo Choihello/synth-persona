@@ -17,6 +17,7 @@
     "reliability:demo": "node dist/eval/reliability-demo.js",
     "report:demo": "node dist/eval/report-demo.js",
     "b2:live": "node dist/eval/b2-live.js",
+    "report:live": "node dist/eval/report-live.js",
     "lint": "biome check .",
     "format": "biome format --write ."
   },
