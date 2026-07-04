@@ -7,6 +7,7 @@ export default defineConfig({
     "eval/fidelity-demo.ts",
     "eval/reliability-demo.ts",
     "eval/report-demo.ts",
+    "eval/b2-live.ts",
     "scripts/refresh-census.ts",
   ],
   format: ["esm"],
