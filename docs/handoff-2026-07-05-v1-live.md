@@ -1,0 +1,66 @@
+# synth-persona 세션 인계 — 웹 v1 라이브 + 후속 4종 · 2026-07-05 (2차)
+
+> 이전 인계: `docs/handoff-2026-07-05-web-vercel.md` (배포 직전 상태). 이번 세션에서 **Task 12(배포)를 완료**하고 후속 후보 4종을 구현했다.
+
+## 0. 한 줄 요약
+
+**웹 v1이 라이브다: https://synth-persona-app.vercel.app** (Vercel + Turso, GitHub main 연동 자동 배포). 라이브 스모크 통과 — after() 백그라운드 잡(Fluid Compute), Turso 테이블 자동 생성, 공유 페이지 13섹션 + 차트 2종 렌더 확인. 이어서 web/ Hono 정리·OG 이미지·다크 모드·홈 갤러리를 구현했다.
+
+## 1. 배포 (Task 12) — 완료
+
+- Vercel 프로젝트: Root Directory = `app/`, GitHub `Choihello/synth-persona` main 연동 → push 시 자동 배포
+- 환경변수: `OPENAI_API_KEY`, `IP_SALT`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `PER_IP_DAILY=3`, `DAILY_GLOBAL_CAP=100`
+- 스모크 리포트: https://synth-persona-app.vercel.app/r/1zt5RRsfUs (주 4일 근무제, ~30초 완료)
+
+### 배포에서 잡은 장애 3건 (재발 방지 지식)
+
+1. **Vercel은 Root Directory 안에서만 npm install** — 워크스페이스 호이스팅에 의존하면 안 됨. `app/`이 쓰는 의존성은 전부 `app/package.json`에 직접 선언 (`@anthropic-ai/sdk`, `@libsql/client`, devDeps `typescript`·`@types/node` 포함. Next는 로컬에선 typescript를 자동 설치해주지만 CI에선 에러).
+2. **`.gitignore`의 비앵커 `reports/` 규칙이 `app/src/app/api/reports/`까지 무시** → API 라우트가 GitHub에 안 올라갔었음. `/reports/`로 앵커링해 해결.
+3. **Vercel CLI는 한글 경로("바탕 화면")에서 ByteString 오류로 사용 불가** → 배포는 GitHub 연동으로만.
+
+또한 `web/store.ts`의 `node:sqlite` 로드를 SqliteStore 생성 시점으로 지연 — Turso 프로덕션은 실험적 내장 모듈 없이 동작.
+
+## 2. 이번 세션 구현 (후속 4종)
+
+### web/ Hono 경로 정리
+- 삭제: `web/server.ts`, `web/main.ts`, `web/views.ts`, `web/server.test.ts` (+ 루트 `web:dev`/`web:start` 스크립트, tsup 엔트리)
+- `web/package.json` 의존성은 `@libsql/client` 단독. `escapeHtml`은 `web/validate.ts`로 이동
+- BYOK 셀프호스팅이 필요해지면 git 히스토리(`edf5e12` 이전)에서 복구 가능
+
+### OG 이미지 (`app/src/app/r/[id]/opengraph-image.tsx`)
+- 1200×630 에디토리얼 카드: 크림 서피스 + Noto Serif KR(구글 폰트 css2 `text=` 서브셋 fetch, 700/400) + 질문 헤드라인 + 검증 팔레트 분포 바 + "가상 패널 응답 — 실제 여론이 아닙니다" 면책
+- 수치는 `web/og-stats.ts`(`extractOgStats`)가 리포트 md의 "응답 분포:"/"- n=" 줄에서 파싱 (테스트 5개)
+- 미완료/없는 리포트는 폴백 카드 (질문 또는 기본 타이틀)
+
+### 다크 모드 (`app/src/app/globals.css` 끝의 미디어쿼리)
+- 페이지 크롬만 웜 잉크 토큰으로 반전 (`--surface:#191613` 등)
+- **차트 SVG는 다크에서 크림(#faf6ef) 카드 위에 그대로** — 팔레트 자동 플립 금지 불변식 유지
+- 미디어쿼리는 특이성이 없으므로 반드시 **파일 끝**에 있어야 함 (앞에 두면 기본 규칙이 이김)
+
+### 홈 갤러리 (`GALLERY_IDS` 환경변수)
+- 쉼표 구분 리포트 id → done 상태만 질문 링크로 노출. 미설정 시 섹션 없음
+- 홈은 서버 컴포넌트 + `report-form.tsx`(클라이언트)로 분리, `revalidate = 3600`
+- **주의**: 정적 페이지라 빌드 시점 env 사용 — Vercel에서 `GALLERY_IDS` 변경 후 재배포 필요
+- 큐레이션 후보: `1zt5RRsfUs` (스모크 리포트)
+
+### 기타
+- 기존 main에 있던 biome lint 오류 10건 정리 (eval/b2-live.ts 템플릿 리터럴, llm-prescriptions.test.ts non-null 단언 → 가드로 교체)
+- `.claude/launch.json` 추가 (프리뷰 서버 `next start app -p 3211`)
+
+## 3. 검증 상태
+
+- 테스트 **263개 그린** (49 파일 — server.test 13개 제거, og-stats 5개 추가)
+- `tsc --noEmit`·`biome check .`·`app next build` 모두 클린
+- OG 이미지는 로컬 `next start`에서 PNG 실렌더 확인 (본 카드 + 폴백), 다크 모드는 프리뷰 다크 에뮬레이션에서 computed style 검증
+
+## 4. 남은 후속 후보
+
+- **GALLERY_IDS 설정**: Vercel 환경변수에 `1zt5RRsfUs` 추가 + 재배포하면 홈에 샘플 노출
+- **npm 배포 (코어)**: npm 계정 필요 — 사용자 결정 대기
+- **Claude 교차 실측**: API 비용 발생 — 보류 중
+- **커스텀 도메인**: 필요 시 Vercel에서 연결 (metadataBase는 Vercel이 자동 해석)
+- Vercel Hobby는 비상업 용도만 — 수익화 시 Pro
+
+## 5. 불변식 (유지)
+
+synthetic panel 과장 금지 · 처방 초안 라벨(basis heuristic|llm) · `src/types.ts`·`aggregate` 무수정 · 코어 런타임 의존성 @anthropic-ai/sdk 단일(app은 next·libsql 등 자체 선언) · 테스트 키 없이 그린 · 차트 팔레트는 검증기 통과분만(다크에서도 크림 카드 위에 유지)
