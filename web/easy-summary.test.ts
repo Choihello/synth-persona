@@ -50,7 +50,7 @@ function reportWith(over: {
     confidenceCard: {
       responseConsistency: { label: over.consistency ?? "medium" },
     } as never,
-  } as FounderInsightReport;
+  } as unknown as FounderInsightReport;
 }
 
 describe("easySummaryHTML", () => {
