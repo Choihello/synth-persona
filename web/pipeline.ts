@@ -7,6 +7,7 @@ import { buildLLMPrescriptions } from "../src/report/llm-prescriptions.js";
 import { renderFounderInsightReport } from "../src/report/render.js";
 import { runCensusStudy } from "../src/study.js";
 import { segmentBarsSVG, shareBarSVG } from "./charts.js";
+import { easySummaryHTML } from "./easy-summary.js";
 import type { ReportRunner } from "./jobs.js";
 
 export interface RunnerParams {
@@ -76,9 +77,15 @@ export function makeReportRunner(
       llmGen ?? undefined,
     );
     let md = renderFounderInsightReport(report);
+    const positiveChoice = options.choices[0];
+
+    // 쉬운 요약 카드 — 제목·disclaimer 아래, 전문 리포트 첫 섹션 위
+    const easy = easySummaryHTML(report, positiveChoice);
+    if (easy) {
+      md = md.replace("## 한 줄 요약\n", `${easy}\n\n## 한 줄 요약\n`);
+    }
 
     // 인라인 SVG 차트 주입 (marked가 HTML 블록으로 통과시킴 — 저장본에 포함되어 공유 페이지 재생성 비용 0)
-    const positiveChoice = options.choices[0];
     const shareSvg = shareBarSVG(
       report.overallSignal.distribution,
       positiveChoice,
