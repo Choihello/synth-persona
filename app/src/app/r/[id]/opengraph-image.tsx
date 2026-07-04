@@ -66,7 +66,7 @@ export default async function OgImage({
   }
 
   const fixed =
-    "synth-persona 0차 시장검증·리포트 가상 패널 응답 — 실제 여론이 아닙니다 합성이 응답하는 중 n=명%()0123456789";
+    "synth-persona 0차 시장검증·리포트 가상 패널 응답 — 실제 여론이 아닙니다 합성이 응답하는 중 질문을 입력하면 90명 n=%()0123456789";
   const glyphs = [
     ...new Set(
       (question + fixed + (bar ? bar.posLabel + bar.negLabel : "")).split(""),
@@ -169,7 +169,9 @@ export default async function OgImage({
         </div>
       ) : (
         <div style={{ display: "flex", fontSize: 26, color: INK_MUTED }}>
-          합성 패널이 응답하는 중
+          {row
+            ? "합성 패널이 응답하는 중"
+            : "질문을 입력하면 합성 패널 90명이 응답합니다"}
         </div>
       )}
 
