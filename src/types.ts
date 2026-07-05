@@ -27,6 +27,8 @@ export interface Persona {
   weight: number;
   provenance?: Record<string, Provenance>;
   flags?: string[];
+  /** 매칭된 배경 서사 (Nemotron-Personas-Korea, CC BY 4.0) — 프롬프트 전용, 집계·세그먼트 미사용 */
+  narrative?: string;
 }
 export interface Response {
   persona: Persona;

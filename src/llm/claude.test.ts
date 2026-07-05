@@ -45,6 +45,29 @@ describe("ClaudeProvider", () => {
     expect(s).toContain("실제 개인이 아니");
   });
 
+  test("narrative가 있으면 배경 블록 + 속성 우선 문구가 들어간다", () => {
+    const prompt = personaSystemPrompt({
+      id: "p1",
+      attrs: { 연령: "45~49세" },
+      weight: 1,
+      narrative:
+        "김철수 씨는 성실한 회사원입니다. (직업: 사무원 · 학력: 대학교)",
+    });
+    expect(prompt).toContain(
+      "배경 서사 (참고용 — 아래 속성과 상충하면 속성이 우선):",
+    );
+    expect(prompt).toContain("김철수 씨는 성실한 회사원입니다.");
+  });
+
+  test("narrative가 없으면 배경 블록이 없다", () => {
+    const prompt = personaSystemPrompt({
+      id: "p1",
+      attrs: { 연령: "45~49세" },
+      weight: 1,
+    });
+    expect(prompt).not.toContain("배경 서사");
+  });
+
   test("주입된 클라이언트로 응답 텍스트를 반환한다", async () => {
     const fakeClient = {
       messages: {

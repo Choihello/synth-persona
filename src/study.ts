@@ -2,6 +2,7 @@ import { aggregate } from "./aggregate/uncertainty.js";
 import type { DataSource } from "./data/source.js";
 import type { LLMProvider } from "./llm/provider.js";
 import { ipf } from "./personas/ipf.js";
+import { type NarrativePool, attachNarratives } from "./personas/narrative.js";
 import { samplePersonas } from "./personas/sample.js";
 import {
   type PersonaSource,
@@ -77,6 +78,8 @@ export interface CensusStudyConfig {
   simulate?: SimulateOpts;
   /** k회 반복 실행 후 응답을 풀링해 집계 (run간 분산 완화). 기본 1. */
   repeats?: number;
+  /** 서사 풀 — 주어지면 표본에 배경 서사를 결정적으로 부착 */
+  narrativePool?: NarrativePool;
 }
 
 /**
@@ -88,7 +91,10 @@ export async function runCensusStudy(
   config: CensusStudyConfig,
 ): Promise<StudyResult> {
   const all = await config.population.population();
-  const sample = sampleForSimulation(all, config.n, config.seed ?? 1);
+  let sample = sampleForSimulation(all, config.n, config.seed ?? 1);
+  if (config.narrativePool) {
+    sample = attachNarratives(sample, config.narrativePool, config.seed ?? 1);
+  }
   const { responses, missing } = await simulatePooled(
     sample,
     config.question,

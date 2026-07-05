@@ -23,6 +23,13 @@ export function personaSystemPrompt(persona: Persona): string {
   if (bridge) {
     lines.push(`- 참고: 일부 속성은 가구주 연령 기반 추정입니다 (${bridge}).`);
   }
+  if (persona.narrative) {
+    lines.push(
+      "",
+      "배경 서사 (참고용 — 아래 속성과 상충하면 속성이 우선):",
+      persona.narrative,
+    );
+  }
   lines.push(
     "",
     "출처가 conditioned/inferred인 속성은 추정값이니 과신하지 마세요.",

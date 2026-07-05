@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import snapshotJson from "../data/census/kr-2024.json" with { type: "json" };
 import { SampleSource } from "./data/sample-source.js";
 import { MockProvider } from "./llm/mock.js";
+import type { LLMProvider } from "./llm/provider.js";
+import type { NarrativePool } from "./personas/narrative.js";
 import type { Snapshot } from "./population/schema.js";
 import { CensusPopulation } from "./population/source.js";
 import { censusShareRunner, runCensusStudy, runStudy } from "./study.js";
@@ -125,6 +127,54 @@ describe("runCensusStudy (key-free, census 합성인구)", () => {
     });
     expect(calls).toBe(60); // 20 × 3
     expect(result.responses.length).toBe(60); // 풀링된 전체 응답
+  });
+
+  test("narrativePool을 주면 표본 페르소나에 서사가 붙는다 (미지정 시 기존과 동일)", async () => {
+    const seen: string[] = [];
+    const provider: LLMProvider = {
+      ask: async (persona) => {
+        seen.push(persona.narrative ?? "");
+        return "쓴다";
+      },
+    };
+    const narrativePopulation = {
+      population: async () => [
+        {
+          id: "c1",
+          attrs: {
+            연령: "45~49세",
+            성: "남자",
+            지역: "수도권",
+            혼인: "유배우",
+          },
+          weight: 1,
+        },
+      ],
+    };
+    const pool: NarrativePool = {
+      meta: {
+        source: "s",
+        license: "CC BY 4.0",
+        generatedAt: "d",
+        rowsScanned: 1,
+        strataFilled: 1,
+        strataTotal: 168,
+      },
+      strata: {
+        "45~49세|남자|수도권|유배우": [
+          { n: "서사입니다.", job: "j", edu: "e", hh: "unknown" },
+        ],
+      },
+    };
+    await runCensusStudy({
+      population: narrativePopulation,
+      provider,
+      question: { prompt: "q?", choices: ["쓴다", "안쓴다"] },
+      n: 1,
+      seed: 1,
+      narrativePool: pool,
+    });
+    expect(seen.some((s) => s.includes("서사입니다."))).toBe(true);
   });
 
   test("censusShareRunner는 provider abstraction 위에서 robustness(orderBias)를 구동한다", async () => {
