@@ -1,5 +1,7 @@
 import snapshotJson from "../data/census/kr-2024.json" with { type: "json" };
+import poolJson from "../data/nemotron/kr-pool.json" with { type: "json" };
 import type { LLMProvider } from "../src/llm/provider.js";
+import type { NarrativePool } from "../src/personas/narrative.js";
 import type { Snapshot } from "../src/population/schema.js";
 import { CensusPopulation } from "../src/population/source.js";
 import { generateFounderInsightReport } from "../src/report/generate.js";
@@ -40,6 +42,12 @@ export function makeReportRunner(
     let last = 0;
     const seed = Math.floor(Math.random() * 1_000_000); // 리포트마다 다른 표본
 
+    // 기본 OFF — A/B GO 후 기본 ON 전환. NARRATIVE=on일 때만 배경 서사 부착.
+    const narrativeOn = process.env.NARRATIVE === "on";
+    const narrativePool = narrativeOn
+      ? (poolJson as unknown as NarrativePool)
+      : undefined;
+
     const result = await runCensusStudy({
       population,
       provider,
@@ -47,6 +55,7 @@ export function makeReportRunner(
       n: params.n,
       seed,
       repeats: params.repeats,
+      narrativePool,
       simulate: {
         concurrency: params.concurrency,
         retries: 1,
@@ -63,7 +72,12 @@ export function makeReportRunner(
     const options = {
       question,
       choices,
-      run: { n: result.responses.length, seed, provider: "web" },
+      run: {
+        n: result.responses.length,
+        seed,
+        provider: "web",
+        narrative: narrativeOn,
+      },
     };
     const llmGen = await buildLLMPrescriptions({
       provider,

@@ -75,6 +75,9 @@ export function generateFounderInsightReport(
       `3지선다 이상: positive("${positiveChoice}") 1개 vs 나머지로 접힙니다. "잘 모르겠다" 같은 중립 응답이 negative로 합쳐질 수 있습니다.`,
     );
   }
+  if (options.run?.narrative) {
+    caveats.push("페르소나 서사: NVIDIA Nemotron-Personas-Korea (CC BY 4.0)");
+  }
 
   const minN = options.minN ?? DEFAULT_MIN_N;
   const { opportunity, resistance, weakSignals, withinNoise, observedButHeld } =

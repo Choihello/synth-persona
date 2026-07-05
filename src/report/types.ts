@@ -25,7 +25,7 @@ export interface FounderReportOptions {
   minN?: number;
   concept?: ConceptMeta;
   founderGoal?: FounderGoal;
-  run?: { seed?: number; provider?: string; n?: number };
+  run?: { seed?: number; provider?: string; n?: number; narrative?: boolean };
 }
 
 export interface ExecutiveSummary {

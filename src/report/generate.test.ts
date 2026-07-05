@@ -215,6 +215,25 @@ describe("generateFounderInsightReport — core/validation", () => {
     ).toBe(true);
   });
 
+  test("run.narrative가 참이면 appendix에 서사 저작자표시가 붙는다", () => {
+    const responses = [...mk(15, 0, "혼인", "A"), ...mk(3, 12, "혼인", "B")];
+    const result: StudyResult = {
+      responses,
+      signal: "split",
+      dispersion: 1,
+      bySegment: {},
+    };
+    const rep = generateFounderInsightReport(result, {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+      minN: 8,
+      run: { n: 30, narrative: true },
+    });
+    expect(rep.appendix.caveats).toContain(
+      "페르소나 서사: NVIDIA Nemotron-Personas-Korea (CC BY 4.0)",
+    );
+  });
+
   test("relevance 미전달/null이면 lowRelevance는 빈 배열, 이동 없음", () => {
     const responses = [...mk(15, 0, "혼인", "A"), ...mk(3, 12, "혼인", "B")];
     const result: StudyResult = {

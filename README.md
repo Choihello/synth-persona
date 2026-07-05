@@ -263,3 +263,7 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 ## 라이선스
 
 MIT
+
+### 데이터 출처·표기
+
+- 페르소나 배경 서사: [NVIDIA Nemotron-Personas-Korea](https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea) (CC BY 4.0) — `NARRATIVE=on`일 때 롤플레이 프롬프트에만 사용
