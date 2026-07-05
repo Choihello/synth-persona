@@ -4,6 +4,7 @@ import type { Snapshot } from "../src/population/schema.js";
 import { CensusPopulation } from "../src/population/source.js";
 import { generateFounderInsightReport } from "../src/report/generate.js";
 import { buildLLMPrescriptions } from "../src/report/llm-prescriptions.js";
+import { judgeDimensionRelevance } from "../src/report/relevance.js";
 import { renderFounderInsightReport } from "../src/report/render.js";
 import { runCensusStudy } from "../src/study.js";
 import { segmentBarsSVG, shareBarSVG } from "./charts.js";
@@ -70,11 +71,21 @@ export function makeReportRunner(
       options,
       seed,
     });
+    // 질문↔차원 관련성 판정 (실패 시 null → 게이트 미적용)
+    const dimensions = [
+      ...new Set(result.responses.flatMap((r) => Object.keys(r.persona.attrs))),
+    ];
+    const relevance = await judgeDimensionRelevance({
+      provider,
+      question,
+      dimensions,
+    });
     const report = generateFounderInsightReport(
       result,
       options,
       undefined,
       llmGen ?? undefined,
+      relevance,
     );
     let md = renderFounderInsightReport(report);
     const positiveChoice = options.choices[0];

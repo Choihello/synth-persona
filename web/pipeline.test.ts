@@ -37,4 +37,39 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
       expect(dones[i]).toBeGreaterThanOrEqual(dones[i - 1]);
     }
   });
+
+  test("관련성 low 차원은 승격에서 제외되고 참고 섹션에 남는다", async () => {
+    const provider = new MockProvider((p) =>
+      (p.attrs.연령 ?? "").startsWith("2") ? "쓴다" : "안쓴다",
+    ) as MockProvider & {
+      generateJson?: (
+        s: string,
+        u: string,
+        schema: { name: string },
+      ) => Promise<unknown>;
+    };
+    provider.generateJson = async (_s, _u, schema) =>
+      schema.name === "dimension_relevance"
+        ? {
+            verdicts: [
+              {
+                dimension: "가구원수",
+                relevance: "low",
+                reason: "테스트 사유",
+              },
+              { dimension: "혼인", relevance: "low", reason: "테스트 사유" },
+            ],
+          }
+        : {}; // 처방 스키마에는 무효 JSON → llm 처방은 heuristic 폴백
+    const runner = makeReportRunner(provider, {
+      n: 30,
+      repeats: 1,
+      concurrency: 1,
+    });
+    const md = await runner("질문?", ["쓴다", "안쓴다"], () => {});
+    expect(md).toContain("## 참고 — 순위에 올리지 않은 차이");
+    expect(md).toContain(
+      "질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: 테스트 사유)",
+    );
+  });
 });
