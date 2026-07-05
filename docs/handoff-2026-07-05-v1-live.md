@@ -55,6 +55,14 @@
 - 스펙: docs/superpowers/specs/2026-07-05-landing-page-design.md
 - 디자인 스킬 3종 설치됨(~/.claude/skills): frontend-design, web-design-guidelines, impeccable-design-polish (출처: nexu-io/open-design, 내용 검토 후 선별 설치)
 
+### 세그먼트 유의성 게이트 (신뢰 개선)
+- rankSegments가 페르소나 단위(반복 과반 투표, 동률 비긍정) Wilson 90% + 효과 ≥10%p 2티어 게이트로 승격 판정 — 우연/무관 세그먼트가 한줄요약·쉬운요약·차트·처방에 오르지 않음 (GATE_Z/GATE_MIN_EFFECT 상수)
+- 약한 신호는 "## 참고 — 우연일 수 있는 차이"(최대 5), 나머지 "우연 범위 내" 한 줄. 세그먼트 전멸 시 정직 문구 + 쉬운 요약 "뚜렷한 차이는 없었어요" + 차트 생략
+- 라이브 검증: /r/YY172ydchh (보안솔루션 질문 — 혼인·성별·가구원수가 우연 범위로 정확히 강등)
+- app/vercel.json `ignoreCommand: exit 1` 추가 — **배포 스킵 함정 영구 해결** (코드로 관리, 대시보드 설정 불필요)
+- 후속 후보: B. LLM 관련성 게이트 (질문↔차원 관련성 1콜) · weak/noise 티어 confidence 필드 정합(최종리뷰 Minor 3)
+- 스펙: docs/superpowers/specs/2026-07-05-segment-gate-design.md
+
 ### 기타
 - 기존 main에 있던 biome lint 오류 10건 정리 (eval/b2-live.ts 템플릿 리터럴, llm-prescriptions.test.ts non-null 단언 → 가드로 교체)
 - `.claude/launch.json` 추가 (프리뷰 서버 `next start app -p 3211`)
