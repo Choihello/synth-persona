@@ -31,7 +31,6 @@ export async function judgeDimensionRelevance(opts: {
   provider: LLMProvider;
   question: string;
   dimensions: string[]; // 응답 attrs에서 수집한 차원명 (예: 연령·성·지역·가구원수·혼인)
-  seed?: number;
 }): Promise<RelevanceVerdict | null>;
 ```
 
@@ -76,8 +75,8 @@ export async function judgeDimensionRelevance(opts: {
 ## ④ 호출 위치 — `web/pipeline.ts`
 
 - buildLLMPrescriptions 호출 옆에서 `judgeDimensionRelevance` 호출
-  (같은 provider·seed). dimensions는 `result.responses[0]` 기준이 아니라
-  전체 응답 attrs 키의 합집합으로 수집
+  (같은 provider). dimensions는 `result.responses[0]` 기준이 아니라
+  전체 응답 attrs 키의 합집합으로 수집. 샘플링이 없어 seed 불필요
 - generate 호출에 5번째 인자로 전달
 - CLI·데모·키 없는 경로는 인자 미전달 → 게이트 미적용 (기존과 동일 출력)
 - 비용: 리포트당 +1콜 (짧은 프롬프트, ≈$0.001 미만)
