@@ -88,7 +88,7 @@ describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 �
       { ...template, segmentLabel: "지역=수도권" },
     ];
     const md = renderFounderInsightReport(rep);
-    expect(md).toContain("## 참고 — 우연일 수 있는 차이");
+    expect(md).toContain("## 참고 — 순위에 올리지 않은 차이");
     expect(md).toContain(
       "- 혼인=사별·이혼 (긍정 100.0% · 페르소나 3명) — 표본이 작아 우연일 수 있음",
     );
@@ -97,7 +97,31 @@ describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 �
 
   it("weakSignals·withinNoise 모두 비면 참고 섹션이 없다", () => {
     const md = renderFounderInsightReport(baseReport());
-    expect(md).not.toContain("## 참고 — 우연일 수 있는 차이");
+    expect(md).not.toContain("## 참고 — 순위에 올리지 않은 차이");
+  });
+
+  it("lowRelevance 항목은 참고 섹션 맨 앞에 AI 판단 사유와 함께 나온다", () => {
+    const rep = baseReport();
+    const template =
+      rep.opportunitySegments[0] ??
+      rep.resistanceSegments[0] ??
+      rep.observedButHeld[0];
+    rep.lowRelevance = [
+      {
+        ...template,
+        segmentLabel: "혼인=유배우",
+        positiveRatio: 0.2,
+        personaCount: 12,
+        caveats: [
+          "질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: 보안 수요와 무관)",
+        ],
+      },
+    ];
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain("## 참고 — 순위에 올리지 않은 차이");
+    expect(md).toContain(
+      "- 혼인=유배우 (긍정 20.0% · 페르소나 12명) — 질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: 보안 수요와 무관)",
+    );
   });
 
   it("기회 세그먼트 0개면 유의성 문구로 안내한다", () => {

@@ -84,9 +84,21 @@ export function renderFounderInsightReport(
     if (rest > 0) md.push(`- …외 ${rest}개 (판단 보류)`);
     md.push("");
   }
-  // 참고 — 우연일 수 있는 차이 (약한 신호 + 우연 범위)
-  if (report.weakSignals.length > 0 || report.withinNoise.length > 0) {
-    md.push("## 참고 — 우연일 수 있는 차이", "");
+  // 참고 — 순위에 올리지 않은 차이 (관련성 낮음 + 약한 신호 + 우연 범위)
+  if (
+    report.lowRelevance.length > 0 ||
+    report.weakSignals.length > 0 ||
+    report.withinNoise.length > 0
+  ) {
+    md.push("## 참고 — 순위에 올리지 않은 차이", "");
+    for (const s of report.lowRelevance) {
+      const why =
+        s.caveats.find((c) => c.includes("관련성이 낮아")) ??
+        "질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단)";
+      md.push(
+        `- ${s.segmentLabel} (긍정 ${pct(s.positiveRatio)} · 페르소나 ${s.personaCount}명) — ${why}`,
+      );
+    }
     for (const s of report.weakSignals.slice(0, 5)) {
       md.push(
         `- ${s.segmentLabel} (긍정 ${pct(s.positiveRatio)} · 페르소나 ${s.personaCount}명) — 표본이 작아 우연일 수 있음`,

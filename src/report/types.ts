@@ -159,6 +159,8 @@ export interface FounderInsightReport {
   weakSignals: SegmentInsight[];
   withinNoise: SegmentInsight[];
   observedButHeld: SegmentInsight[];
+  /** 통계는 유의했지만 질문과 관련성이 낮다고 AI가 판단해 순위에서 제외한 세그먼트 */
+  lowRelevance: SegmentInsight[];
   keyDrivers: DriverInsight[];
   keyObjections: DriverInsight[];
   riskyAssumptions: RiskyAssumption[];

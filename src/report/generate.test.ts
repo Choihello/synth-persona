@@ -12,6 +12,13 @@ function r(attrs: Record<string, string>, choice: string): Response {
 function study(responses: Response[]): StudyResult {
   return { responses, signal: "split", dispersion: 0.9, bySegment: {} };
 }
+/** 승격이 보장되는 결정적 응답 셋 — dim=val 세그먼트에 긍정 pos개 + 부정 neg개 */
+function mk(pos: number, neg: number, dim: string, val: string): Response[] {
+  return [
+    ...Array.from({ length: pos }, () => r({ [dim]: val }, "쓴다")),
+    ...Array.from({ length: neg }, () => r({ [dim]: val }, "안쓴다")),
+  ];
+}
 const opts = { question: "쓸 의향?", choices: ["쓴다", "안쓴다"] };
 
 describe("generateFounderInsightReport — core/validation", () => {
@@ -166,5 +173,62 @@ describe("generateFounderInsightReport — core/validation", () => {
     );
     expect(rep.keyDrivers).toEqual([]);
     expect(rep.nextValidationPlan).toEqual([]);
+  });
+
+  test("relevance low 차원의 승격 세그먼트는 lowRelevance로 이동한다", () => {
+    // 혼인=A 15/15 긍정 vs 혼인=B 3/12 — 둘 다 뚜렷한 신호로 승격되는 구성
+    const responses = [...mk(15, 0, "혼인", "A"), ...mk(3, 12, "혼인", "B")];
+    const result: StudyResult = {
+      responses,
+      signal: "split",
+      dispersion: 1,
+      bySegment: {},
+    };
+    const rep = generateFounderInsightReport(
+      result,
+      { question: "q?", choices: ["쓴다", "안쓴다"], minN: 8 },
+      undefined,
+      undefined,
+      {
+        relevant: { 혼인: "low" },
+        reasons: { 혼인: "질문과 무관" },
+        basis: "llm",
+      },
+    );
+    expect(rep.opportunitySegments).toHaveLength(0);
+    expect(rep.resistanceSegments).toHaveLength(0);
+    expect(rep.lowRelevance.map((s) => s.segmentLabel).sort()).toEqual([
+      "혼인=A",
+      "혼인=B",
+    ]);
+    expect(
+      rep.lowRelevance[0].caveats.some((c) =>
+        c.includes(
+          "질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: 질문과 무관)",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      rep.appendix.caveats.some((c) =>
+        c.includes("관련성 판단(AI): low = 혼인"),
+      ),
+    ).toBe(true);
+  });
+
+  test("relevance 미전달/null이면 lowRelevance는 빈 배열, 이동 없음", () => {
+    const responses = [...mk(15, 0, "혼인", "A"), ...mk(3, 12, "혼인", "B")];
+    const result: StudyResult = {
+      responses,
+      signal: "split",
+      dispersion: 1,
+      bySegment: {},
+    };
+    const rep = generateFounderInsightReport(result, {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+      minN: 8,
+    });
+    expect(rep.lowRelevance).toEqual([]);
+    expect(rep.opportunitySegments.length).toBeGreaterThan(0);
   });
 });

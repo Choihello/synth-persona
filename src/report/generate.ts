@@ -8,6 +8,7 @@ import {
   type PrescriptionGenerator,
   detectThemes,
 } from "./prescriptions.js";
+import type { RelevanceVerdict } from "./relevance.js";
 import { rankSegments } from "./segments.js";
 import type {
   FounderInsightReport,
@@ -48,6 +49,7 @@ export function generateFounderInsightReport(
   options: FounderReportOptions,
   ctx?: { fidelity?: FidelityReport; bridges?: Record<string, string> },
   generator: PrescriptionGenerator = new HeuristicPrescriptionGenerator(),
+  relevance?: RelevanceVerdict | null,
 ): FounderInsightReport {
   const { choices } = options;
   if (choices.length < 2) {
@@ -78,6 +80,31 @@ export function generateFounderInsightReport(
   const { opportunity, resistance, weakSignals, withinNoise, observedButHeld } =
     rankSegments(result, positiveChoice, minN);
 
+  // 관련성 게이트: AI가 low로 판정한 차원의 승격 세그먼트는 순위에서 빼 lowRelevance로 옮긴다.
+  const lowRelevance: SegmentInsight[] = [];
+  let gatedOpportunity = opportunity;
+  let gatedResistance = resistance;
+  if (relevance) {
+    const dimOf = (s: SegmentInsight) => s.segmentLabel.split("=")[0];
+    const strip = (list: SegmentInsight[]) =>
+      list.filter((s) => {
+        if (relevance.relevant[dimOf(s)] !== "low") return true;
+        const reason = relevance.reasons[dimOf(s)];
+        s.caveats.push(
+          reason
+            ? `질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: ${reason})`
+            : "질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단)",
+        );
+        lowRelevance.push(s);
+        return false;
+      });
+    gatedOpportunity = strip(opportunity);
+    gatedResistance = strip(resistance);
+    const lowDims = [...new Set(lowRelevance.map(dimOf))];
+    if (lowDims.length > 0)
+      caveats.push(`관련성 판단(AI): low = ${lowDims.join(", ")}`);
+  }
+
   // 신뢰성 카드 (assessReliability 재사용). fidelity 없으면 composition은 unknown 유지.
   const card = assessReliability(result, {
     fidelity: ctx?.fidelity,
@@ -104,8 +131,8 @@ export function generateFounderInsightReport(
       : s.caveats;
     return { ...s, confidence: conf, caveats: extra };
   };
-  const opportunitySegments = opportunity.map(applyConfidence);
-  const resistanceSegments = resistance.map(applyConfidence);
+  const opportunitySegments = gatedOpportunity.map(applyConfidence);
+  const resistanceSegments = gatedResistance.map(applyConfidence);
 
   const riskyAssumptions = buildRiskyAssumptions(
     card,
@@ -159,6 +186,7 @@ export function generateFounderInsightReport(
     weakSignals,
     withinNoise,
     observedButHeld,
+    lowRelevance,
     keyDrivers: drivers,
     keyObjections: objections,
     riskyAssumptions,
