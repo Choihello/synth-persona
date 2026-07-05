@@ -39,7 +39,7 @@ export default async function ReportPage({
       <main>
         <h1>리포트를 찾을 수 없습니다</h1>
         <p className="backlink">
-          <Link href="/">← 새 리포트 만들기</Link>
+          <Link href="/new">← 새 리포트 만들기</Link>
         </p>
       </main>
     );
@@ -50,7 +50,7 @@ export default async function ReportPage({
         <h1>생성 실패</h1>
         <p className="error-text">{row.error}</p>
         <p className="backlink">
-          <Link href="/">← 다시 시도</Link>
+          <Link href="/new">← 다시 시도</Link>
         </p>
       </main>
     );
@@ -72,7 +72,7 @@ export default async function ReportPage({
   return (
     <main>
       <p className="backlink">
-        <Link href="/">← 새 리포트 만들기</Link>
+        <Link href="/new">← 새 리포트 만들기</Link>
       </p>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: 입력은 서버에서 이스케이프됨 + 자체 렌더러/차트 출력 */}
       <article className="report" dangerouslySetInnerHTML={{ __html: html }} />
