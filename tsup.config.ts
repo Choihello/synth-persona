@@ -16,4 +16,5 @@ export default defineConfig({
   ],
   format: ["esm"],
   clean: true,
+  dts: { entry: "src/index.ts" }, // npm 소비자용 타입은 라이브러리 진입점만
 });
