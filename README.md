@@ -266,4 +266,4 @@ MIT
 
 ### 데이터 출처·표기
 
-- 페르소나 배경 서사: [NVIDIA Nemotron-Personas-Korea](https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea) (CC BY 4.0) — `NARRATIVE=on`일 때 롤플레이 프롬프트에만 사용
+- 페르소나 배경 서사: [NVIDIA Nemotron-Personas-Korea](https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea) (CC BY 4.0) — 롤플레이 프롬프트에만 사용 (기본 활성, `NARRATIVE=off`로 차단. 통계·세그먼트에는 미사용)

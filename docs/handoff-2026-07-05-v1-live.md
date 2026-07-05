@@ -65,6 +65,14 @@
 - 잔여 Minor(이연): weak/noise/lowRelevance 티어 confidence 필드 정합 · relevance 프롬프트 델리미터 하드닝
 - 스펙: docs/superpowers/specs/2026-07-05-segment-gate-design.md
 
+### Nemotron 서사 레이어 (2026-07-06, 기본 ON)
+- KOSIS IPF 표본 페르소나에 Nemotron-Personas-Korea 서사를 결정적 매칭(연령대×성×권역×혼인 + 가구 호환 필터)해 **프롬프트만** 풍부화 — 표본·가중치·세그먼트·수치 불변
+- 풀: data/nemotron/kr-pool.json (3,022 엔트리, 167/168 스트라텀, HF rows API 층화 수집, CC BY 4.0 — appendix·콜로폰·README 표기). 재생성: `node dist/scripts/build-nemotron-pool.js` (결정적)
+- 검증 3층 전부 통과: 자동 감사 200표본 모순 0(텍스트 모순 그물 포함) · 정성 20건(발견 1건 → hh 보정 2단 수정) · **라이브 A/B GO** (파싱 90/90 양쪽, 분포 붕괴 없음 — 있다 50%→39% 현실 보정, reason에 삶의 맥락 반영)
+- 차단: `NARRATIVE=off` 환경변수. **불변식 갱신: src/types.ts는 "기존 필드 무수정" — optional `narrative?` 1줄은 사용자 승인분(2026-07-05)**
+- 실행 기록: 서브에이전트 전부 Opus 4.8(사용자 지시), 컨트롤러 fable. Opus 리뷰 6회(태스크4+수정2) + 최종 전체 리뷰 통과
+- 잔여 Minor(이연): 풀 정적 import는 NARRATIVE=off여도 콜드스타트에 파싱(기본 ON이라 실질 무관) · refineHhFromNarrative 정규식은 데이터 갱신 시 재감사 필요
+
 ### 기타
 - 기존 main에 있던 biome lint 오류 10건 정리 (eval/b2-live.ts 템플릿 리터럴, llm-prescriptions.test.ts non-null 단언 → 가드로 교체)
 - `.claude/launch.json` 추가 (프리뷰 서버 `next start app -p 3211`)
