@@ -13,10 +13,10 @@ const SYSTEM_PROMPT = [
   "너는 설문 문항과 인구통계 차원의 관련성을 판정하는 리서치 방법론 심사자다.",
   "질문에 대한 응답 성향이 해당 차원에 따라 달라질 타당한 인과·상관 경로가 있으면 high.",
   "확실히 무관할 때만 low. 불확실하면 반드시 high로 판정한다.",
-  "low로 판정한 차원에는 반드시 한 줄 reason을 붙인다.",
+  "모든 차원에 한 줄 reason을 붙인다 (high도 짧게).",
 ].join("\n");
 
-const RELEVANCE_SCHEMA = {
+export const RELEVANCE_SCHEMA = {
   name: "dimension_relevance",
   schema: {
     type: "object",
@@ -30,7 +30,7 @@ const RELEVANCE_SCHEMA = {
             relevance: { type: "string", enum: ["high", "low"] },
             reason: { type: "string" },
           },
-          required: ["dimension", "relevance"],
+          required: ["dimension", "relevance", "reason"],
           additionalProperties: false,
         },
       },

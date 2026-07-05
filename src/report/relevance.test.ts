@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { LLMProvider } from "../llm/provider.js";
-import { judgeDimensionRelevance } from "./relevance.js";
+import { judgeDimensionRelevance, RELEVANCE_SCHEMA } from "./relevance.js";
 
 const jsonProvider = (raw: unknown): LLMProvider => ({
   ask: async () => "",
@@ -89,5 +89,20 @@ describe("judgeDimensionRelevance", () => {
       dimensions: [],
     });
     expect(v).toBeNull();
+  });
+
+  test("RELEVANCE_SCHEMA는 OpenAI strict 모드 호환 — 모든 object의 required가 properties 전체를 포함", () => {
+    const checkStrict = (node: unknown): void => {
+      if (typeof node !== "object" || node === null) return;
+      const n = node as Record<string, unknown>;
+      if (n.type === "object" && typeof n.properties === "object" && n.properties) {
+        const props = Object.keys(n.properties as Record<string, unknown>);
+        expect(n.required, `object node missing required for [${props.join(",")}]`).toEqual(
+          expect.arrayContaining(props),
+        );
+      }
+      for (const v of Object.values(n)) checkStrict(v);
+    };
+    checkStrict(RELEVANCE_SCHEMA.schema);
   });
 });
