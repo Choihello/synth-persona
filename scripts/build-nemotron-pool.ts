@@ -121,6 +121,20 @@ function hhClass(familyType: string): PoolEntry["hh"] {
   return "unknown";
 }
 
+/** family_type이 unknown일 때 서사 텍스트에서 가구 단서로 보정 (잘못 부착 방지 — 과소 매칭 방향만). */
+function refineHhFromNarrative(n: string): PoolEntry["hh"] {
+  if (/혼자 살|독거|1인 가구/.test(n)) return "1";
+  if (/3세대|삼세대|대가족/.test(n)) return "3+";
+  const spouse = /(아내|남편|배우자)(와|과)/.test(n);
+  const kidsOrParents =
+    /(자녀|아이|아들|딸|손주|손자|부모님|어머니|아버지)(와|과|를)/.test(n);
+  if (spouse && kidsOrParents) return "3+";
+  if (spouse) return "2";
+  if (kidsOrParents && /(모시|함께 살|함께 거주|봉양)/.test(n)) return "3+";
+  if (/가족과 함께 (살|거주)/.test(n)) return "3+";
+  return "unknown";
+}
+
 // 결정적 오프셋 시퀀스 — 고정 seed LCG (Math.random 금지: 재현성).
 // Numerical Recipes LCG 상수. offset은 100 단위로 정렬해 페이지 경계에 맞춤.
 function* offsetSeq(seed: number, pageSize: number, maxOffset: number) {
@@ -196,13 +210,15 @@ async function build(): Promise<void> {
         strata[key] = bucket;
       }
       if (bucket.length >= CAP) continue;
-      let n = row.persona ?? "";
+      const persona = row.persona ?? "";
+      let n = persona;
       if (n.length > 400) n = `${n.slice(0, 400)}…`;
+      const baseHh = hhClass(row.family_type);
       bucket.push({
         n,
         job: row.occupation,
         edu: row.education_level,
-        hh: hhClass(row.family_type),
+        hh: baseHh === "unknown" ? refineHhFromNarrative(persona) : baseHh,
       });
     }
     // 조기 종료: 모든 스트라텀이 CAP에 도달했는가?
