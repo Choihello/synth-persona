@@ -34,6 +34,7 @@ export function seg(
     segmentDefinition: `${label.split("=")[0]}이(가) "${label.split("=")[1]}"인 응답자`,
     sampleCount: 20,
     sampleWeightShare: 0.2,
+    personaCount: 20,
     responseDistribution: { 쓴다: 14, 안쓴다: 6 },
     positiveRatio: 0.7,
     signal: "consensus",

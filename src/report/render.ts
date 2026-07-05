@@ -15,7 +15,7 @@ const pct = (x: number) => pctBase(x, 1); // 리포트는 소수 1자리
 function segmentLines(s: SegmentInsight): string[] {
   const dist = formatDistribution(s.responseDistribution);
   const lines = [
-    `### ${s.segmentLabel}  (n=${s.sampleCount} · 긍정 ${pct(s.positiveRatio)} · 신뢰도 ${s.confidence})`,
+    `### ${s.segmentLabel}  (n=${s.sampleCount} · 페르소나 ${s.personaCount}명 · 긍정 ${pct(s.positiveRatio)} · 신뢰도 ${s.confidence})`,
     `- 분포: ${dist} · 인구 가중 비율 ≈ ${pct(s.sampleWeightShare)}`,
     `- 왜 중요한가: ${s.whyItMatters}`,
     `- 다음 질문: ${s.recommendedFollowUpQuestion}`,
@@ -60,12 +60,18 @@ export function renderFounderInsightReport(
   // ④ 기회 세그먼트
   md.push("## 기회 세그먼트", "");
   if (report.opportunitySegments.length === 0)
-    md.push("(minN을 넘는 기회 세그먼트 없음)", "");
+    md.push(
+      "(유의한 기회 세그먼트 없음 — 이 규모의 가상 패널에서 흔한 일입니다)",
+      "",
+    );
   for (const s of report.opportunitySegments) md.push(...segmentLines(s), "");
   // ⑤ 저항 세그먼트 + 판단 보류 cap
   md.push("## 저항 세그먼트", "");
   if (report.resistanceSegments.length === 0)
-    md.push("(minN을 넘는 저항 세그먼트 없음)", "");
+    md.push(
+      "(유의한 저항 세그먼트 없음 — 이 규모의 가상 패널에서 흔한 일입니다)",
+      "",
+    );
   for (const s of report.resistanceSegments) md.push(...segmentLines(s), "");
   if (report.observedButHeld.length > 0) {
     md.push("### 판단 보류 (표본 부족)", "");
@@ -76,6 +82,21 @@ export function renderFounderInsightReport(
     }
     const rest = report.observedButHeld.length - HELD_CAP;
     if (rest > 0) md.push(`- …외 ${rest}개 (판단 보류)`);
+    md.push("");
+  }
+  // 참고 — 우연일 수 있는 차이 (약한 신호 + 우연 범위)
+  if (report.weakSignals.length > 0 || report.withinNoise.length > 0) {
+    md.push("## 참고 — 우연일 수 있는 차이", "");
+    for (const s of report.weakSignals.slice(0, 5)) {
+      md.push(
+        `- ${s.segmentLabel} (긍정 ${pct(s.positiveRatio)} · 페르소나 ${s.personaCount}명) — 표본이 작아 우연일 수 있음`,
+      );
+    }
+    if (report.withinNoise.length > 0) {
+      md.push(
+        `- 우연 범위 내(±10%p 미만): ${report.withinNoise.map((s) => s.segmentLabel).join(", ")}`,
+      );
+    }
     md.push("");
   }
   // ⑥ 관심/거부 이유

@@ -92,7 +92,7 @@ describe("generateFounderInsightReport — core/validation", () => {
     }
   });
 
-  test("기준선과 동률인 세그먼트는 appendix caveat으로 보존된다 (조용한 소실 금지)", () => {
+  test("기준선과 동률인 세그먼트는 withinNoise로 보존된다 (조용한 소실 금지)", () => {
     const responses = [
       ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "쓴다")),
       ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "안쓴다")),
@@ -100,11 +100,18 @@ describe("generateFounderInsightReport — core/validation", () => {
     const rep = generateFounderInsightReport(study(responses), opts);
     expect(rep.opportunitySegments).toEqual([]);
     expect(rep.resistanceSegments).toEqual([]);
-    expect(
-      rep.appendix.caveats.some(
-        (c) => c.includes("연령=30대") && c.includes("동률"),
-      ),
-    ).toBe(true);
+    expect(rep.withinNoise.some((s) => s.segmentLabel === "연령=30대")).toBe(
+      true,
+    );
+  });
+
+  test("weakSignals/withinNoise가 리포트로 전달된다 (rankSegments 통합 경로)", () => {
+    const rep = generateFounderInsightReport(
+      study([r({ 연령: "30대" }, "쓴다")]),
+      opts,
+    );
+    expect(Array.isArray(rep.weakSignals)).toBe(true);
+    expect(Array.isArray(rep.withinNoise)).toBe(true);
   });
 
   test("가격 무관 질문(단어 속 원: 직원)에는 가격 위험가정·가격 caveat이 붙지 않는다", () => {

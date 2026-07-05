@@ -60,6 +60,86 @@ describe("renderFounderInsightReport — 코어 섹션", () => {
   });
 });
 
+describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 범위)", () => {
+  function baseReport() {
+    return generateFounderInsightReport(bigResult(), {
+      question: "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?",
+      choices: ["쓴다", "안쓴다"],
+    });
+  }
+
+  it("weakSignals가 있으면 참고 섹션을 그리고 withinNoise는 한 줄로 나열한다", () => {
+    const rep = baseReport();
+    const template =
+      rep.opportunitySegments[0] ??
+      rep.resistanceSegments[0] ??
+      rep.observedButHeld[0];
+    rep.weakSignals = [
+      {
+        ...template,
+        segmentLabel: "혼인=사별·이혼",
+        positiveRatio: 1,
+        personaCount: 3,
+        caveats: ["표본이 작아 우연일 수 있음 (페르소나 3명 기준)"],
+      },
+    ];
+    rep.withinNoise = [
+      { ...template, segmentLabel: "성=여자" },
+      { ...template, segmentLabel: "지역=수도권" },
+    ];
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain("## 참고 — 우연일 수 있는 차이");
+    expect(md).toContain(
+      "- 혼인=사별·이혼 (긍정 100.0% · 페르소나 3명) — 표본이 작아 우연일 수 있음",
+    );
+    expect(md).toContain("- 우연 범위 내(±10%p 미만): 성=여자, 지역=수도권");
+  });
+
+  it("weakSignals·withinNoise 모두 비면 참고 섹션이 없다", () => {
+    const md = renderFounderInsightReport(baseReport());
+    expect(md).not.toContain("## 참고 — 우연일 수 있는 차이");
+  });
+
+  it("기회 세그먼트 0개면 유의성 문구로 안내한다", () => {
+    const rep = baseReport();
+    rep.opportunitySegments = [];
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain("유의한 기회 세그먼트 없음");
+  });
+
+  it("세그먼트 헤더에 페르소나 수 각주가 붙는다", () => {
+    // 실제로 유의한 기회 세그먼트가 생기는 결과 (minN 충족 + 전체 평균과 유의한 차이)
+    const responses = [];
+    for (let i = 0; i < 20; i++) {
+      responses.push({
+        persona: { id: `young-${i}`, attrs: { 연령: "20대" }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    }
+    for (let i = 0; i < 20; i++) {
+      responses.push({
+        persona: { id: `old-${i}`, attrs: { 연령: "60대" }, weight: 1 },
+        answer: "안쓴다",
+        choice: "안쓴다",
+      });
+    }
+    const result: StudyResult = {
+      responses,
+      signal: "split",
+      dispersion: 0.9,
+      bySegment: { 연령: {} },
+    };
+    const rep = generateFounderInsightReport(result, {
+      question: "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    expect(rep.opportunitySegments.length).toBeGreaterThan(0);
+    const md = renderFounderInsightReport(rep);
+    expect(md).toMatch(/### .+\(n=\d+ · 페르소나 \d+명 · 긍정/);
+  });
+});
+
 describe("renderFounderInsightReport — 처방 섹션", () => {
   const report = generateFounderInsightReport(bigResult(), {
     question: "신선식품 새벽배송 구독, 월 9900원에 쓸 의향?",
