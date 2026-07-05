@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { MockProvider } from "../src/llm/mock.js";
 import { makeReportRunner } from "./pipeline.js";
 
@@ -39,6 +39,12 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
   });
 
   test("관련성 low 차원은 승격에서 제외되고 참고 섹션에 남는다", async () => {
+    // pipeline.ts는 매 실행마다 Math.random()으로 seed를 뽑아 표본을 바꾼다.
+    // 표본에 따라 low로 마킹한 차원이 rankSegments 승격 게이트를 못 넘을 수 있어
+    // lowRelevance가 비어 참고 섹션 자체가 안 나오는 flaky 실패가 있었다 (~30%).
+    // seed를 고정해 표본을 결정적으로 만든다.
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+
     const provider = new MockProvider((p) =>
       (p.attrs.연령 ?? "").startsWith("2") ? "쓴다" : "안쓴다",
     ) as MockProvider & {
@@ -48,10 +54,16 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
         schema: { name: string },
       ) => Promise<unknown>;
     };
+    // 모든 차원을 low로 마킹 — 고정 seed에서 무엇이 승격되든(mock 응답자는
+    // 연령 기반이라 연령 세그먼트가 항상 승격됨) 전부 lowRelevance로 이동해
+    // 참고 섹션과 제외 라인이 항상 보장된다.
     provider.generateJson = async (_s, _u, schema) =>
       schema.name === "dimension_relevance"
         ? {
             verdicts: [
+              { dimension: "연령", relevance: "low", reason: "테스트 사유" },
+              { dimension: "성", relevance: "low", reason: "테스트 사유" },
+              { dimension: "지역", relevance: "low", reason: "테스트 사유" },
               {
                 dimension: "가구원수",
                 relevance: "low",
@@ -71,5 +83,9 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
     expect(md).toContain(
       "질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: 테스트 사유)",
     );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 });
