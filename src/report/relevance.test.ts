@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { LLMProvider } from "../llm/provider.js";
-import { judgeDimensionRelevance, RELEVANCE_SCHEMA } from "./relevance.js";
+import { RELEVANCE_SCHEMA, judgeDimensionRelevance } from "./relevance.js";
 
 const jsonProvider = (raw: unknown): LLMProvider => ({
   ask: async () => "",
@@ -95,11 +95,16 @@ describe("judgeDimensionRelevance", () => {
     const checkStrict = (node: unknown): void => {
       if (typeof node !== "object" || node === null) return;
       const n = node as Record<string, unknown>;
-      if (n.type === "object" && typeof n.properties === "object" && n.properties) {
+      if (
+        n.type === "object" &&
+        typeof n.properties === "object" &&
+        n.properties
+      ) {
         const props = Object.keys(n.properties as Record<string, unknown>);
-        expect(n.required, `object node missing required for [${props.join(",")}]`).toEqual(
-          expect.arrayContaining(props),
-        );
+        expect(
+          n.required,
+          `object node missing required for [${props.join(",")}]`,
+        ).toEqual(expect.arrayContaining(props));
       }
       for (const v of Object.values(n)) checkStrict(v);
     };
