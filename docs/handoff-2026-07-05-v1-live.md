@@ -68,7 +68,8 @@
 ## 4. 남은 후속 후보
 
 - **Ignored Build Step 설정** (§1-4): web/·src/ 변경도 배포되게 — 대시보드에서 1분
-- **GALLERY_IDS 설정**: Vercel 환경변수에 `1zt5RRsfUs` 추가 + 재배포하면 홈에 샘플 노출
+- ~~GALLERY_IDS 설정~~ → 완료: `BAJnsFMKrF, 1zt5RRsfUs` (Production+Preview). IP_SALT도 첫 설정 때 누락됐던 것을 발견해 함께 추가함 (2026-07-05)
+- **사이트 기본 OG**: app/src/app/opengraph-image.tsx — 랜딩/new 공용 정적 카드(히어로 카피). 폰트 로더는 lib/og-font.ts로 공용화
 - **npm 배포 (코어)**: npm 계정 필요 — 사용자 결정 대기
 - **Claude 교차 실측**: API 비용 발생 — 보류 중
 - **커스텀 도메인**: 필요 시 Vercel에서 연결 (metadataBase는 Vercel이 자동 해석)

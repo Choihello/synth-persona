@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReportRow } from "../../../../web/store.js";
 import { getStore } from "../../lib/backend.js";
 import { unescapeHtml } from "../../lib/html.js";
 import ReportForm from "../report-form.js";
+
+export const metadata: Metadata = {
+  title: "새 리포트 만들기 — synth-persona",
+};
 
 // 갤러리(GALLERY_IDS)가 DB를 읽으므로 시간 기반 재검증 — 홈은 정적 유지
 export const revalidate = 3600;
