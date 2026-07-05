@@ -112,7 +112,10 @@ export function makeReportRunner(
             0,
           )
         : 0;
-    const segSvg = segmentBarsSVG(segData, globalRatio);
+    // segmentBarsSVG already returns "" for empty segments (web/charts.ts:59),
+    // but guard early to avoid unnecessary processing
+    const segSvg =
+      segData.length > 0 ? segmentBarsSVG(segData, globalRatio) : "";
     if (segSvg) {
       md = md.replace("## 기회 세그먼트\n", `${segSvg}\n\n## 기회 세그먼트\n`);
     }

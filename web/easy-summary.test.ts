@@ -90,10 +90,10 @@ describe("easySummaryHTML", () => {
       "다음 할 일: 45~49세 실제 고객 5~8명에게 직접 물어보고",
     );
   });
-  test("세그먼트 없으면 누가 블록 생략 + 일반형 다음 할 일", () => {
+  test("세그먼트 없으면 '뚜렷한 차이 없음' 문장 + 일반형 다음 할 일", () => {
     const html = easySummaryHTML(reportWith({}), "찬성");
+    expect(html).toContain("세그먼트 간 뚜렷한 차이는 없었어요.");
     expect(html).not.toContain("특히");
-    expect(html).not.toContain("반대로");
     expect(html).toContain(
       "다음 할 일: 잠재 고객 5~8명에게 직접 물어보며 확인해 보세요",
     );

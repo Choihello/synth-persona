@@ -71,6 +71,8 @@ export function easySummaryHTML(
   const who: string[] = [];
   if (oppLabel) who.push(`특히 ${esc(oppLabel)}의 반응이 가장 좋았어요.`);
   if (resLabel) who.push(`반대로 ${esc(resLabel)}는 망설였어요.`);
+  const whoLine =
+    who.length > 0 ? who.join(" ") : "세그먼트 간 뚜렷한 차이는 없었어요.";
 
   const next = oppLabel
     ? `다음 할 일: ${esc(oppLabel)} 실제 고객 5~8명에게 직접 물어보고, 이 반응이 진짜인지 확인해 보세요.`
@@ -88,7 +90,8 @@ export function easySummaryHTML(
 <p class="easy-kicker">한눈에 보기</p>
 <p class="easy-verdict">${verdict}</p>
 <p class="easy-count"><span class="easy-count-num">10명 중 ${outOfTen}명</span>이 "${esc(positiveChoice)}" <span class="easy-basis">가상 응답 ${report.overallSignal.n}개 기준</span></p>
-${who.length > 0 ? `<p class="easy-who">${who.join(" ")}</p>\n` : ""}<p class="easy-next">${next}</p>
+<p class="easy-who">${whoLine}</p>
+<p class="easy-next">${next}</p>
 <p class="easy-trust">진짜 사람이 아니라 AI가 인구 구성을 흉내 내 답한 결과예요 — 방향을 잡는 참고로만 쓰세요.${trustExtra}</p>
 </section>`;
 }
