@@ -83,6 +83,11 @@
 - `tsc --noEmit`·`biome check .`·`app next build` 모두 클린
 - OG 이미지는 로컬 `next start`에서 PNG 실렌더 확인 (본 카드 + 폴백), 다크 모드는 프리뷰 다크 에뮬레이션에서 computed style 검증
 
+## 3.5 방향 결정 (2026-07-06): 사업화
+
+- **npm 오픈소스 공개 스킵** (패키징 준비는 완료돼 있음 — private 플래그로 봉인, 필요 시 한 줄 제거로 재개 가능). Claude 교차 실측 보류 유지
+- 사업화 시 검토 필요 (사용자 결정 대기): ① GitHub 저장소가 현재 **public + MIT** — 비공개 전환/라이선스 재고 여부 ② **Vercel Hobby는 비상업 전용** — 수익화 시점에 Pro($20/월) 전환 필수
+
 ## 4. 남은 후속 후보
 
 - **Ignored Build Step 설정** (§1-4): web/·src/ 변경도 배포되게 — 대시보드에서 1분
