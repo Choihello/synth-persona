@@ -10,6 +10,7 @@ export default defineConfig({
     "eval/b2-live.ts",
     "eval/report-live.ts",
     "scripts/refresh-census.ts",
+    "scripts/build-nemotron-pool.ts",
   ],
   format: ["esm"],
   clean: true,
