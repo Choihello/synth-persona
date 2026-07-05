@@ -1,60 +1,112 @@
 import Link from "next/link";
-import type { ReportRow } from "../../../web/store.js";
-import { getStore } from "../lib/backend.js";
-import { unescapeHtml } from "../lib/html.js";
-import ReportForm from "./report-form.js";
 
-// 갤러리(GALLERY_IDS)가 DB를 읽으므로 시간 기반 재검증 — 홈은 정적 유지
-export const revalidate = 3600;
-
-async function loadGallery(): Promise<{ id: string; question: string }[]> {
-  const ids = (process.env.GALLERY_IDS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (ids.length === 0) return [];
-  const store = getStore();
-  const rows = await Promise.all(ids.map((id) => store.get(id)));
-  return rows
-    .filter((r): r is ReportRow => r?.status === "done")
-    .map((r) => ({ id: r.id, question: unescapeHtml(r.question) }));
-}
-
-export default async function Home() {
-  const gallery = await loadGallery();
-
+/** 랜딩 — 신문 1면. 정적 마크업만, DB 접근 없음 (항상 즉시 뜨고 깨지지 않는다). */
+export default function Landing() {
   return (
-    <main>
-      <h1>
-        아이디어를 검증하기 전에,
-        <br />
-        합성 패널에게 먼저 물어보세요
-      </h1>
-      <p className="lede">
-        질문 하나를 입력하면 통계청 인구총조사 분포로 구성된 합성 패널
-        90명(gpt-4o-mini)이 응답하고, 세그먼트 분석·신뢰도 카드·다음 행동 처방이
-        담긴 리포트로 번역해 드립니다.
-      </p>
-      <div className="disclaimer">
-        ⚠️ 결과는 <strong>synthetic panel response</strong>(가상 패널 응답)이며
-        실제 시장 반응·구매율이 아닙니다 — 고객 인터뷰 전에 가설을 탐색하는
-        용도입니다.
-      </div>
+    <main className="landing">
+      <section className="landing-hero">
+        <p className="landing-kicker">창업자를 위한 0차 시장검증</p>
+        <h1 className="landing-headline">
+          진짜 고객을 만나기 전,
+          <br />
+          <span className="landing-underline">가짜 90명</span>에게 먼저
+          물어보세요
+        </h1>
+        <p className="landing-sub">
+          통계청 인구 분포를 흉내 낸 합성 패널 — 실제 여론이 아니라서, 오히려
+          솔직하게 쓸 수 있습니다
+        </p>
+        <div className="landing-cta-row">
+          <Link className="landing-cta" href="/new">
+            리포트 만들기 — 약 1분
+          </Link>
+          <Link className="landing-sample-link" href="/r/BAJnsFMKrF">
+            샘플 리포트 보기 →
+          </Link>
+        </div>
+      </section>
 
-      <ReportForm />
+      <section className="landing-cards" aria-label="예시 리포트 미리보기">
+        <Link href="/r/BAJnsFMKrF" className="landing-report-card">
+          <span className="landing-card-label">예시 리포트</span>
+          <p className="landing-card-kicker">한눈에 보기</p>
+          <p className="landing-card-verdict">반응이 뚜렷하게 긍정적이에요</p>
+          <p className="landing-card-num">
+            10명 중 9명<span>이 "있다"</span>
+          </p>
+          <span className="landing-bar" aria-hidden="true">
+            <i style={{ width: "87%" }} />
+            <em />
+          </span>
+          <span className="landing-card-basis">가상 응답 90개 기준</span>
+        </Link>
+        <Link href="/r/BAJnsFMKrF" className="landing-report-card">
+          <span className="landing-card-label">예시 리포트</span>
+          <p className="landing-card-kicker">기회 세그먼트</p>
+          <p className="landing-card-verdict">
+            수도권 거주자의 반응이 가장 좋았어요
+          </p>
+          <p className="landing-card-num">
+            10명 중 9명<span>이 긍정</span>
+          </p>
+          <span className="landing-bar" aria-hidden="true">
+            <i style={{ width: "89%" }} />
+            <em />
+          </span>
+          <span className="landing-card-basis">가상 응답 90개 기준</span>
+        </Link>
+      </section>
 
-      {gallery.length > 0 && (
-        <section className="gallery">
-          <h2>샘플 리포트</h2>
-          <ul>
-            {gallery.map((g) => (
-              <li key={g.id}>
-                <Link href={`/r/${g.id}`}>{g.question}</Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <section className="landing-how">
+        <h2>작동 방식</h2>
+        <ol>
+          <li>
+            <span className="landing-step-num">1</span>
+            <h3>질문을 입력합니다</h3>
+            <p>선택지 2~4개, 200자 이내 — 첫 번째 선택지가 긍정 방향입니다.</p>
+          </li>
+          <li>
+            <span className="landing-step-num">2</span>
+            <h3>합성 패널 90명이 응답합니다</h3>
+            <p>
+              통계청 인구총조사 분포로 구성된 가상 패널이 약 1분간 응답합니다.
+            </p>
+          </li>
+          <li>
+            <span className="landing-step-num">3</span>
+            <h3>리포트와 공유 링크를 받습니다</h3>
+            <p>
+              쉬운 요약, 세그먼트 분석, 다음 행동 처방이 담긴 리포트가
+              생성됩니다.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section className="landing-honest">
+        <h2>이 서비스가 하지 않는 것</h2>
+        <ul>
+          <li>
+            <strong>실제 여론조사가 아닙니다</strong> — AI가 인구 구성을 흉내 내
+            답한 결과입니다.
+          </li>
+          <li>
+            <strong>고객 인터뷰를 대체하지 않습니다</strong> — 인터뷰 전에
+            가설을 좁히는 용도입니다.
+          </li>
+          <li>
+            <strong>수치는 방향 신호입니다</strong> — 실제 시장 반응·구매율이
+            아닙니다.
+          </li>
+        </ul>
+      </section>
+
+      <section className="landing-bottom">
+        <Link className="landing-cta" href="/new">
+          리포트 만들기 — 약 1분
+        </Link>
+        <p className="landing-bottom-note">무료 · IP당 하루 3회</p>
+      </section>
     </main>
   );
 }
