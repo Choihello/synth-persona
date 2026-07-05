@@ -49,6 +49,12 @@
 - 신규 리포트에만 적용 (저장된 기존 md는 불변 — 카드 없는 게 정상). 라이브 검증: /r/BAJnsFMKrF
 - 스펙: `docs/superpowers/specs/2026-07-05-easy-summary-design.md` · 플랜: `docs/superpowers/plans/2026-07-05-easy-summary.md`
 
+### 랜딩 페이지 (/ ↔ /new 분리)
+- /는 신문 1면 정적 랜딩("가짜 90명" 헤드라인 + 예시 카드 2장 + 작동 방식 3단계 + 정직 면책), 폼·갤러리는 /new로 이동, r/[id] backlink → /new
+- 예시 카드는 /r/BAJnsFMKrF 하드코딩 링크 — 해당 리포트 행이 지워지면 교체 필요 (운영 메모)
+- 스펙: docs/superpowers/specs/2026-07-05-landing-page-design.md
+- 디자인 스킬 3종 설치됨(~/.claude/skills): frontend-design, web-design-guidelines, impeccable-design-polish (출처: nexu-io/open-design, 내용 검토 후 선별 설치)
+
 ### 기타
 - 기존 main에 있던 biome lint 오류 10건 정리 (eval/b2-live.ts 템플릿 리터럴, llm-prescriptions.test.ts non-null 단언 → 가드로 교체)
 - `.claude/launch.json` 추가 (프리뷰 서버 `next start app -p 3211`)
