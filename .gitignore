@@ -4,3 +4,4 @@ dist/
 eval/report/*.html
 /reports/
 .stryker-tmp/
+.superpowers/
