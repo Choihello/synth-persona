@@ -60,7 +60,9 @@
 - 약한 신호는 "## 참고 — 우연일 수 있는 차이"(최대 5), 나머지 "우연 범위 내" 한 줄. 세그먼트 전멸 시 정직 문구 + 쉬운 요약 "뚜렷한 차이는 없었어요" + 차트 생략
 - 라이브 검증: /r/YY172ydchh (보안솔루션 질문 — 혼인·성별·가구원수가 우연 범위로 정확히 강등)
 - app/vercel.json `ignoreCommand: exit 1` 추가 — **배포 스킵 함정 영구 해결** (코드로 관리, 대시보드 설정 불필요)
-- 후속 후보: B. LLM 관련성 게이트 (질문↔차원 관련성 1콜) · weak/noise 티어 confidence 필드 정합(최종리뷰 Minor 3)
+- ~~후속 후보: B. LLM 관련성 게이트~~ → 완료 (2026-07-05): judgeDimensionRelevance 1콜 → 통계 유의해도 무관 축은 "## 참고 — 순위에 올리지 않은 차이"로 제외+AI 사유 명시. 실패 시 조용한 폴백. 스펙: docs/superpowers/specs/2026-07-05-relevance-gate-design.md
+- **교훈(중요)**: OpenAI strict structured outputs는 **모든 properties가 required에 있어야** 함 — 누락 시 HTTP 400으로 요청 거부되는데 조용한 폴백 탓에 프로덕션서 무증상 무력화됐음. 라이브 프로브로 발견, real-API 재현으로 확정, 재귀 strict-compat 회귀 테스트로 고정 (relevance.test.ts). generateJson에 새 스키마 추가 시 이 테스트 패턴을 복사할 것
+- 잔여 Minor(이연): weak/noise/lowRelevance 티어 confidence 필드 정합 · relevance 프롬프트 델리미터 하드닝
 - 스펙: docs/superpowers/specs/2026-07-05-segment-gate-design.md
 
 ### 기타
