@@ -1,6 +1,21 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
+import { refineHhFromNarrative } from "../../scripts/build-nemotron-pool.js";
 import type { NarrativePool } from "./narrative.js";
+
+describe("refineHhFromNarrative (가구 단서 보정)", () => {
+  test("과거형 독거 + 현재 동거는 unknown 폴백 (오분류 방지)", () => {
+    expect(
+      refineHhFromNarrative(
+        "혼자 살아온 세월을 뒤로 하고 지금은 가족과 함께 산다",
+      ),
+    ).toBe("unknown");
+  });
+
+  test("현재형 독거 단서만 있으면 '1'", () => {
+    expect(refineHhFromNarrative("독거 노인으로 살아간다")).toBe("1");
+  });
+});
 
 describe("kr-pool.json (커밋된 실데이터)", () => {
   const pool = JSON.parse(

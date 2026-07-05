@@ -35,7 +35,9 @@ for (const p of attached) {
   const size = p.attrs.가구원수;
   if (
     size?.match(/1\s*명/) &&
-    /(아내|남편|배우자)(와|과)|3세대|가족과 함께 (살|거주)/.test(p.narrative)
+    /(아내|남편|배우자)(와|과)|3세대|가족과 함께 (살|거주)|(자녀|아이|아들|딸|부모님|어머니|아버지)(와|과) (함께 )?(살|거주)|(모시|봉양)/.test(
+      p.narrative,
+    )
   ) {
     console.error("VIOLATION: 1인 가구 + 동거 서사", p.id, key);
     violations++;

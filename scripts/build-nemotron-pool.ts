@@ -122,12 +122,17 @@ function hhClass(familyType: string): PoolEntry["hh"] {
 }
 
 /** family_type이 unknown일 때 서사 텍스트에서 가구 단서로 보정 (잘못 부착 방지 — 과소 매칭 방향만). */
-function refineHhFromNarrative(n: string): PoolEntry["hh"] {
-  if (/혼자 살|독거|1인 가구/.test(n)) return "1";
-  if (/3세대|삼세대|대가족/.test(n)) return "3+";
+export function refineHhFromNarrative(n: string): PoolEntry["hh"] {
   const spouse = /(아내|남편|배우자)(와|과)/.test(n);
   const kidsOrParents =
     /(자녀|아이|아들|딸|손주|손자|부모님|어머니|아버지)(와|과|를)/.test(n);
+  // solo 단서. 단, 과거형 독거 + 현재 동거("혼자 살아온 … 지금은 가족과") 오분류 방지:
+  // solo·cohabit 단서가 동시에 있으면 판별 불가로 unknown 폴백 (solo만 있을 때만 "1").
+  const solo = /혼자 살|독거|1인 가구/.test(n);
+  const cohabit =
+    spouse || kidsOrParents || /3세대|삼세대|대가족|가족과 함께/.test(n);
+  if (solo) return cohabit ? "unknown" : "1";
+  if (/3세대|삼세대|대가족/.test(n)) return "3+";
   if (spouse && kidsOrParents) return "3+";
   if (spouse) return "2";
   if (kidsOrParents && /(모시|함께 살|함께 거주|봉양)/.test(n)) return "3+";
