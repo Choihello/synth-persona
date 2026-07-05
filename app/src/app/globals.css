@@ -406,6 +406,11 @@ button[type="submit"]:disabled {
 }
 
 /* ── 랜딩 (신문 1면) ────────────────────────── */
+.landing {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 .landing-hero {
   text-align: center;
   padding: 48px 0 40px;
