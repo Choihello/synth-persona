@@ -1,4 +1,5 @@
 import snapshotJson from "../data/census/kr-2024.json" with { type: "json" };
+// 풀(985KB)은 기본 ON이라 정적 import가 정당 — off는 예외 경로라 콜드스타트 최적화 대상 아님 (최종리뷰 Minor 판단)
 import poolJson from "../data/nemotron/kr-pool.json" with { type: "json" };
 import type { LLMProvider } from "../src/llm/provider.js";
 import type { NarrativePool } from "../src/personas/narrative.js";

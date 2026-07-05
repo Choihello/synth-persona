@@ -234,6 +234,66 @@ describe("generateFounderInsightReport — core/validation", () => {
     );
   });
 
+  test("비승격 티어(weakSignals/withinNoise/lowRelevance)도 confidence가 unknown이 아니다", () => {
+    // confidence는 assessReliability가 bySegment 키의 dim + persona.provenance로 판정한다.
+    // 혼인/연령을 matched로 붙이면 confByDim이 high가 되어, applyConfidence가 적용된
+    // 티어만 "unknown"을 벗어난다. 혼인은 low 게이트로 lowRelevance, 연령 동률은 withinNoise.
+    const rp = (attrs: Record<string, string>, choice: string): Response => ({
+      persona: {
+        id: Math.random().toString(),
+        attrs,
+        weight: 1,
+        provenance: Object.fromEntries(
+          Object.keys(attrs).map((k) => [k, "matched" as const]),
+        ),
+      },
+      answer: choice,
+      choice,
+    });
+    const seg = (pos: number, neg: number, dim: string, val: string) => [
+      ...Array.from({ length: pos }, () => rp({ [dim]: val }, "쓴다")),
+      ...Array.from({ length: neg }, () => rp({ [dim]: val }, "안쓴다")),
+    ];
+    const responses = [
+      ...seg(15, 0, "혼인", "A"),
+      ...seg(3, 12, "혼인", "B"),
+      ...seg(6, 6, "연령", "30대"), // 50/50 동률 → withinNoise
+    ];
+    const result: StudyResult = {
+      responses,
+      signal: "split",
+      dispersion: 1,
+      bySegment: {
+        혼인: {
+          A: { signal: "consensus", breakdown: {} },
+          B: { signal: "split", breakdown: {} },
+        },
+        연령: { "30대": { signal: "split", breakdown: {} } },
+      },
+    };
+    const rep = generateFounderInsightReport(
+      result,
+      { question: "q?", choices: ["쓴다", "안쓴다"], minN: 8 },
+      undefined,
+      undefined,
+      {
+        relevant: { 혼인: "low" },
+        reasons: { 혼인: "질문과 무관" },
+        basis: "llm",
+      },
+    );
+    // 각 비승격 티어가 세그먼트를 갖고, 전부 confidence != "unknown"
+    expect(rep.lowRelevance.length).toBeGreaterThan(0);
+    expect(rep.withinNoise.length).toBeGreaterThan(0);
+    for (const s of [
+      ...rep.weakSignals,
+      ...rep.withinNoise,
+      ...rep.lowRelevance,
+    ]) {
+      expect(s.confidence).not.toBe("unknown");
+    }
+  });
+
   test("relevance 미전달/null이면 lowRelevance는 빈 배열, 이동 없음", () => {
     const responses = [...mk(15, 0, "혼인", "A"), ...mk(3, 12, "혼인", "B")];
     const result: StudyResult = {

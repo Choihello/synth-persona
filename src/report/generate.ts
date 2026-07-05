@@ -136,6 +136,12 @@ export function generateFounderInsightReport(
   };
   const opportunitySegments = gatedOpportunity.map(applyConfidence);
   const resistanceSegments = gatedResistance.map(applyConfidence);
+  // 비승격 티어도 동일 로직으로 confidence를 채워 전 티어 메타데이터를 일관화한다
+  // (렌더 미출력이라 md 무영향이나, JSON 소비자에겐 티어 간 confidence 의미가 어긋나면 안 됨).
+  // lowRelevance는 strip 이후 확정되므로 이 시점에 적용한다.
+  const weakSignalsWithConf = weakSignals.map(applyConfidence);
+  const withinNoiseWithConf = withinNoise.map(applyConfidence);
+  const lowRelevanceWithConf = lowRelevance.map(applyConfidence);
 
   const riskyAssumptions = buildRiskyAssumptions(
     card,
@@ -186,10 +192,10 @@ export function generateFounderInsightReport(
     overallSignal: overallSection(result, options),
     opportunitySegments,
     resistanceSegments,
-    weakSignals,
-    withinNoise,
+    weakSignals: weakSignalsWithConf,
+    withinNoise: withinNoiseWithConf,
     observedButHeld,
-    lowRelevance,
+    lowRelevance: lowRelevanceWithConf,
     keyDrivers: drivers,
     keyObjections: objections,
     riskyAssumptions,
