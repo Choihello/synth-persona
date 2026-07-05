@@ -1,6 +1,23 @@
 import type { StudyResult } from "../types.js";
 import type { Confidence, SegmentInsight } from "./types.js";
 
+export const GATE_Z = 1.645; // Wilson 90% 신뢰구간
+export const GATE_MIN_EFFECT = 0.1; // 최소 효과 크기 10%p
+
+/** 이항 비율 윌슨 신뢰구간. n<=0이면 [0,1]. */
+export function wilsonInterval(
+  p: number,
+  n: number,
+  z: number,
+): [number, number] {
+  if (n <= 0) return [0, 1];
+  const z2 = z * z;
+  const denom = 1 + z2 / n;
+  const center = (p + z2 / (2 * n)) / denom;
+  const half = (z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / denom;
+  return [Math.max(0, center - half), Math.min(1, center + half)];
+}
+
 interface Bucket {
   dim: string;
   value: string;
@@ -8,13 +25,23 @@ interface Bucket {
   positive: number;
   weightSum: number;
   dist: Record<string, number>;
+  personaIds: Set<string>;
 }
 
 /**
- * dim×세그먼트를 재집계해 기회/저항/판단보류로 랭킹한다 (순수 함수, read-only).
- * 랭킹은 기준선(globalPositiveRatio) 대비 차이 × log(sampleCount) — 큰 세그먼트가
- * 기준선보다 아주 조금 높은 것만으로 과대평가되지 않게 한다.
- * sampleCount < minN 세그먼트는 랭킹에서 제외하고 observedButHeld(판단 보류)로 보존한다.
+ * dim×세그먼트를 재집계해 기회/저항/약한 신호/판단보류로 랭킹한다 (순수 함수, read-only).
+ *
+ * 판정은 페르소나 단위로 한다: 각 페르소나가 반복 응답한 경우 과반 투표로
+ * 긍정/비긍정 하나로 이진화(동률은 보수적으로 비긍정)한 뒤, 세그먼트의 페르소나
+ * 긍정 비율을 전체 페르소나 긍정 비율(globalPersonaRatio)과 비교한다.
+ * 유의성은 2티어 게이트로 판단한다:
+ *   1) 효과 크기: |세그 비율 - 전체 비율| >= GATE_MIN_EFFECT(10%p)
+ *   2) 통계적 신뢰: 세그먼트 페르소나 비율의 Wilson 90% CI가 전체 비율을 포함하지 않음
+ * 두 조건을 모두 만족해야 opportunity/resistance로 승격된다.
+ * 효과 크기만 크고 CI가 전체 비율을 포함하면(표본이 작아 우연일 수 있음) weakSignals로,
+ * 효과 크기 자체가 작으면 withinNoise로 분류한다.
+ * sampleCount(응답 단위) < minN 세그먼트는 애초에 랭킹에서 제외하고 observedButHeld로 보존한다.
+ * 표시용 수치(sampleCount·positiveRatio·responseDistribution 등)는 응답 단위 원본 그대로 유지한다.
  * (렌더 단계 cap은 P4-3에서 처리 — 데이터는 여기서 전량 보존한다.)
  */
 export function rankSegments(
@@ -24,9 +51,11 @@ export function rankSegments(
 ): {
   opportunity: SegmentInsight[];
   resistance: SegmentInsight[];
+  /** 효과는 크지만 표본이 작아 우연일 수 있는 세그먼트 (전량 보존) */
+  weakSignals: SegmentInsight[];
+  /** 효과 크기가 게이트 기준(10%p) 미만인 세그먼트 (전량 보존) */
+  withinNoise: SegmentInsight[];
   observedButHeld: SegmentInsight[];
-  /** 긍정 비율이 기준선과 정확히 같아 기회/저항 어느 쪽도 아닌 세그먼트 (전량 보존) */
-  atBaseline: SegmentInsight[];
   globalPositiveRatio: number;
 } {
   const buckets = new Map<string, Bucket>();
@@ -43,18 +72,49 @@ export function rankSegments(
       const key = `${dim}=${value}`;
       let b = buckets.get(key);
       if (!b) {
-        b = { dim, value, total: 0, positive: 0, weightSum: 0, dist: {} };
+        b = {
+          dim,
+          value,
+          total: 0,
+          positive: 0,
+          weightSum: 0,
+          dist: {},
+          personaIds: new Set(),
+        };
         buckets.set(key, b);
       }
       b.total++;
       b.weightSum += r.persona.weight;
       b.dist[r.choice] = (b.dist[r.choice] ?? 0) + 1;
       if (r.choice === positiveChoice) b.positive++;
+      b.personaIds.add(r.persona.id);
     }
   }
 
   const globalPositiveRatio =
     globalTotal > 0 ? globalPositive / globalTotal : 0;
+
+  // 페르소나 단위 보정: 반복 K회 중 positiveChoice 과반이면 긍정 1 (동률은 보수적으로 0)
+  const perPersona = new Map<string, { pos: number; total: number }>();
+  for (const r of result.responses) {
+    if (r.choice == null) continue;
+    let p = perPersona.get(r.persona.id);
+    if (!p) {
+      p = { pos: 0, total: 0 };
+      perPersona.set(r.persona.id, p);
+    }
+    p.total++;
+    if (r.choice === positiveChoice) p.pos++;
+  }
+  const personaPositive = new Map<string, boolean>();
+  let globalPersonaPos = 0;
+  for (const [id, p] of perPersona) {
+    const pos = p.pos > p.total / 2;
+    personaPositive.set(id, pos);
+    if (pos) globalPersonaPos++;
+  }
+  const globalPersonaRatio =
+    perPersona.size > 0 ? globalPersonaPos / perPersona.size : 0;
 
   const toInsight = (b: Bucket): SegmentInsight => {
     const positiveRatio = b.total > 0 ? b.positive / b.total : 0;
@@ -65,6 +125,7 @@ export function rankSegments(
       segmentDefinition: `${b.dim}이(가) "${b.value}"인 응답자`,
       sampleCount: b.total,
       sampleWeightShare: totalWeight > 0 ? b.weightSum / totalWeight : 0,
+      personaCount: b.personaIds.size,
       responseDistribution: b.dist,
       positiveRatio,
       signal,
@@ -86,7 +147,8 @@ export function rankSegments(
   const opportunity: Array<{ s: SegmentInsight; score: number }> = [];
   const resistance: Array<{ s: SegmentInsight; score: number }> = [];
   const held: SegmentInsight[] = [];
-  const atBaseline: SegmentInsight[] = [];
+  const weakSignals: Array<{ s: SegmentInsight; score: number }> = [];
+  const withinNoise: SegmentInsight[] = [];
 
   for (const b of buckets.values()) {
     const insight = toInsight(b);
@@ -94,33 +156,47 @@ export function rankSegments(
       held.push(insight);
       continue;
     }
-    if (insight.positiveRatio > globalPositiveRatio) {
-      opportunity.push({
-        s: insight,
-        score:
-          (insight.positiveRatio - globalPositiveRatio) * Math.log(b.total),
-      });
-    } else if (insight.positiveRatio < globalPositiveRatio) {
-      resistance.push({
-        s: insight,
-        score:
-          (globalPositiveRatio - insight.positiveRatio) * Math.log(b.total),
-      });
+    const nP = b.personaIds.size;
+    let posP = 0;
+    for (const id of b.personaIds) if (personaPositive.get(id)) posP++;
+    const segRatio = nP > 0 ? posP / nP : 0;
+    const diff = Math.abs(segRatio - globalPersonaRatio);
+    const [lo, hi] = wilsonInterval(segRatio, nP, GATE_Z);
+    const significant =
+      nP > 0 &&
+      diff >= GATE_MIN_EFFECT &&
+      (globalPersonaRatio < lo || globalPersonaRatio > hi);
+
+    if (significant) {
+      const up = segRatio > globalPersonaRatio;
+      insight.whyItMatters = up
+        ? "전체 평균보다 긍정 반응이 강한 세그먼트"
+        : "전체 평균보다 저항이 강한 세그먼트";
+      const entry = { s: insight, score: diff * Math.log(nP) };
+      if (up) opportunity.push(entry);
+      else resistance.push(entry);
+    } else if (nP > 0 && diff >= GATE_MIN_EFFECT) {
+      insight.caveats.push(
+        `표본이 작아 우연일 수 있음 (페르소나 ${nP}명 기준)`,
+      );
+      weakSignals.push({ s: insight, score: diff });
     } else {
-      atBaseline.push(insight);
+      withinNoise.push(insight);
     }
   }
 
   opportunity.sort((a, b) => b.score - a.score);
   resistance.sort((a, b) => b.score - a.score);
+  weakSignals.sort((a, b) => b.score - a.score);
   held.sort((a, b) => b.sampleCount - a.sampleCount);
-  atBaseline.sort((a, b) => b.sampleCount - a.sampleCount);
+  withinNoise.sort((a, b) => b.sampleCount - a.sampleCount);
 
   return {
     opportunity: opportunity.map((x) => x.s),
     resistance: resistance.map((x) => x.s),
+    weakSignals: weakSignals.map((x) => x.s),
+    withinNoise,
     observedButHeld: held,
-    atBaseline,
     globalPositiveRatio,
   };
 }

@@ -51,6 +51,7 @@ export interface SegmentInsight {
   segmentDefinition: string;
   sampleCount: number;
   sampleWeightShare: number;
+  personaCount: number;
   responseDistribution: Record<string, number>;
   positiveRatio: number;
   signal: "consensus" | "split";
@@ -155,6 +156,8 @@ export interface FounderInsightReport {
   overallSignal: OverallSignalSection;
   opportunitySegments: SegmentInsight[];
   resistanceSegments: SegmentInsight[];
+  weakSignals: SegmentInsight[];
+  withinNoise: SegmentInsight[];
   observedButHeld: SegmentInsight[];
   keyDrivers: DriverInsight[];
   keyObjections: DriverInsight[];
