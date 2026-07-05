@@ -37,7 +37,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <footer className="colophon">
             통계청 인구총조사 분포 기반 합성 패널 · 결과는 실제 시장 반응이 아닌
             탐색 신호입니다 ·{" "}
-            <a href="https://github.com/Choihello/synth-persona">GitHub</a>
+            <a href="https://github.com/Choihello/synth-persona">GitHub</a> ·
+            서사:{" "}
+            <a href="https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea">
+              Nemotron-Personas-Korea
+            </a>{" "}
+            (CC BY 4.0)
           </footer>
         </div>
       </body>

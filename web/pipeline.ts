@@ -42,8 +42,8 @@ export function makeReportRunner(
     let last = 0;
     const seed = Math.floor(Math.random() * 1_000_000); // 리포트마다 다른 표본
 
-    // 기본 OFF — A/B GO 후 기본 ON 전환. NARRATIVE=on일 때만 배경 서사 부착.
-    const narrativeOn = process.env.NARRATIVE === "on";
+    // 기본 ON — A/B GO 판정(2026-07-06)으로 기본 ON 전환. NARRATIVE=off일 때만 배경 서사 미부착.
+    const narrativeOn = process.env.NARRATIVE !== "off";
     const narrativePool = narrativeOn
       ? (poolJson as unknown as NarrativePool)
       : undefined;

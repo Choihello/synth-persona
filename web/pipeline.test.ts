@@ -86,49 +86,49 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
     );
   });
 
-  test("NARRATIVE=on이면 프롬프트에 배경 서사가 실리고 md에 저작자표시가 남는다", async () => {
-    process.env.NARRATIVE = "on";
-    try {
-      const prompts: string[] = [];
-      const provider = new MockProvider((p) =>
-        (p.attrs.연령 ?? "").startsWith("2") ? "쓴다" : "안쓴다",
-      );
-      const origAsk = provider.ask.bind(provider);
-      provider.ask = async (persona, prompt) => {
-        prompts.push(personaSystemPrompt(persona));
-        return origAsk(persona, prompt);
-      };
-      const runner = makeReportRunner(provider, {
-        n: 10,
-        repeats: 1,
-        concurrency: 1,
-      });
-      const md = await runner("질문?", ["쓴다", "안쓴다"], () => {});
-      expect(prompts.some((s) => s.includes("배경 서사"))).toBe(true);
-      expect(md).toContain(
-        "페르소나 서사: NVIDIA Nemotron-Personas-Korea (CC BY 4.0)",
-      );
-    } finally {
-      process.env.NARRATIVE = undefined;
-    }
-  });
-
-  test("NARRATIVE 미설정이면 서사가 붙지 않는다 (기본 OFF)", async () => {
+  test("NARRATIVE 미설정이면 서사가 붙는다 (기본 ON)", async () => {
     const prompts: string[] = [];
-    const provider = new MockProvider(() => "쓴다");
+    const provider = new MockProvider((p) =>
+      (p.attrs.연령 ?? "").startsWith("2") ? "쓴다" : "안쓴다",
+    );
     const origAsk = provider.ask.bind(provider);
     provider.ask = async (persona, prompt) => {
       prompts.push(personaSystemPrompt(persona));
       return origAsk(persona, prompt);
     };
     const runner = makeReportRunner(provider, {
-      n: 5,
+      n: 10,
       repeats: 1,
       concurrency: 1,
     });
     const md = await runner("질문?", ["쓴다", "안쓴다"], () => {});
-    expect(prompts.every((s) => !s.includes("배경 서사"))).toBe(true);
-    expect(md).not.toContain("Nemotron");
+    expect(prompts.some((s) => s.includes("배경 서사"))).toBe(true);
+    expect(md).toContain(
+      "페르소나 서사: NVIDIA Nemotron-Personas-Korea (CC BY 4.0)",
+    );
+  });
+
+  test("NARRATIVE=off면 붙지 않는다", async () => {
+    process.env.NARRATIVE = "off";
+    try {
+      const prompts: string[] = [];
+      const provider = new MockProvider(() => "쓴다");
+      const origAsk = provider.ask.bind(provider);
+      provider.ask = async (persona, prompt) => {
+        prompts.push(personaSystemPrompt(persona));
+        return origAsk(persona, prompt);
+      };
+      const runner = makeReportRunner(provider, {
+        n: 5,
+        repeats: 1,
+        concurrency: 1,
+      });
+      const md = await runner("질문?", ["쓴다", "안쓴다"], () => {});
+      expect(prompts.every((s) => !s.includes("배경 서사"))).toBe(true);
+      expect(md).not.toContain("Nemotron");
+    } finally {
+      process.env.NARRATIVE = undefined;
+    }
   });
 
   afterEach(() => {
