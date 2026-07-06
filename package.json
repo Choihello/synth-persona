@@ -27,13 +27,7 @@
       "import": "./dist/src/index.js"
     }
   },
-  "files": [
-    "dist",
-    "data/census",
-    "data/nemotron",
-    "LICENSE",
-    "README.md"
-  ],
+  "files": ["dist", "data/census", "data/nemotron", "LICENSE", "README.md"],
   "bin": {
     "synth-persona": "dist/cli/main.js"
   },
