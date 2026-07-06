@@ -17,6 +17,7 @@ const sans = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://synth-persona-app.vercel.app"),
   title: "synth-persona — 0차 시장검증",
   description:
     "질문 하나로 통계청 합성 패널 90명의 반응을 받아보는 0차 시장검증 리포트",
