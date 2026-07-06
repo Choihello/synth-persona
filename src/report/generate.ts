@@ -166,7 +166,9 @@ export function generateFounderInsightReport(
 
   const headline =
     result.signal === "split"
-      ? `전체 반응은 갈렸지만, ${topOpportunity ?? "일부 세그먼트"}에서 상대적으로 긍정 신호가 강합니다. 어느 방향을 더 확인해야 하는지 아래를 보세요.`
+      ? topOpportunity
+        ? `전체 반응은 갈렸지만, ${topOpportunity}에서 상대적으로 긍정 신호가 강합니다. 어느 방향을 더 확인해야 하는지 아래를 보세요.`
+        : "전체 반응은 갈렸고, 순위에 올릴 만큼 뚜렷한 세그먼트 차이는 없었습니다. 세그먼트별 상세는 아래 참고 섹션을 보세요."
       : `전체적으로 비교적 합의된 반응입니다${topOpportunity ? ` (${topOpportunity} 특히)` : ""}. 다만 실제 조사로 검증이 필요합니다.`;
 
   const appendix: ReportAppendix = {

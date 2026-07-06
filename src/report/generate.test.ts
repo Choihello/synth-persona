@@ -294,6 +294,19 @@ describe("generateFounderInsightReport — core/validation", () => {
     }
   });
 
+  test("split인데 기회 세그먼트가 없으면 headline이 세그먼트 신호를 주장하지 않는다", () => {
+    // 50/50 동률 → 승격 세그먼트 없음(opportunitySegments 빈 배열), signal은 split
+    const responses = [
+      ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "쓴다")),
+      ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "안쓴다")),
+    ];
+    const rep = generateFounderInsightReport(study(responses), opts);
+    expect(rep.opportunitySegments).toEqual([]);
+    expect(rep.executiveSummary.topOpportunity).toBeUndefined();
+    expect(rep.executiveSummary.headline).not.toContain("긍정 신호가 강합니다");
+    expect(rep.executiveSummary.headline).toContain("뚜렷한 세그먼트 차이");
+  });
+
   test("relevance 미전달/null이면 lowRelevance는 빈 배열, 이동 없음", () => {
     const responses = [...mk(15, 0, "혼인", "A"), ...mk(3, 12, "혼인", "B")];
     const result: StudyResult = {
