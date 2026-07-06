@@ -5,6 +5,32 @@
 
 [![CI](https://github.com/Choihello/synth-persona/actions/workflows/ci.yml/badge.svg)](https://github.com/Choihello/synth-persona/actions/workflows/ci.yml) ![node](https://img.shields.io/badge/node-24-blue) ![license](https://img.shields.io/badge/license-MIT-black) ![deps](https://img.shields.io/badge/runtime%20deps-1-lightgrey)
 
+## For English readers
+
+**What** — an open-source synthetic-panel engine for Korea: it builds a
+statistically grounded virtual population from official census
+distributions (KOSIS 2024, IPF-fitted joints), asks each persona your
+market question via an LLM, and aggregates the answers into a
+founder-friendly report with a two-tier significance gate (Wilson 90% CI
++ minimum effect size) so noise never gets ranked as signal.
+
+**Why** — real surveys take weeks and cost thousands; early ideas only
+need a *directional* read. The tool is honest about what it is: every
+number is labeled a synthetic panel response, disagreement (🔴) is
+surfaced as "spend your real research budget here", not hidden.
+
+**Quickstart** (no API key needed — deterministic mock provider):
+
+```console
+npm install && npm run build
+node dist/cli/main.js --question "Would you subscribe?" \
+  --choices "yes,no" --n 60 --seed 7 --mock --source census
+```
+
+**Live demo** — https://synth-persona-app.vercel.app (capped hosted
+showcase; run it with your own key for unlimited use). Docs below are in
+Korean; the code, tests and CLI are English-friendly.
+
 <p align="center">
   <img src="docs/demo.svg" alt="synth-persona CLI demo" width="680">
 </p>
@@ -178,9 +204,24 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
 | `--no-counterbalance` | 선택지 순서 상쇄 해제 (라이브 기본 on) | — |
 | `--help` | 도움말 | — |
 
-## 웹 서비스 (web/)
+## 웹 서비스 — 라이브 데모
 
-질문 하나 입력 → 진행 표시 → 리포트 + 공유 링크(`/r/<id>`)를 제공하는 호스팅 웹 (방문자 키 불필요, IP당 일 3회 + 전역 일일 상한).
+**https://synth-persona-app.vercel.app** (Vercel + Turso, 운영비 하드캡
+때문에 IP당 하루 3회 — 자기 키로 돌리면 무제한)
+
+<p align="center">
+  <img src="docs/screenshots/report-light.png" alt="리포트 — 쉬운 요약 카드와 세그먼트 게이트" width="680">
+</p>
+<p align="center">
+  <img src="docs/screenshots/report-dark.png" alt="다크 모드 리포트" width="680">
+</p>
+
+질문 → 합성 패널 90명 응답 → 리포트 공유 링크. 리포트에는 쉬운 요약
+카드(통계 용어 없는 생활 언어) · Wilson 2티어 유의성 게이트(우연 범위
+차이는 순위에서 강등) · LLM 관련성 게이트 · Nemotron 서사 페르소나 ·
+동적 OG 이미지가 들어간다.
+
+로컬에서 돌리려면 (방문자 키 불필요, IP당 일 3회 + 전역 일일 상한):
 
 ```bash
 npm run web:dev            # localhost:8787 (.env의 OPENAI_API_KEY 사용)
@@ -258,7 +299,8 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **2층 응답 실측 (묶음 B)** — B1 완료(go 조건부, gpt-4o-mini · `--provider openai|anthropic`): 예스맨·순서 편향 게이트 통과, 가격 저항 분화 확인 ([노트](docs/b1-live-notes-2026-07-04.md))
 - [x] **3층 응답 신뢰도 실측 (묶음 B)** — `measureResponseConsistency` + `npm run b2:live`로 자기일관성·예스맨·순서·패러프레이즈·붕괴 계측, `responseConsistency`가 measured(medium|low)로 교체됨. 실측(gpt-4o-mini): 순서·문구 민감 → low ([노트](docs/b2-live-notes-2026-07-04.md))
 - [x] **진단→처방: 다음 행동 생성물 (묶음 B)** — B3 완료: `buildLLMPrescriptions`가 실측 reason 층화 샘플에 근거해 drivers/objections(병목 태그)/인터뷰 질문을 LLM 생성(basis:llm), 나머지는 heuristic 위임. `npm run report:live`로 end-to-end ([노트](docs/b3-live-notes-2026-07-04.md), issue #4)
-- [ ] 웹 UI
+- [x] **웹 서비스 (v0.2~0.3)** — Next.js 15 App Router + Vercel + Turso 라이브 데모: 폼 → 진행 폴링 → 공유 리포트. 쉬운 요약 카드 · Wilson 2티어 통계 게이트(GATE_Z=1.645, 최소 효과 10%p) · LLM 관련성 게이트(실패 시 조용한 폴백) · Nemotron-Personas-Korea 서사 결정적 매칭(FNV-1a) · 동적 OG · 다크 모드 · IP 해시 레이트리밋
+- [ ] (탐색) 게이트 임계·표본 크기 가이드 문서화
 
 ## 라이선스
 
