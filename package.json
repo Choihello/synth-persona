@@ -1,7 +1,6 @@
 {
   "name": "synth-persona",
-  "version": "0.3.0",
-  "private": true,
+  "version": "0.4.0",
   "type": "module",
   "license": "MIT",
   "description": "통계청 인구총조사 분포 기반 합성 패널로 아이디어를 0차 시장검증 — 세그먼트 유의성 게이트·LLM 관련성 게이트·Nemotron 서사 페르소나를 갖춘 리포트 엔진",
