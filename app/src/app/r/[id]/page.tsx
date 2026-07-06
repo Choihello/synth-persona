@@ -1,6 +1,7 @@
 import { marked } from "marked";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getStore } from "../../../lib/backend.js";
 
 export const runtime = "nodejs";
@@ -34,16 +35,7 @@ export default async function ReportPage({
   const { id } = await params;
   const row = await getStore().get(id);
 
-  if (!row) {
-    return (
-      <main>
-        <h1>리포트를 찾을 수 없습니다</h1>
-        <p className="backlink">
-          <Link href="/new">← 새 리포트 만들기</Link>
-        </p>
-      </main>
-    );
-  }
+  if (!row) notFound();
   if (row.status === "failed") {
     return (
       <main>
