@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { parseArgs } from "node:util";
 import snapshotJson from "../data/census/kr-2024.json" with { type: "json" };
 import { SampleSource } from "../src/data/sample-source.js";

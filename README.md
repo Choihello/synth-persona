@@ -221,13 +221,10 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
 차이는 순위에서 강등) · LLM 관련성 게이트 · Nemotron 서사 페르소나 ·
 동적 OG 이미지가 들어간다.
 
-로컬에서 돌리려면 (방문자 키 불필요, IP당 일 3회 + 전역 일일 상한):
-
-```bash
-npm run web:dev            # localhost:8787 (.env의 OPENAI_API_KEY 사용)
-```
-
-배포는 Dockerfile + fly.toml 참조 (secrets: `OPENAI_API_KEY`, `IP_SALT`; 볼륨에 SQLite). 상세 설계: `docs/superpowers/specs/2026-07-04-web-v1-design.md`.
+로컬에서 돌리려면: `cd app && npm install && npm run dev` (Next.js dev 서버).
+리포트 생성에는 `OPENAI_API_KEY`, 저장에는 Turso 환경변수(`TURSO_DATABASE_URL`,
+`TURSO_AUTH_TOKEN`)가 필요하다 — 없으면 폼·랜딩만 뜬다. 배포는 Vercel(Root
+Directory=`app/`) + Turso 조합을 쓴다.
 
 ## 동작 원리
 

@@ -14,7 +14,7 @@ const INK_MUTED = "#6b675e";
 const ACCENT = "#2a78d6";
 const HAIRLINE = "rgba(31,29,26,0.18)";
 
-const KICKER = "창업자를 위한 0차 시장검증";
+const KICKER = "오픈소스 합성 패널 엔진 · 라이브 데모";
 const LINE1 = "진짜 고객을 만나기 전,";
 const UNDERLINED = "가짜 90명";
 const LINE2_REST = "에게 먼저 물어보세요";
@@ -23,7 +23,7 @@ const FOOT = "가상 패널 응답 — 실제 여론이 아닙니다";
 export default async function OgImage() {
   const glyphs = [
     ...new Set(
-      `synth·persona 0차 시장검증 리포트${KICKER}${LINE1}${UNDERLINED}${LINE2_REST}${FOOT}`.split(
+      `synth·persona ${KICKER}${LINE1}${UNDERLINED}${LINE2_REST}${FOOT}`.split(
         "",
       ),
     ),
@@ -57,7 +57,7 @@ export default async function OgImage() {
       >
         <div style={{ fontSize: 30, fontWeight: 700 }}>synth·persona</div>
         <div style={{ fontSize: 20, fontWeight: 400, color: INK_MUTED }}>
-          0차 시장검증 리포트
+          가짜 90명에게 먼저 물어보세요
         </div>
       </div>
 
