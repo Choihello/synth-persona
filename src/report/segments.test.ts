@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import type { Response, StudyResult } from "../types.js";
-import { GATE_Z, rankSegments, wilsonInterval } from "./segments.js";
+import {
+  GATE_Z,
+  rankSegments,
+  twoProportionZ,
+  wilsonInterval,
+} from "./segments.js";
 
 function make(
   pos: number,
@@ -166,10 +171,32 @@ describe("rankSegments", () => {
       { id: "b2", attrs: { 지역: "B" }, picks: ["쓴다", "쓴다"] },
     ]);
     const r = rankSegments(study(responses), "쓴다", 1);
-    // 동률이 비긍정이므로 지역=A ratio 0.5 vs 여집합(B) 1.0 → diff 0.5,
-    // 여집합이 A의 CI [0.12,0.88] 밖 → 저항 승격
-    // (동률을 긍정으로 세면 diff 0이 되어 withinNoise가 됨 — 판별 픽스처)
-    expect(r.resistance.some((s) => s.segmentLabel === "지역=A")).toBe(true);
+    // 동률이 비긍정이므로 지역=A ratio 0.5 vs 여집합(B) 1.0 → diff 0.5.
+    // 2표본 z-검정: n=2 vs n=2로 표본이 극소 → z≈1.15 < 1.645라 승격 못 하고
+    // weakSignals로. (동률을 긍정으로 세면 diff 0이 되어 withinNoise — 판별 픽스처)
+    expect(r.weakSignals.some((s) => s.segmentLabel === "지역=A")).toBe(true);
+  });
+
+  test("여집합이 작으면 큰 세그먼트도 승격 못 함 (2표본 검정이 여집합 불확실성 반영)", () => {
+    // 세그 A 18/20=0.9(CI 좁음) vs 여집합 B 4/6=0.667. diff 0.233 >= 10%p.
+    // 구 로직(여집합을 오차 없는 점으로 취급): 0.667이 A의 좁은 Wilson CI 밖 → 승격.
+    // 신 로직(2표본 z): 여집합 n=6이 작아 SE가 커져 z≈1.39 < 1.645 → weakSignals.
+    const responses = [
+      ...make(18, 2, "지역", "A"),
+      ...make(4, 2, "지역", "B"),
+    ];
+    const r = rankSegments(study(responses), "쓴다", 5);
+    expect(r.opportunity.some((s) => s.segmentLabel === "지역=A")).toBe(false);
+    expect(r.weakSignals.some((s) => s.segmentLabel === "지역=A")).toBe(true);
+  });
+
+  test("twoProportionZ: pooled 2표본 비율 검정, 표본 0이면 0", () => {
+    expect(twoProportionZ(0.9, 0, 0.5, 10)).toBe(0);
+    expect(twoProportionZ(0.9, 10, 0.5, 0)).toBe(0);
+    // p1=1.0 n1=15, p2=0.2 n2=15: pooled 0.6, SE 0.1789, z≈4.47
+    expect(twoProportionZ(1.0, 15, 0.2, 15)).toBeCloseTo(4.47, 1);
+    // 동일 비율이면 z=0 (SE 0 방어 포함)
+    expect(twoProportionZ(0.5, 8, 0.5, 8)).toBe(0);
   });
 
   test("여집합 비교 — 큰 세그먼트의 자기포함 희석을 제거한다", () => {

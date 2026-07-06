@@ -4,6 +4,25 @@ import type { Confidence, SegmentInsight } from "./types.js";
 export const GATE_Z = 1.645; // Wilson 90% 신뢰구간
 export const GATE_MIN_EFFECT = 0.1; // 최소 효과 크기 10%p
 
+/**
+ * Pooled 2표본 비율 z-검정 통계량. 세그먼트(p1,n1)와 여집합(p2,n2)의 긍정
+ * 비율이 다른지 판정한다. 어느 한쪽 n<=0이거나 pooled 분산이 0이면 0.
+ * |z| >= GATE_Z(1.645, 양측 α=0.10)이면 유의. 여집합측 표본(n2)이 작을수록
+ * 표준오차가 커져 z가 작아지므로, 여집합 불확실성이 판정에 반영된다.
+ */
+export function twoProportionZ(
+  p1: number,
+  n1: number,
+  p2: number,
+  n2: number,
+): number {
+  if (n1 <= 0 || n2 <= 0) return 0;
+  const pPool = (p1 * n1 + p2 * n2) / (n1 + n2);
+  const se = Math.sqrt(pPool * (1 - pPool) * (1 / n1 + 1 / n2));
+  if (se === 0) return 0;
+  return (p1 - p2) / se;
+}
+
 /** 이항 비율 윌슨 신뢰구간. n<=0이면 [0,1]. */
 export function wilsonInterval(
   p: number,
@@ -38,10 +57,11 @@ interface Bucket {
  * 파이썬판 교차 검증에서 확인).
  * 유의성은 2티어 게이트로 판단한다:
  *   1) 효과 크기: |세그 비율 - 여집합 비율| >= GATE_MIN_EFFECT(10%p)
- *   2) 통계적 신뢰: 세그먼트 페르소나 비율의 Wilson 90% CI가 여집합 비율을 포함하지 않음
+ *   2) 통계적 신뢰: 세그먼트 vs 여집합 2표본 비율 z-검정 |z| >= GATE_Z(1.645)
+ *      — 세그먼트·여집합 양쪽 표본 크기를 반영(여집합이 작으면 승격이 어려움)
  * 다중비교는 보정하지 않는다 — 승격된 차이도 "가설"로 렌더에 명시된다.
  * 두 조건을 모두 만족해야 opportunity/resistance로 승격된다.
- * 효과 크기만 크고 CI가 여집합 비율을 포함하면(표본이 작아 우연일 수 있음) weakSignals로,
+ * 효과 크기는 크지만 z-검정이 유의하지 않으면(표본이 작아 우연일 수 있음) weakSignals로,
  * 효과 크기 자체가 작으면 withinNoise로 분류한다.
  * sampleCount(응답 단위) < minN 세그먼트는 애초에 랭킹에서 제외하고 observedButHeld로 보존한다.
  * 표시용 수치(sampleCount·positiveRatio·responseDistribution 등)는 응답 단위 원본 그대로 유지한다.
@@ -165,18 +185,18 @@ export function rankSegments(
     const segRatio = nP > 0 ? posP / nP : 0;
     // 여집합 비교 — 전체 평균은 세그먼트 자신을 포함해 큰 세그먼트일수록
     // 효과가 희석된다(자기포함 편향). 대조군은 "나머지 응답자"가 맞다.
-    // 한계: 여집합 비율을 고정 기준점으로 취급하므로(여집합측 불확실성 미반영)
-    // 소표본에서 관대할 수 있다 — minN 게이트가 1차 방어선.
+    // 통계 신뢰는 2표본 z-검정으로 판정해 세그먼트·여집합 양쪽 표본 크기를
+    // 모두 반영한다(여집합이 작으면 SE가 커져 승격이 어려워짐).
     const restN = perPersona.size - nP;
     const restPos = globalPersonaPos - posP;
     const restRatio = restN > 0 ? restPos / restN : segRatio; // 대조군 없음 → diff 0
     const diff = Math.abs(segRatio - restRatio);
-    const [lo, hi] = wilsonInterval(segRatio, nP, GATE_Z);
+    const z = twoProportionZ(segRatio, nP, restRatio, restN);
     const significant =
       nP > 0 &&
       restN > 0 &&
       diff >= GATE_MIN_EFFECT &&
-      (restRatio < lo || restRatio > hi);
+      Math.abs(z) >= GATE_Z;
 
     if (significant) {
       const up = segRatio > restRatio;
