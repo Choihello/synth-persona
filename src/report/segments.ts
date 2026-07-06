@@ -33,10 +33,13 @@ interface Bucket {
  *
  * 판정은 페르소나 단위로 한다: 각 페르소나가 반복 응답한 경우 과반 투표로
  * 긍정/비긍정 하나로 이진화(동률은 보수적으로 비긍정)한 뒤, 세그먼트의 페르소나
- * 긍정 비율을 전체 페르소나 긍정 비율(globalPersonaRatio)과 비교한다.
+ * 긍정 비율을 **여집합(나머지 응답자)** 비율과 비교한다 — 전체 평균 비교는
+ * 세그먼트 자신이 평균에 포함돼 큰 세그먼트의 효과를 희석시킨다(자기포함 편향,
+ * 파이썬판 교차 검증에서 확인).
  * 유의성은 2티어 게이트로 판단한다:
- *   1) 효과 크기: |세그 비율 - 전체 비율| >= GATE_MIN_EFFECT(10%p)
- *   2) 통계적 신뢰: 세그먼트 페르소나 비율의 Wilson 90% CI가 전체 비율을 포함하지 않음
+ *   1) 효과 크기: |세그 비율 - 여집합 비율| >= GATE_MIN_EFFECT(10%p)
+ *   2) 통계적 신뢰: 세그먼트 페르소나 비율의 Wilson 90% CI가 여집합 비율을 포함하지 않음
+ * 다중비교는 보정하지 않는다 — 승격된 차이도 "가설"로 렌더에 명시된다.
  * 두 조건을 모두 만족해야 opportunity/resistance로 승격된다.
  * 효과 크기만 크고 CI가 전체 비율을 포함하면(표본이 작아 우연일 수 있음) weakSignals로,
  * 효과 크기 자체가 작으면 withinNoise로 분류한다.
@@ -160,18 +163,26 @@ export function rankSegments(
     let posP = 0;
     for (const id of b.personaIds) if (personaPositive.get(id)) posP++;
     const segRatio = nP > 0 ? posP / nP : 0;
-    const diff = Math.abs(segRatio - globalPersonaRatio);
+    // 여집합 비교 — 전체 평균은 세그먼트 자신을 포함해 큰 세그먼트일수록
+    // 효과가 희석된다(자기포함 편향). 대조군은 "나머지 응답자"가 맞다.
+    // 한계: 여집합 비율을 고정 기준점으로 취급하므로(여집합측 불확실성 미반영)
+    // 소표본에서 관대할 수 있다 — minN 게이트가 1차 방어선.
+    const restN = perPersona.size - nP;
+    const restPos = globalPersonaPos - posP;
+    const restRatio = restN > 0 ? restPos / restN : segRatio; // 대조군 없음 → diff 0
+    const diff = Math.abs(segRatio - restRatio);
     const [lo, hi] = wilsonInterval(segRatio, nP, GATE_Z);
     const significant =
       nP > 0 &&
+      restN > 0 &&
       diff >= GATE_MIN_EFFECT &&
-      (globalPersonaRatio < lo || globalPersonaRatio > hi);
+      (restRatio < lo || restRatio > hi);
 
     if (significant) {
-      const up = segRatio > globalPersonaRatio;
+      const up = segRatio > restRatio;
       insight.whyItMatters = up
-        ? "전체 평균보다 긍정 반응이 강한 세그먼트"
-        : "전체 평균보다 저항이 강한 세그먼트";
+        ? "나머지 응답자보다 긍정 반응이 강한 세그먼트"
+        : "나머지 응답자보다 저항이 강한 세그먼트";
       const entry = { s: insight, score: diff * Math.log(nP) };
       if (up) opportunity.push(entry);
       else resistance.push(entry);

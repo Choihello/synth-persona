@@ -89,10 +89,10 @@ describe("rankSegments", () => {
   });
 
   test("효과 10%p 미만 차이는 유의해 보여도 withinNoise", () => {
-    // 30대 55% vs 전체 50% — diff 5%p < 10%p
+    // 30대 52.5% vs 여집합(60대) 47.5% — diff 5%p < 10%p
     const responses = [
-      ...make(11, 9, "연령", "30대"),
-      ...make(9, 11, "연령", "60대"),
+      ...make(21, 19, "연령", "30대"),
+      ...make(19, 21, "연령", "60대"),
     ];
     const r = rankSegments(study(responses), "쓴다", 8);
     expect(r.opportunity).toHaveLength(0);
@@ -148,8 +148,9 @@ describe("rankSegments", () => {
       { id: "b3", attrs: { 연령: "60대" }, picks: ["쓴다", "쓴다", "안쓴다"] },
     ]);
     const r = rankSegments(study(responses), "쓴다", 3);
-    // 페르소나 단위: global 4/6=0.667. 30대 nP=3 ratio 1.0 diff 0.33 — CI [0.53,1] 포함 → weak
-    const seg30 = r.weakSignals.find((s) => s.segmentLabel === "연령=30대");
+    // 페르소나 단위: 30대 nP=3 ratio 1.0, 여집합(60대) 1/3=0.333 (b3만 과반 긍정)
+    // — diff 0.67, 여집합이 세그 CI [0.53,1] 밖 → 승격 (여집합 비교 semantics)
+    const seg30 = r.opportunity.find((s) => s.segmentLabel === "연령=30대");
     expect(seg30).toBeDefined();
     expect(seg30?.personaCount).toBe(3);
     // 표시용 수치는 응답 단위 그대로: 9응답 전부 긍정
@@ -165,9 +166,30 @@ describe("rankSegments", () => {
       { id: "b2", attrs: { 지역: "B" }, picks: ["쓴다", "쓴다"] },
     ]);
     const r = rankSegments(study(responses), "쓴다", 1);
-    // 동률이 비긍정이므로 global 3/4 = 0.75, 지역=A ratio 0.5 → diff 0.25 → weak
+    // 동률이 비긍정이므로 지역=A ratio 0.5 vs 여집합(B) 1.0 → diff 0.5,
+    // 여집합이 A의 CI [0.12,0.88] 밖 → 저항 승격
     // (동률을 긍정으로 세면 diff 0이 되어 withinNoise가 됨 — 판별 픽스처)
-    expect(r.weakSignals.some((s) => s.segmentLabel === "지역=A")).toBe(true);
+    expect(r.resistance.some((s) => s.segmentLabel === "지역=A")).toBe(true);
+  });
+
+  test("여집합 비교 — 큰 세그먼트의 자기포함 희석을 제거한다", () => {
+    // 지역=A 24/30=0.8, 지역=B 4/10=0.4. 구(전체 0.7) 비교면 A diff 10%p·CI 포함 → weak.
+    // 여집합 비교면 A 0.8 vs B 0.4 — diff 40%p, B가 A의 CI 밖 → 승격돼야 한다.
+    const responses = [
+      ...make(24, 6, "지역", "A"),
+      ...make(4, 6, "지역", "B"),
+    ];
+    const r = rankSegments(study(responses), "쓴다", 8);
+    expect(r.opportunity.some((s) => s.segmentLabel === "지역=A")).toBe(true);
+    expect(r.resistance.some((s) => s.segmentLabel === "지역=B")).toBe(true);
+  });
+
+  test("세그먼트가 전체와 같으면 대조군이 없어 withinNoise", () => {
+    const responses = make(12, 3, "성", "여자");
+    const r = rankSegments(study(responses), "쓴다", 8);
+    expect(r.opportunity).toHaveLength(0);
+    expect(r.resistance).toHaveLength(0);
+    expect(r.withinNoise.some((s) => s.segmentLabel === "성=여자")).toBe(true);
   });
 
   test("wilsonInterval 경계: n=0은 [0,1], p=1 n=15 z=1.645 lo≈0.847", () => {
