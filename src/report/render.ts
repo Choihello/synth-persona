@@ -59,6 +59,15 @@ export function renderFounderInsightReport(
   );
   // ④ 기회 세그먼트
   md.push("## 기회 세그먼트", "");
+  // 게이트 통과분도 다중비교 보정은 없다 — 과신 방지 고지 (승격이 있을 때만)
+  if (
+    report.opportunitySegments.length > 0 ||
+    report.resistanceSegments.length > 0
+  )
+    md.push(
+      "_순위에 오른 차이도 가설입니다 — 여러 세그먼트를 동시에 비교하므로(다중비교 무보정) 일부는 우연일 수 있습니다._",
+      "",
+    );
   if (report.opportunitySegments.length === 0)
     md.push(
       "(유의한 기회 세그먼트 없음 — 이 규모의 가상 패널에서 흔한 일입니다)",

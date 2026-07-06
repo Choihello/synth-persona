@@ -301,7 +301,8 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 
 ## 라이선스
 
-MIT
+MIT. 연구나 파생 프로젝트에서 이 방법론·코드를 사용하실 때는 인용 표기를
+부탁드립니다 (`synth-persona`, github.com/Choihello/synth-persona).
 
 ### 데이터 출처·표기
 

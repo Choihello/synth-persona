@@ -187,3 +187,36 @@ describe("renderFounderInsightReport — 처방 섹션", () => {
     expect(count).toBeGreaterThanOrEqual(3); // ⑥ + 인터뷰/설문/랜딩 등
   });
 });
+
+describe("renderFounderInsightReport — 게이트 고지", () => {
+  it("승격 세그먼트가 있으면 다중비교 무보정 고지가 렌더된다", () => {
+    const responses = [];
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `a${i}`, attrs: { 연령: "30대" }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `b${i}`, attrs: { 연령: "60대" }, weight: 1 },
+        answer: i < 3 ? "쓴다" : "안쓴다",
+        choice: i < 3 ? "쓴다" : "안쓴다",
+      });
+    const report = generateFounderInsightReport(
+      { responses, signal: "split", dispersion: 1, bySegment: { 연령: {} } },
+      { question: "구독 의향?", choices: ["쓴다", "안쓴다"] },
+    );
+    expect(report.opportunitySegments.length).toBeGreaterThan(0);
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("다중비교 무보정");
+  });
+
+  it("승격 세그먼트가 없으면 다중비교 고지도 없다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    expect(renderFounderInsightReport(report)).not.toContain("다중비교");
+  });
+});

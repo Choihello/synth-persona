@@ -81,6 +81,12 @@ export function buildRiskyAssumptions(
       "조건화된 가상 응답(synthetic panel)이라 실제 행동과 다를 수 있음",
     howToTest: "우선순위 세그먼트 대상 실제 고객 인터뷰",
   });
+  out.push({
+    assumption: "전체 반응이 약하면 수요가 없다",
+    whyRisky:
+      "일반 인구 분포 패널은 소수 열성층(니치) 수요를 구조적으로 감지하지 못함 — 미감지가 니치 부재를 뜻하지 않음",
+    howToTest: "열성 후보군(취미·관심사 기반)을 직접 모아 소규모로 재확인",
+  });
   if (hasPriceSignal && card.missingAxes.length) {
     out.push({
       assumption: "이 결과로 가격/구매력을 판단할 수 있다",

@@ -84,4 +84,11 @@ describe("confidence mapping", () => {
       true,
     );
   });
+
+  test("니치 미감지 riskyAssumption은 항상 포함 (미감지 ≠ 니치 없음)", () => {
+    const ra = buildRiskyAssumptions(base, false, 0);
+    const niche = ra.find((a) => a.whyRisky.includes("니치"));
+    expect(niche).toBeDefined();
+    expect(niche?.whyRisky).toContain("감지하지 못");
+  });
 });
