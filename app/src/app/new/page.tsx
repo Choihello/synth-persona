@@ -45,6 +45,11 @@ export default async function NewReportPage() {
         실제 시장 반응·구매율이 아닙니다 — 고객 인터뷰 전에 가설을 탐색하는
         용도입니다.
       </div>
+      <p className="lede" style={{ fontSize: "0.85em" }}>
+        이 페이지는 오픈소스 프로젝트{" "}
+        <a href="https://github.com/Choihello/synth-persona">synth-persona</a>의
+        라이브 데모입니다 — 자기 API 키로 직접 실행하면 횟수 제한이 없습니다.
+      </p>
 
       <ReportForm />
 

@@ -5,7 +5,7 @@ export default function Landing() {
   return (
     <main className="landing">
       <section className="landing-hero">
-        <p className="landing-kicker">창업자를 위한 0차 시장검증</p>
+        <p className="landing-kicker">오픈소스 합성 패널 엔진 · 라이브 데모</p>
         <h1 className="landing-headline">
           진짜 고객을 만나기 전,
           <br />
@@ -23,6 +23,12 @@ export default function Landing() {
           <Link className="landing-sample-link" href="/r/BAJnsFMKrF">
             샘플 리포트 보기 →
           </Link>
+          <a
+            className="landing-sample-link"
+            href="https://github.com/Choihello/synth-persona"
+          >
+            GitHub에서 코드 보기 →
+          </a>
         </div>
       </section>
 
@@ -105,7 +111,10 @@ export default function Landing() {
         <Link className="landing-cta" href="/new">
           리포트 만들기 — 약 1분
         </Link>
-        <p className="landing-bottom-note">무료 · IP당 하루 3회</p>
+        <p className="landing-bottom-note">
+          오픈소스 데모 · IP당 하루 3회 — 무제한은{" "}
+          <a href="https://github.com/Choihello/synth-persona">자기 키로 직접 실행</a>
+        </p>
       </section>
     </main>
   );
