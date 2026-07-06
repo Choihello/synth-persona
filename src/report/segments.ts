@@ -41,7 +41,7 @@ interface Bucket {
  *   2) 통계적 신뢰: 세그먼트 페르소나 비율의 Wilson 90% CI가 여집합 비율을 포함하지 않음
  * 다중비교는 보정하지 않는다 — 승격된 차이도 "가설"로 렌더에 명시된다.
  * 두 조건을 모두 만족해야 opportunity/resistance로 승격된다.
- * 효과 크기만 크고 CI가 전체 비율을 포함하면(표본이 작아 우연일 수 있음) weakSignals로,
+ * 효과 크기만 크고 CI가 여집합 비율을 포함하면(표본이 작아 우연일 수 있음) weakSignals로,
  * 효과 크기 자체가 작으면 withinNoise로 분류한다.
  * sampleCount(응답 단위) < minN 세그먼트는 애초에 랭킹에서 제외하고 observedButHeld로 보존한다.
  * 표시용 수치(sampleCount·positiveRatio·responseDistribution 등)는 응답 단위 원본 그대로 유지한다.
