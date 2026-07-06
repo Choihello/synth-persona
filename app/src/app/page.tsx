@@ -113,7 +113,9 @@ export default function Landing() {
         </Link>
         <p className="landing-bottom-note">
           오픈소스 데모 · IP당 하루 3회 — 무제한은{" "}
-          <a href="https://github.com/Choihello/synth-persona">자기 키로 직접 실행</a>
+          <a href="https://github.com/Choihello/synth-persona">
+            자기 키로 직접 실행
+          </a>
         </p>
       </section>
     </main>
