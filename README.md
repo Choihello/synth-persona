@@ -207,7 +207,7 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
 ## 웹 서비스 — 라이브 데모
 
 **https://synth-persona-app.vercel.app** (Vercel + Turso, 운영비 하드캡
-때문에 IP당 하루 3회 — 자기 키로 돌리면 무제한)
+때문에 IP당 하루 1회 — 자기 키로 돌리면 무제한)
 
 <p align="center">
   <img src="docs/screenshots/report-light.png" alt="리포트 — 쉬운 요약 카드와 세그먼트 게이트" width="680">
