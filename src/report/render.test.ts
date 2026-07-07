@@ -262,6 +262,35 @@ describe("renderFounderInsightReport — v2 재배치·리프레이밍", () => {
   });
 });
 
+describe("renderFounderInsightReport — 배너 basis 구분 + 신뢰도 평이화", () => {
+  it("drivers가 llm 기반이면 실측 요약 배너, heuristic이면 초안 배너", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    // heuristic 기본
+    expect(renderFounderInsightReport(base)).toContain(
+      "heuristic으로 생성된 추정 초안",
+    );
+    // llm으로 바꾼 사본
+    const llm = {
+      ...base,
+      keyDrivers: base.keyDrivers.map((d) => ({ ...d, basis: "llm" as const })),
+    };
+    const md = renderFounderInsightReport(llm);
+    expect(md).toContain("실제 응답 이유를 종합한 AI 요약");
+  });
+  it("신뢰도 4층 표에 생활 언어가 병기된다", () => {
+    const md = renderFounderInsightReport(
+      generateFounderInsightReport(bigResult(), {
+        question: "q?",
+        choices: ["쓴다", "안쓴다"],
+      }),
+    );
+    expect(md).toContain("실측 일치"); // matched 병기 예시 — 실제 표 위 범례에 등장
+  });
+});
+
 describe("renderFounderInsightReport — 출처 계층화", () => {
   it("출처에 통계청 census 근거와 Nemotron 서사가 계층화되어 나온다", () => {
     const report = generateFounderInsightReport(bigResult(), {

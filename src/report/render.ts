@@ -10,6 +10,9 @@ export const HELD_CAP = 10;
 export const AI_DRAFT_BANNER =
   "> ⚠️ **AI 생성 초안 · 검토 필요** — 아래 항목은 heuristic으로 생성된 추정 초안입니다. 그대로 쓰지 말고 반드시 검토·수정하세요.";
 
+export const LLM_SUMMARY_BANNER =
+  "> 💡 **실제 응답 이유를 종합한 AI 요약** — 패널의 실제 응답 이유를 묶은 것입니다. 참고로 쓰고 실제 고객으로 검증하세요.";
+
 const pct = (x: number) => pctBase(x, 1); // 리포트는 소수 1자리
 
 function segmentLines(s: SegmentInsight): string[] {
@@ -58,7 +61,15 @@ export function renderFounderInsightReport(
     "",
   );
   // ⑥ 관심/거부 이유 (알맹이 — 세그먼트보다 위로)
-  md.push("## 관심을 끄는 이유 / 거부 이유 (추정)", "", AI_DRAFT_BANNER, "");
+  const reasonsAreLLM = [...report.keyDrivers, ...report.keyObjections].some(
+    (d) => d.basis === "llm",
+  );
+  md.push(
+    "## 관심을 끄는 이유 / 거부 이유 (추정)",
+    "",
+    reasonsAreLLM ? LLM_SUMMARY_BANNER : AI_DRAFT_BANNER,
+    "",
+  );
   for (const d of report.keyDrivers)
     md.push(`- ✅ **${d.label}** — ${d.rationale} _(신뢰도 ${d.confidence})_`);
   for (const d of report.keyObjections)
@@ -191,6 +202,8 @@ export function renderFounderInsightReport(
   // ⑧ 신뢰도 카드 (부록 — 출처 직전)
   md.push(
     "## 기술 상세 — 신뢰도 4층",
+    "",
+    "> 용어: matched(실측 일치) · conditioned/inferred(추정) · unknown(측정 안 됨) · fidelity(원본 분포 재현도)",
     "",
     "| 층 | 신뢰도 | 근거 | 허용되는 사용 | 허용 안 되는 사용 |",
     "|---|---|---|---|---|",
