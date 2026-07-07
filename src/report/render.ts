@@ -57,6 +57,13 @@ export function renderFounderInsightReport(
     `- ${o.label}`,
     "",
   );
+  // ⑥ 관심/거부 이유 (알맹이 — 세그먼트보다 위로)
+  md.push("## 관심을 끄는 이유 / 거부 이유 (추정)", "", AI_DRAFT_BANNER, "");
+  for (const d of report.keyDrivers)
+    md.push(`- ✅ **${d.label}** — ${d.rationale} _(신뢰도 ${d.confidence})_`);
+  for (const d of report.keyObjections)
+    md.push(`- ❌ **${d.label}** — ${d.rationale} _(신뢰도 ${d.confidence})_`);
+  md.push("");
   // ④ 기회 세그먼트
   md.push("## 기회 세그먼트", "");
   // 게이트 통과분도 다중비교 보정은 없다 — 과신 방지 고지 (승격이 있을 때만)
@@ -70,7 +77,7 @@ export function renderFounderInsightReport(
     );
   if (report.opportunitySegments.length === 0)
     md.push(
-      "(유의한 기회 세그먼트 없음 — 이 규모의 가상 패널에서 흔한 일입니다)",
+      "이 규모(표본 소수)에선 세그먼트별 차이가 통계적으로 뚜렷하지 않았어요 — 전체 방향(위)이 핵심 신호입니다. 세그먼트로 쪼개 보려면 표본을 키우세요.",
       "",
     );
   for (const s of report.opportunitySegments) md.push(...segmentLines(s), "");
@@ -78,7 +85,7 @@ export function renderFounderInsightReport(
   md.push("## 저항 세그먼트", "");
   if (report.resistanceSegments.length === 0)
     md.push(
-      "(유의한 저항 세그먼트 없음 — 이 규모의 가상 패널에서 흔한 일입니다)",
+      "이 규모(표본 소수)에선 세그먼트별 차이가 통계적으로 뚜렷하지 않았어요 — 전체 방향(위)이 핵심 신호입니다. 세그먼트로 쪼개 보려면 표본을 키우세요.",
       "",
     );
   for (const s of report.resistanceSegments) md.push(...segmentLines(s), "");
@@ -99,7 +106,12 @@ export function renderFounderInsightReport(
     report.weakSignals.length > 0 ||
     report.withinNoise.length > 0
   ) {
-    md.push("## 참고 — 순위에 올리지 않은 차이", "");
+    md.push(
+      "## 확실한 것만 추렸습니다",
+      "",
+      "_아래는 표본 대비 작아 순위·가설에서 보류한 차이입니다._",
+      "",
+    );
     for (const s of report.lowRelevance) {
       const why =
         s.caveats.find((c) => c.includes("관련성이 낮아")) ??
@@ -115,18 +127,11 @@ export function renderFounderInsightReport(
     }
     if (report.withinNoise.length > 0) {
       md.push(
-        `- 우연 범위 내(±10%p 미만): ${report.withinNoise.map((s) => s.segmentLabel).join(", ")}`,
+        `- 그 외 ${report.withinNoise.length}개 차이는 우연 범위(±10%p 미만) — 표본 대비 작아 판단 보류`,
       );
     }
     md.push("");
   }
-  // ⑥ 관심/거부 이유
-  md.push("## 관심을 끄는 이유 / 거부 이유 (추정)", "", AI_DRAFT_BANNER, "");
-  for (const d of report.keyDrivers)
-    md.push(`- ✅ **${d.label}** — ${d.rationale} _(신뢰도 ${d.confidence})_`);
-  for (const d of report.keyObjections)
-    md.push(`- ❌ **${d.label}** — ${d.rationale} _(신뢰도 ${d.confidence})_`);
-  md.push("");
   // ⑦ 위험한 가정
   md.push("## 위험한 가정", "");
   for (const a of report.riskyAssumptions) {
@@ -137,21 +142,6 @@ export function renderFounderInsightReport(
     );
   }
   md.push("");
-  // ⑧ 신뢰도 카드
-  md.push(
-    "## 신뢰도 카드",
-    "",
-    "| 층 | 신뢰도 | 근거 | 허용되는 사용 | 허용 안 되는 사용 |",
-    "|---|---|---|---|---|",
-    ...layerLines("1층 · 패널 구성", report.confidenceCard.composition),
-    ...layerLines("2층 · 속성 출처", report.confidenceCard.attributes),
-    ...layerLines(
-      "3층 · 응답 일관성",
-      report.confidenceCard.responseConsistency,
-    ),
-    ...layerLines("4층 · 시장 판단", report.confidenceCard.marketJudgment),
-    "",
-  );
   // ⑨ 추천 인터뷰
   md.push("## 추천 인터뷰 대상", "", AI_DRAFT_BANNER, "");
   for (const t of report.recommendedInterviews) {
@@ -198,6 +188,21 @@ export function renderFounderInsightReport(
   for (const a of report.nextValidationPlan)
     md.push(`- **${a.day}**: ${a.action}`);
   md.push("");
+  // ⑧ 신뢰도 카드 (부록 — 출처 직전)
+  md.push(
+    "## 기술 상세 — 신뢰도 4층",
+    "",
+    "| 층 | 신뢰도 | 근거 | 허용되는 사용 | 허용 안 되는 사용 |",
+    "|---|---|---|---|---|",
+    ...layerLines("1층 · 패널 구성", report.confidenceCard.composition),
+    ...layerLines("2층 · 속성 출처", report.confidenceCard.attributes),
+    ...layerLines(
+      "3층 · 응답 일관성",
+      report.confidenceCard.responseConsistency,
+    ),
+    ...layerLines("4층 · 시장 판단", report.confidenceCard.marketJudgment),
+    "",
+  );
   // ⑭ 출처 표기 (해당 시) — 데이터 근거(census)와 서사(Nemotron) 저작자표시를 계층화
   const dataSource = report.appendix.caveats.filter((c) =>
     c.startsWith("데이터 근거:"),

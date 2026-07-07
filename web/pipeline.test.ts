@@ -80,7 +80,7 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
       concurrency: 1,
     });
     const md = await runner("질문?", ["쓴다", "안쓴다"], () => {});
-    expect(md).toContain("## 참고 — 순위에 올리지 않은 차이");
+    expect(md).toContain("## 확실한 것만 추렸습니다");
     expect(md).toContain(
       "질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: 테스트 사유)",
     );

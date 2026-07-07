@@ -49,7 +49,7 @@ describe("renderFounderInsightReport — 코어 섹션", () => {
       "## 저항 세그먼트",
       "## 관심을 끄는 이유 / 거부 이유 (추정)",
       "## 위험한 가정",
-      "## 신뢰도 카드",
+      "## 기술 상세 — 신뢰도 4층",
     ]) {
       expect(md).toContain(h);
     }
@@ -97,16 +97,18 @@ describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 �
       { ...template, segmentLabel: "지역=수도권" },
     ];
     const md = renderFounderInsightReport(rep);
-    expect(md).toContain("## 참고 — 순위에 올리지 않은 차이");
+    expect(md).toContain("## 확실한 것만 추렸습니다");
     expect(md).toContain(
       "- 혼인=사별·이혼 (긍정 100.0% · 페르소나 3명) — 표본이 작아 우연일 수 있음",
     );
-    expect(md).toContain("- 우연 범위 내(±10%p 미만): 성=여자, 지역=수도권");
+    expect(md).toContain(
+      "- 그 외 2개 차이는 우연 범위(±10%p 미만) — 표본 대비 작아 판단 보류",
+    );
   });
 
   it("weakSignals·withinNoise 모두 비면 참고 섹션이 없다", () => {
     const md = renderFounderInsightReport(baseReport());
-    expect(md).not.toContain("## 참고 — 순위에 올리지 않은 차이");
+    expect(md).not.toContain("## 확실한 것만 추렸습니다");
   });
 
   it("lowRelevance 항목은 참고 섹션 맨 앞에 AI 판단 사유와 함께 나온다", () => {
@@ -127,7 +129,7 @@ describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 �
       },
     ];
     const md = renderFounderInsightReport(rep);
-    expect(md).toContain("## 참고 — 순위에 올리지 않은 차이");
+    expect(md).toContain("## 확실한 것만 추렸습니다");
     expect(md).toContain(
       "- 혼인=유배우 (긍정 20.0% · 페르소나 12명) — 질문과 관련성이 낮아 보여 순위에서 제외 (AI 판단: 보안 수요와 무관)",
     );
@@ -137,7 +139,7 @@ describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 �
     const rep = baseReport();
     rep.opportunitySegments = [];
     const md = renderFounderInsightReport(rep);
-    expect(md).toContain("유의한 기회 세그먼트 없음");
+    expect(md).toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
   });
 
   it("세그먼트 헤더에 페르소나 수 각주가 붙는다", () => {
@@ -227,6 +229,36 @@ describe("renderFounderInsightReport — 게이트 고지", () => {
       choices: ["쓴다", "안쓴다"],
     });
     expect(renderFounderInsightReport(report)).not.toContain("다중비교");
+  });
+});
+
+describe("renderFounderInsightReport — v2 재배치·리프레이밍", () => {
+  it("관심/거부 이유가 기회 세그먼트보다 위에 온다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "구독?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const md = renderFounderInsightReport(report);
+    expect(md.indexOf("## 관심을 끄는 이유")).toBeLessThan(
+      md.indexOf("## 기회 세그먼트"),
+    );
+  });
+  it("세그먼트 없음은 표본 키우기 안내로 리프레이밍된다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
+    expect(md).not.toContain("유의한 기회 세그먼트 없음");
+  });
+  it("신뢰도 카드는 출처 직전(부록)에 온다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const md = renderFounderInsightReport(report);
+    expect(md.indexOf("신뢰도 4층")).toBeGreaterThan(md.indexOf("## 다음 7일"));
   });
 });
 
