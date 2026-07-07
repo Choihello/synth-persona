@@ -198,13 +198,17 @@ export function renderFounderInsightReport(
   for (const a of report.nextValidationPlan)
     md.push(`- **${a.day}**: ${a.action}`);
   md.push("");
-  // ⑭ 출처 표기 (해당 시) — 서사 저작자표시 등 appendix caveat 중 표기성 항목
-  const attributions = report.appendix.caveats.filter((c) =>
+  // ⑭ 출처 표기 (해당 시) — 데이터 근거(census)와 서사(Nemotron) 저작자표시를 계층화
+  const dataSource = report.appendix.caveats.filter((c) =>
+    c.startsWith("데이터 근거:"),
+  );
+  const narrativeSource = report.appendix.caveats.filter((c) =>
     c.startsWith("페르소나 서사:"),
   );
-  if (attributions.length > 0) {
-    md.push("## 출처");
-    for (const a of attributions) md.push(`- ${a}`);
+  if (dataSource.length > 0 || narrativeSource.length > 0) {
+    md.push("## 출처", "");
+    for (const a of dataSource) md.push(`- ${a}`);
+    for (const a of narrativeSource) md.push(`- ${a}`);
     md.push("");
   }
   md.push(`> ⚠️ ${report.disclaimer}`); // 하단 라벨

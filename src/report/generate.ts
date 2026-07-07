@@ -181,10 +181,16 @@ export function generateFounderInsightReport(
         : "전체 반응은 갈렸고, 순위에 올릴 만큼 뚜렷한 세그먼트 차이는 없었습니다. 세그먼트별 상세는 아래 참고 섹션을 보세요."
       : `전체적으로 비교적 합의된 반응입니다${topOpportunity ? ` (${topOpportunity} 특히)` : ""}. 다만 실제 조사로 검증이 필요합니다.`;
 
+  const CENSUS_ATTRIBUTION =
+    "데이터 근거: 통계청 인구총조사 2024 (KOSIS) — 성·연령·지역(DT_1IN1509), 혼인(DT_1MR2060), 가구원수(DT_1JC1511). IPF 반복비례적합으로 결합분포 합성.";
+  const caveatsWithSource = caveats.includes(CENSUS_ATTRIBUTION)
+    ? caveats
+    : [CENSUS_ATTRIBUTION, ...caveats];
+
   const appendix: ReportAppendix = {
     generatedAt: new Date().toISOString(),
     options,
-    caveats,
+    caveats: caveatsWithSource,
     observedButHeldCount: observedButHeld.length,
     reliabilityCardRaw: card,
   };

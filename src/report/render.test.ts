@@ -229,3 +229,17 @@ describe("renderFounderInsightReport — 게이트 고지", () => {
     expect(renderFounderInsightReport(report)).not.toContain("다중비교");
   });
 });
+
+describe("renderFounderInsightReport — 출처 계층화", () => {
+  it("출처에 통계청 census 근거와 Nemotron 서사가 계층화되어 나온다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("## 출처");
+    expect(md).toContain("통계청 인구총조사 2024");
+    expect(md).toContain("DT_1IN1509");
+    expect(md).toContain("데이터 근거");
+  });
+});
