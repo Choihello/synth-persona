@@ -105,8 +105,9 @@ export function makeReportRunner(
     let md = renderFounderInsightReport(report);
     const positiveChoice = options.choices[0];
 
-    // 쉬운 요약 카드 — 제목·disclaimer 아래, 전문 리포트 첫 섹션 위
-    const easy = easySummaryHTML(report, positiveChoice);
+    // 쉬운 요약 카드 — 제목·disclaimer 아래, 전문 리포트 첫 섹션 위.
+    // denominator는 실제 페르소나 수(params.n)로 정직하게 표시한다.
+    const easy = easySummaryHTML(report, positiveChoice, params.n);
     if (easy) {
       md = md.replace("## 한 줄 요약\n", `${easy}\n\n## 한 줄 요약\n`);
     }

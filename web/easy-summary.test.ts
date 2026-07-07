@@ -60,6 +60,18 @@ describe("easySummaryHTML", () => {
     expect(html).toContain("10명 중 9명");
     expect(html).toContain("가상 응답 90개 기준");
   });
+  test("panelSize를 주면 그 수를 denominator로 (실제 표본 수 정직 표시)", () => {
+    const html = easySummaryHTML(
+      reportWith({ dist: { 찬성: 54, 반대: 6 } }), // r=0.9
+      "찬성",
+      60,
+    );
+    expect(html).toContain("60명 중 54명");
+    expect(html).not.toContain("10명 중");
+  });
+  test("panelSize 미지정이면 기존대로 10 기준", () => {
+    expect(easySummaryHTML(reportWith({}), "찬성")).toContain("10명 중");
+  });
   test("판정 경계: 0.8 뚜렷 긍정 / 0.6 긍정 가까움 / 0.5 갈림 / 0.35 부정 가까움 / 0.1 뚜렷 부정", () => {
     const at = (pos: number, total: number) =>
       easySummaryHTML(

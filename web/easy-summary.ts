@@ -52,15 +52,20 @@ export function humanizeSegmentLabel(label: string): string {
  * 쉬운 요약 카드 HTML. marked가 블록 HTML로 통과시킨다.
  * total=0이면 "" (주입 생략). "응답 분포:" 문자열 금지 — og-stats 파서 보호.
  */
+/**
+ * @param panelSize "N명 중 M명"의 N — 실제 합성 패널(페르소나) 수. 카드가 표본
+ *   크기를 정직하게 드러내도록 호출부가 넘긴다. 미지정 시 10으로 정규화(폴백).
+ */
 export function easySummaryHTML(
   report: FounderInsightReport,
   positiveChoice: string,
+  panelSize = 10,
 ): string {
   const dist = report.overallSignal.distribution;
   const total = Object.values(dist).reduce((a, b) => a + b, 0);
   if (total === 0) return "";
   const r = (dist[positiveChoice] ?? 0) / total;
-  const outOfTen = Math.round(r * 10);
+  const positiveCount = Math.round(r * panelSize);
   const verdict = verdictSentence(report.overallSignal.signal, r);
 
   const opp = report.opportunitySegments[0];
@@ -89,7 +94,7 @@ export function easySummaryHTML(
   return `<section class="easy-summary" aria-label="한눈에 보기">
 <p class="easy-kicker">한눈에 보기</p>
 <p class="easy-verdict">${verdict}</p>
-<p class="easy-count"><span class="easy-count-num">10명 중 ${outOfTen}명</span>이 "${esc(positiveChoice)}" <span class="easy-basis">가상 응답 ${report.overallSignal.n}개 기준</span></p>
+<p class="easy-count"><span class="easy-count-num">${panelSize}명 중 ${positiveCount}명</span>이 "${esc(positiveChoice)}" <span class="easy-basis">가상 응답 ${report.overallSignal.n}개 기준</span></p>
 <p class="easy-who">${whoLine}</p>
 <p class="easy-next">${next}</p>
 <p class="easy-trust">진짜 사람이 아니라 AI가 인구 구성을 흉내 내 답한 결과예요 — 방향을 잡는 참고로만 쓰세요.${trustExtra}</p>
