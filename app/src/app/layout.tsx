@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://synth-persona-app.vercel.app"),
   title: "synth-persona — 오픈소스 합성 패널 엔진",
   description:
-    "통계청 분포 기반 합성 패널 90명에게 질문을 던지는 오픈소스 엔진의 라이브 데모 — 세그먼트 유의성 게이트·쉬운 요약 리포트",
+    "통계청 분포 기반 합성 패널 60명(각 3회·총 180응답)에게 질문을 던지는 오픈소스 엔진의 라이브 데모 — 세그먼트 유의성 게이트·쉬운 요약 리포트",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

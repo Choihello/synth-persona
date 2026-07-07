@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt =
-  "synth-persona — 진짜 고객을 만나기 전, 가짜 90명에게 먼저 물어보세요";
+  "synth-persona — 진짜 고객을 만나기 전, 가짜 60명에게 먼저 물어보세요";
 
 const CREAM = "#faf6ef";
 const INK = "#1f1d1a";
@@ -16,7 +16,7 @@ const HAIRLINE = "rgba(31,29,26,0.18)";
 
 const KICKER = "오픈소스 합성 패널 엔진 · 라이브 데모";
 const LINE1 = "진짜 고객을 만나기 전,";
-const UNDERLINED = "가짜 90명";
+const UNDERLINED = "가짜 60명";
 const LINE2_REST = "에게 먼저 물어보세요";
 const FOOT = "가상 패널 응답 — 실제 여론이 아닙니다";
 
@@ -57,7 +57,7 @@ export default async function OgImage() {
       >
         <div style={{ fontSize: 30, fontWeight: 700 }}>synth·persona</div>
         <div style={{ fontSize: 20, fontWeight: 400, color: INK_MUTED }}>
-          가짜 90명에게 먼저 물어보세요
+          가짜 60명에게 먼저 물어보세요
         </div>
       </div>
 

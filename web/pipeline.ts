@@ -20,9 +20,9 @@ export interface RunnerParams {
   concurrency: number;
 }
 
-/** 비용 고정을 위해 파라미터는 서버가 정한다 (사용자 조절 불가, 회당 ≈$0.02). */
+/** 비용 고정을 위해 파라미터는 서버가 정한다 (사용자 조절 불가, 회당 ≈$0.04). */
 export const DEFAULT_PARAMS: RunnerParams = {
-  n: 30,
+  n: 60,
   repeats: 3,
   concurrency: 4,
 };

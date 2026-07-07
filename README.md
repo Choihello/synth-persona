@@ -216,10 +216,10 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
   <img src="docs/screenshots/report-dark.png" alt="다크 모드 리포트" width="680">
 </p>
 
-질문 → 합성 패널 90명 응답 → 리포트 공유 링크. 리포트에는 쉬운 요약
-카드(통계 용어 없는 생활 언어) · Wilson 2티어 유의성 게이트(우연 범위
-차이는 순위에서 강등) · LLM 관련성 게이트 · Nemotron 서사 페르소나 ·
-동적 OG 이미지가 들어간다.
+질문 → 합성 패널 60명(각 3회·총 180응답) → 리포트 공유 링크. 리포트에는
+쉬운 요약 카드(통계 용어 없는 생활 언어) · 2티어 유의성 게이트(효과 크기 +
+세그먼트 vs 여집합 2표본 z-검정, 우연 범위 차이는 순위에서 강등) · LLM 관련성
+게이트 · Nemotron 서사 페르소나 · 동적 OG 이미지가 들어간다.
 
 로컬에서 돌리려면: `cd app && npm install && npm run dev` (Next.js dev 서버).
 리포트 생성에는 `OPENAI_API_KEY`, 저장에는 Turso 환경변수(`TURSO_DATABASE_URL`,
@@ -296,7 +296,7 @@ console.log(result.bySegment);  // 세그먼트별 신호 + 분포
 - [x] **2층 응답 실측 (묶음 B)** — B1 완료(go 조건부, gpt-4o-mini · `--provider openai|anthropic`): 예스맨·순서 편향 게이트 통과, 가격 저항 분화 확인 ([노트](docs/b1-live-notes-2026-07-04.md))
 - [x] **3층 응답 신뢰도 실측 (묶음 B)** — `measureResponseConsistency` + `npm run b2:live`로 자기일관성·예스맨·순서·패러프레이즈·붕괴 계측, `responseConsistency`가 measured(medium|low)로 교체됨. 실측(gpt-4o-mini): 순서·문구 민감 → low ([노트](docs/b2-live-notes-2026-07-04.md))
 - [x] **진단→처방: 다음 행동 생성물 (묶음 B)** — B3 완료: `buildLLMPrescriptions`가 실측 reason 층화 샘플에 근거해 drivers/objections(병목 태그)/인터뷰 질문을 LLM 생성(basis:llm), 나머지는 heuristic 위임. `npm run report:live`로 end-to-end ([노트](docs/b3-live-notes-2026-07-04.md), issue #4)
-- [x] **웹 서비스 (v0.2~0.3)** — Next.js 15 App Router + Vercel + Turso 라이브 데모: 폼 → 진행 폴링 → 공유 리포트. 쉬운 요약 카드 · Wilson 2티어 통계 게이트(GATE_Z=1.645, 최소 효과 10%p) · LLM 관련성 게이트(실패 시 조용한 폴백) · Nemotron-Personas-Korea 서사 결정적 매칭(FNV-1a) · 동적 OG · 다크 모드 · IP 해시 레이트리밋
+- [x] **웹 서비스 (v0.2~0.3)** — Next.js 15 App Router + Vercel + Turso 라이브 데모: 폼 → 진행 폴링 → 공유 리포트. 쉬운 요약 카드 · 2티어 통계 게이트(효과 크기 10%p + 세그먼트 vs 여집합 2표본 z-검정 |z|≥1.645) · LLM 관련성 게이트(실패 시 조용한 폴백) · Nemotron-Personas-Korea 서사 결정적 매칭(FNV-1a) · 동적 OG · 다크 모드 · IP 해시 레이트리밋
 - [ ] (탐색) 게이트 임계·표본 크기 가이드 문서화
 
 ## 라이선스

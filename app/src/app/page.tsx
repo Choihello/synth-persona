@@ -9,7 +9,7 @@ export default function Landing() {
         <h1 className="landing-headline">
           진짜 고객을 만나기 전,
           <br />
-          <span className="landing-underline">가짜 90명</span>에게 먼저
+          <span className="landing-underline">가짜 60명</span>에게 먼저
           물어보세요
         </h1>
         <p className="landing-sub">
@@ -18,7 +18,7 @@ export default function Landing() {
         </p>
         <div className="landing-cta-row">
           <Link className="landing-cta" href="/new">
-            리포트 만들기 — 약 1분
+            리포트 만들기 — 약 2분
           </Link>
           <Link className="landing-sample-link" href="/r/BAJnsFMKrF">
             샘플 리포트 보기 →
@@ -73,9 +73,10 @@ export default function Landing() {
           </li>
           <li>
             <span className="landing-step-num">2</span>
-            <h3>합성 패널 90명이 응답합니다</h3>
+            <h3>합성 패널 60명이 응답합니다</h3>
             <p>
-              통계청 인구총조사 분포로 구성된 가상 패널이 약 1분간 응답합니다.
+              통계청 인구총조사 분포로 구성된 가상 패널 60명이 각각 3번씩, 총
+              180번 약 2분간 응답합니다.
             </p>
           </li>
           <li>
@@ -109,10 +110,10 @@ export default function Landing() {
 
       <section className="landing-bottom">
         <Link className="landing-cta" href="/new">
-          리포트 만들기 — 약 1분
+          리포트 만들기 — 약 2분
         </Link>
         <p className="landing-bottom-note">
-          오픈소스 데모 · IP당 하루 3회 — 무제한은{" "}
+          오픈소스 데모 · IP당 하루 1회 — 무제한은{" "}
           <a href="https://github.com/Choihello/synth-persona">
             자기 키로 직접 실행
           </a>

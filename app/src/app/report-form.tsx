@@ -87,9 +87,9 @@ export default function ReportForm() {
           />
         </label>
         <button type="submit" disabled={busy}>
-          {busy ? "생성 중…" : "리포트 생성 — 약 1분"}
+          {busy ? "생성 중…" : "리포트 생성 — 약 2분"}
         </button>
-        <span className="hint">무료 · IP당 하루 3회</span>
+        <span className="hint">무료 · IP당 하루 1회</span>
       </form>
 
       {busy && (
@@ -99,7 +99,7 @@ export default function ReportForm() {
             <div className="progress-fill" style={{ width: `${pct}%` }} />
           </div>
           <p className="progress-note">
-            합성 패널 90명이 응답하는 중입니다 — 페이지를 닫지 마세요 (약 1분).
+            합성 패널 60명이 응답하는 중입니다 — 페이지를 닫지 마세요 (약 2분).
           </p>
         </div>
       )}
