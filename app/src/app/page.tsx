@@ -44,7 +44,7 @@ export default function Landing() {
             <i style={{ width: "87%" }} />
             <em />
           </span>
-          <span className="landing-card-basis">가상 응답 90개 기준</span>
+          <span className="landing-card-basis">합성 패널 응답 기준</span>
         </Link>
         <Link href="/r/BAJnsFMKrF" className="landing-report-card">
           <span className="landing-card-label">예시 리포트</span>
@@ -59,7 +59,7 @@ export default function Landing() {
             <i style={{ width: "89%" }} />
             <em />
           </span>
-          <span className="landing-card-basis">가상 응답 90개 기준</span>
+          <span className="landing-card-basis">합성 패널 응답 기준</span>
         </Link>
       </section>
 
