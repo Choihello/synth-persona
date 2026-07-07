@@ -116,6 +116,10 @@ export function makeReportRunner(
     const shareSvg = shareBarSVG(
       report.overallSignal.distribution,
       positiveChoice,
+      {
+        panelSize: report.overallSignal.panelSize ?? params.n,
+        panelPositive: report.overallSignal.panelPositive ?? 0,
+      },
     );
     if (shareSvg) {
       md = md.replace("## 전체 신호\n", `## 전체 신호\n\n${shareSvg}\n`);

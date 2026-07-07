@@ -58,6 +58,15 @@ describe("renderFounderInsightReport — 코어 섹션", () => {
     expect(report.observedButHeld.length).toBe(15);
     expect(md).toContain(`외 ${15 - HELD_CAP}개 (판단 보류)`);
   });
+  it("전체 신호가 페르소나 수(표본)로 표기된다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("표본 30명");
+    expect(md).toContain("각 3회 응답");
+  });
 });
 
 describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 범위)", () => {

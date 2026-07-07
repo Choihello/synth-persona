@@ -20,6 +20,7 @@ function esc(s: string): string {
 export function shareBarSVG(
   distribution: Record<string, number>,
   positiveChoice: string,
+  panel?: { panelSize: number; panelPositive: number },
 ): string {
   const total = Object.values(distribution).reduce((a, b) => a + b, 0);
   if (total === 0) return "";
@@ -35,13 +36,19 @@ export function shareBarSVG(
   const negLabel = Object.keys(distribution)
     .filter((k) => k !== positiveChoice)
     .join("·");
+  // 하단 라벨은 페르소나 수 우선(표본 60명 단위), panel 없으면 응답 수.
+  const labelPos = panel ? panel.panelPositive : pos;
+  const labelNeg = panel ? panel.panelSize - panel.panelPositive : neg;
+  const title = panel
+    ? `전체 반응 · 표본 ${panel.panelSize}명 (각 3회 응답, 총 ${total})`
+    : `전체 응답 분포 (n=${total})`;
 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="전체 응답 분포: ${esc(positiveChoice)} ${posPct}%, ${esc(negLabel)} ${negPct}%" xmlns="http://www.w3.org/2000/svg">
-  <text x="0" y="14" ${FONT} font-size="12" fill="${INK_MUTED}">전체 응답 분포 (n=${total})</text>
+  <text x="0" y="14" ${FONT} font-size="12" fill="${INK_MUTED}">${title}</text>
   <rect x="0" y="${barY}" width="${Math.max(posW - 1, 0)}" height="${barH}" rx="4" fill="${POSITIVE}"/>
   <rect x="${posW + 1}" y="${barY}" width="${Math.max(W - posW - 1, 0)}" height="${barH}" rx="4" fill="${NEGATIVE}"/>
-  <text x="0" y="${barY + barH + 16}" ${FONT} font-size="12" fill="${INK}">${esc(positiveChoice)} ${posPct}% (${pos}명)</text>
-  <text x="${W}" y="${barY + barH + 16}" ${FONT} font-size="12" fill="${INK}" text-anchor="end">${esc(negLabel)} ${negPct}% (${neg}명)</text>
+  <text x="0" y="${barY + barH + 16}" ${FONT} font-size="12" fill="${INK}">${esc(positiveChoice)} ${posPct}% (${labelPos}명)</text>
+  <text x="${W}" y="${barY + barH + 16}" ${FONT} font-size="12" fill="${INK}" text-anchor="end">${esc(negLabel)} ${negPct}% (${labelNeg}명)</text>
 </svg>`;
 }
 

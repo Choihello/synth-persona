@@ -65,7 +65,10 @@ export function easySummaryHTML(
   const total = Object.values(dist).reduce((a, b) => a + b, 0);
   if (total === 0) return "";
   const r = (dist[positiveChoice] ?? 0) / total;
-  const positiveCount = Math.round(r * panelSize);
+  const ps = report.overallSignal.panelSize;
+  const pp = report.overallSignal.panelPositive;
+  const denom = ps ?? panelSize;
+  const positiveCount = pp ?? Math.round(r * panelSize);
   const verdict = verdictSentence(report.overallSignal.signal, r);
 
   const opp = report.opportunitySegments[0];
@@ -94,7 +97,7 @@ export function easySummaryHTML(
   return `<section class="easy-summary" aria-label="한눈에 보기">
 <p class="easy-kicker">한눈에 보기</p>
 <p class="easy-verdict">${verdict}</p>
-<p class="easy-count"><span class="easy-count-num">${panelSize}명 중 ${positiveCount}명</span>이 "${esc(positiveChoice)}" <span class="easy-basis">가상 응답 ${report.overallSignal.n}개 기준</span></p>
+<p class="easy-count"><span class="easy-count-num">${denom}명 중 ${positiveCount}명</span>이 "${esc(positiveChoice)}" <span class="easy-basis">가상 응답 ${report.overallSignal.n}개 기준</span></p>
 <p class="easy-who">${whoLine}</p>
 <p class="easy-next">${next}</p>
 <p class="easy-trust">진짜 사람이 아니라 AI가 인구 구성을 흉내 내 답한 결과예요 — 방향을 잡는 참고로만 쓰세요.${trustExtra}</p>

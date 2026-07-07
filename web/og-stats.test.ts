@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import { extractOgStats } from "./og-stats.js";
 
 const SAMPLE_MD = `# 컨셉 — 0차 시장검증 리포트
@@ -50,6 +50,16 @@ describe("extractOgStats", () => {
   test("분포가 없으면 undefined", () => {
     expect(extractOgStats("# 제목\n본문")).toBeUndefined();
     expect(extractOgStats("")).toBeUndefined();
+  });
+
+  it("표본 N명 줄에서도 n(응답 수)을 파싱한다", () => {
+    const md = [
+      "- 🟢 consensus(합의) · 응답 분포: 쓴다=19, 안쓴다=161",
+      "- 표본 60명 · 각 3회 응답(총 180) · seed=7 · 누락률 0.0%",
+    ].join("\n");
+    const stats = extractOgStats(md);
+    expect(stats?.n).toBe(180);
+    expect(stats?.dist[0]).toEqual(["쓴다", 19]);
   });
 
   test("라벨에 =가 들어가도 마지막 =를 기준으로 나눈다", () => {

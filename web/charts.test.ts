@@ -16,6 +16,17 @@ describe("shareBarSVG (전체 분포 스택바)", () => {
   test("응답 0건이면 빈 문자열 (차트 생략)", () => {
     expect(shareBarSVG({}, "쓴다")).toBe("");
   });
+
+  test("shareBarSVG는 panel이 주어지면 페르소나 수로 라벨한다", () => {
+    const svg = shareBarSVG({ 쓴다: 19, 안쓴다: 161 }, "쓴다", {
+      panelSize: 60,
+      panelPositive: 6,
+    });
+    expect(svg).toContain("쓴다 11% (6명)");
+    expect(svg).toContain("안쓴다 89% (54명)");
+    expect(svg).toContain("표본 60명");
+    expect(svg).not.toContain("(19명)");
+  });
 });
 
 describe("segmentBarsSVG (세그먼트 긍정률)", () => {

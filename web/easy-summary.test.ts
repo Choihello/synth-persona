@@ -36,6 +36,8 @@ function reportWith(over: {
   opp?: string;
   res?: string;
   consistency?: "high" | "medium" | "low" | "unknown";
+  panelSize?: number;
+  panelPositive?: number;
 }): FounderInsightReport {
   return {
     overallSignal: {
@@ -44,6 +46,8 @@ function reportWith(over: {
       n: over.n ?? 90,
       missingRate: 0,
       label: "",
+      panelSize: over.panelSize,
+      panelPositive: over.panelPositive,
     },
     opportunitySegments: over.opp ? [{ segmentLabel: over.opp } as never] : [],
     resistanceSegments: over.res ? [{ segmentLabel: over.res } as never] : [],
@@ -71,6 +75,18 @@ describe("easySummaryHTML", () => {
   });
   test("panelSize 미지정이면 기존대로 10 기준", () => {
     expect(easySummaryHTML(reportWith({}), "찬성")).toContain("10명 중");
+  });
+  test("overallSignal에 페르소나 총계가 있으면 그 실제값을 쓴다", () => {
+    const html = easySummaryHTML(
+      reportWith({
+        dist: { 찬성: 90, 반대: 90 },
+        panelSize: 60,
+        panelPositive: 6,
+      }),
+      "찬성",
+      60,
+    );
+    expect(html).toContain("60명 중 6명"); // 근사(round(0.5*60)=30)가 아니라 실제 6
   });
   test("판정 경계: 0.8 뚜렷 긍정 / 0.6 긍정 가까움 / 0.5 갈림 / 0.35 부정 가까움 / 0.1 뚜렷 부정", () => {
     const at = (pos: number, total: number) =>

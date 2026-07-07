@@ -53,7 +53,7 @@ export function renderFounderInsightReport(
     "## 전체 신호",
     "",
     `- ${signalDot(o.signal)} ${o.signal === "split" ? "split(분열)" : "consensus(합의)"} · 응답 분포: ${dist}`,
-    `- n=${o.n}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
+    `- ${o.panelSize != null ? `표본 ${o.panelSize}명 · 각 3회 응답(총 ${o.n})` : `n=${o.n}`}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
     `- ${o.label}`,
     "",
   );
