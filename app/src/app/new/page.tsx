@@ -37,8 +37,8 @@ export default async function NewReportPage() {
       </h1>
       <p className="lede">
         질문 하나를 입력하면 통계청 인구총조사 분포로 구성된 합성 패널 60명이 각
-        3회(총 180응답, gpt-4o-mini) 응답하고, 세그먼트 분석·신뢰도 카드·다음 행동
-        처방이 담긴 리포트로 번역해 드립니다.
+        3회(총 180응답, gpt-4o-mini) 응답하고, 세그먼트 분석·신뢰도 카드·다음
+        행동 처방이 담긴 리포트로 번역해 드립니다.
       </p>
       <div className="disclaimer">
         ⚠️ 결과는 <strong>synthetic panel response</strong>(가상 패널 응답)이며

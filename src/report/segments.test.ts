@@ -181,10 +181,7 @@ describe("rankSegments", () => {
     // 세그 A 18/20=0.9(CI 좁음) vs 여집합 B 4/6=0.667. diff 0.233 >= 10%p.
     // 구 로직(여집합을 오차 없는 점으로 취급): 0.667이 A의 좁은 Wilson CI 밖 → 승격.
     // 신 로직(2표본 z): 여집합 n=6이 작아 SE가 커져 z≈1.39 < 1.645 → weakSignals.
-    const responses = [
-      ...make(18, 2, "지역", "A"),
-      ...make(4, 2, "지역", "B"),
-    ];
+    const responses = [...make(18, 2, "지역", "A"), ...make(4, 2, "지역", "B")];
     const r = rankSegments(study(responses), "쓴다", 5);
     expect(r.opportunity.some((s) => s.segmentLabel === "지역=A")).toBe(false);
     expect(r.weakSignals.some((s) => s.segmentLabel === "지역=A")).toBe(true);
@@ -202,10 +199,7 @@ describe("rankSegments", () => {
   test("여집합 비교 — 큰 세그먼트의 자기포함 희석을 제거한다", () => {
     // 지역=A 24/30=0.8, 지역=B 4/10=0.4. 구(전체 0.7) 비교면 A diff 10%p·CI 포함 → weak.
     // 여집합 비교면 A 0.8 vs B 0.4 — diff 40%p, B가 A의 CI 밖 → 승격돼야 한다.
-    const responses = [
-      ...make(24, 6, "지역", "A"),
-      ...make(4, 6, "지역", "B"),
-    ];
+    const responses = [...make(24, 6, "지역", "A"), ...make(4, 6, "지역", "B")];
     const r = rankSegments(study(responses), "쓴다", 8);
     expect(r.opportunity.some((s) => s.segmentLabel === "지역=A")).toBe(true);
     expect(r.resistance.some((s) => s.segmentLabel === "지역=B")).toBe(true);

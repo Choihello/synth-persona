@@ -193,10 +193,7 @@ export function rankSegments(
     const diff = Math.abs(segRatio - restRatio);
     const z = twoProportionZ(segRatio, nP, restRatio, restN);
     const significant =
-      nP > 0 &&
-      restN > 0 &&
-      diff >= GATE_MIN_EFFECT &&
-      Math.abs(z) >= GATE_Z;
+      nP > 0 && restN > 0 && diff >= GATE_MIN_EFFECT && Math.abs(z) >= GATE_Z;
 
     if (significant) {
       const up = segRatio > restRatio;
