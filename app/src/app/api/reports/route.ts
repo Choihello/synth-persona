@@ -1,10 +1,17 @@
 import { createHash } from "node:crypto";
 import { nanoid } from "nanoid";
 import { type NextRequest, NextResponse, after } from "next/server";
+import { ADMIN_COOKIE, isAdminRequest } from "../../../../../web/admin.js";
 import { checkLimit } from "../../../../../web/limits.js";
 import { executeReport } from "../../../../../web/run-report.js";
 import { validateReportInput } from "../../../../../web/validate.js";
-import { getRunner, getStore, ipSalt, policy } from "../../../lib/backend.js";
+import {
+  adminToken,
+  getRunner,
+  getStore,
+  ipSalt,
+  policy,
+} from "../../../lib/backend.js";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 실측 ~60초 + LLM 처방 — Fluid에서 after()까지 보장
@@ -28,9 +35,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     .slice(0, 16);
 
   const store = getStore();
-  const limit = await checkLimit(store, ipHash, new Date(), policy);
-  if (!limit.ok) {
-    return NextResponse.json({ error: limit.reason }, { status: 429 });
+  // 관리자(운영자)는 한도를 건너뛴다 — 쿠키(sp_admin) 또는 헤더(x-admin-token).
+  const admin = isAdminRequest(
+    [req.cookies.get(ADMIN_COOKIE)?.value, req.headers.get("x-admin-token")],
+    adminToken,
+  );
+  if (!admin) {
+    const limit = await checkLimit(store, ipHash, new Date(), policy);
+    if (!limit.ok) {
+      return NextResponse.json({ error: limit.reason }, { status: 429 });
+    }
   }
 
   const id = nanoid(10);

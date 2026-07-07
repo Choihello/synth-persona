@@ -37,3 +37,6 @@ export const policy = {
 };
 
 export const ipSalt = process.env.IP_SALT ?? "change-me";
+
+/** 관리자 우회 토큰. 미설정 시 우회 기능 비활성(기본값). */
+export const adminToken = process.env.ADMIN_TOKEN;

@@ -221,6 +221,16 @@ const result = await runStudy({ source, provider: new ClaudeProvider(), question
 세그먼트 vs 여집합 2표본 z-검정, 우연 범위 차이는 순위에서 강등) · LLM 관련성
 게이트 · Nemotron 서사 페르소나 · 동적 OG 이미지가 들어간다.
 
+**호스팅 환경변수**: `OPENAI_API_KEY`(필수) · `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN`
+(저장) · `IP_SALT`(IP 해시 솔트) · `PER_IP_DAILY`(기본 3) · `DAILY_GLOBAL_CAP`
+(기본 100) · `NARRATIVE`(기본 on, `off`로 서사 차단) · `GALLERY_IDS`(갤러리 노출
+리포트 id) · `ADMIN_TOKEN`(선택 — 운영자 한도 우회).
+
+**운영자 한도 우회**: `ADMIN_TOKEN`을 설정하면, 브라우저에서
+`/api/admin?token=<ADMIN_TOKEN>`을 한 번 열어 httpOnly 쿠키(30일)를 받은 뒤
+그 브라우저는 IP 한도 없이 리포트를 만들 수 있다(curl은 `x-admin-token` 헤더).
+토큰 미설정 시 우회 기능은 완전히 꺼진다.
+
 로컬에서 돌리려면: `cd app && npm install && npm run dev` (Next.js dev 서버).
 리포트 생성에는 `OPENAI_API_KEY`, 저장에는 Turso 환경변수(`TURSO_DATABASE_URL`,
 `TURSO_AUTH_TOKEN`)가 필요하다 — 없으면 폼·랜딩만 뜬다. 배포는 Vercel(Root
