@@ -52,11 +52,20 @@ export function renderFounderInsightReport(
   // ③ 전체 신호
   const o = report.overallSignal;
   const dist = formatDistribution(o.distribution);
+  // 반복 응답 수는 하드코딩하지 않고 응답수/표본으로 유도한다(데모·CLI의 repeats≠3도 정확).
+  const repeats =
+    o.panelSize && o.panelSize > 0 ? Math.round(o.n / o.panelSize) : 0;
+  const sampleLabel =
+    o.panelSize != null
+      ? repeats >= 2
+        ? `표본 ${o.panelSize}명 · 각 ${repeats}회 응답(총 ${o.n})`
+        : `표본 ${o.panelSize}명`
+      : `n=${o.n}`;
   md.push(
     "## 전체 신호",
     "",
     `- ${signalDot(o.signal)} ${o.signal === "split" ? "split(분열)" : "consensus(합의)"} · 응답 분포: ${dist}`,
-    `- ${o.panelSize != null ? `표본 ${o.panelSize}명 · 각 3회 응답(총 ${o.n})` : `n=${o.n}`}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
+    `- ${sampleLabel}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
     `- ${o.label}`,
     "",
   );

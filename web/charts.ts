@@ -39,8 +39,13 @@ export function shareBarSVG(
   // 하단 라벨은 페르소나 수 우선(표본 60명 단위), panel 없으면 응답 수.
   const labelPos = panel ? panel.panelPositive : pos;
   const labelNeg = panel ? panel.panelSize - panel.panelPositive : neg;
+  // 반복 응답 수는 응답수/표본으로 유도(하드코딩 금지 — repeats≠3도 정확).
+  const repeats =
+    panel && panel.panelSize > 0 ? Math.round(total / panel.panelSize) : 0;
   const title = panel
-    ? `전체 반응 · 표본 ${panel.panelSize}명 (각 3회 응답, 총 ${total})`
+    ? repeats >= 2
+      ? `전체 반응 · 표본 ${panel.panelSize}명 (각 ${repeats}회 응답, 총 ${total})`
+      : `전체 반응 · 표본 ${panel.panelSize}명`
     : `전체 응답 분포 (n=${total})`;
 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="전체 응답 분포: ${esc(positiveChoice)} ${posPct}%, ${esc(negLabel)} ${negPct}%" xmlns="http://www.w3.org/2000/svg">

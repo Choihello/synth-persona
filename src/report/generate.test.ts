@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Response, StudyResult } from "../types.js";
 import { generateFounderInsightReport } from "./generate.js";
+import { bigResult } from "./test-fixtures.js";
 
 function r(attrs: Record<string, string>, choice: string): Response {
   return {
@@ -20,25 +21,6 @@ function mk(pos: number, neg: number, dim: string, val: string): Response[] {
   ];
 }
 const opts = { question: "쓸 의향?", choices: ["쓴다", "안쓴다"] };
-/** 세그먼트 다수를 가진 StudyResult 픽스처 (render.test.ts와 동일 구성: 연령 15구간×2명=30 페르소나, 전원 "쓴다") */
-function bigResult(): StudyResult {
-  const responses: Response[] = [];
-  for (let i = 0; i < 15; i++) {
-    for (let j = 0; j < 2; j++) {
-      responses.push({
-        persona: { id: `p${i}-${j}`, attrs: { 연령: `구간${i}` }, weight: 1 },
-        answer: "쓴다",
-        choice: "쓴다",
-      });
-    }
-  }
-  return {
-    responses,
-    signal: "consensus" as const,
-    dispersion: 0,
-    bySegment: { 연령: {} },
-  };
-}
 
 describe("generateFounderInsightReport — core/validation", () => {
   test("choices가 2개 미만이면 throw", () => {

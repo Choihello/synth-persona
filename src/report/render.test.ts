@@ -2,31 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { StudyResult } from "../types.js";
 import { generateFounderInsightReport } from "./generate.js";
 import { HELD_CAP, renderFounderInsightReport } from "./render.js";
-
-// 세그먼트 다수를 가진 StudyResult 픽스처 (판단 보류 cap 테스트용)
-function bigResult(): StudyResult {
-  const responses = [];
-  // 연령 15구간 × 2명(소표본) → observedButHeld 15개 생성
-  for (let i = 0; i < 15; i++) {
-    for (let j = 0; j < 2; j++) {
-      responses.push({
-        persona: {
-          id: `p${i}-${j}`,
-          attrs: { 연령: `구간${i}` },
-          weight: 1,
-        },
-        answer: "쓴다",
-        choice: "쓴다",
-      });
-    }
-  }
-  return {
-    responses,
-    signal: "consensus" as const,
-    dispersion: 0,
-    bySegment: { 연령: {} },
-  };
-}
+import { bigResult } from "./test-fixtures.js";
 
 describe("renderFounderInsightReport — 코어 섹션", () => {
   const report = generateFounderInsightReport(bigResult(), {
@@ -58,14 +34,32 @@ describe("renderFounderInsightReport — 코어 섹션", () => {
     expect(report.observedButHeld.length).toBe(15);
     expect(md).toContain(`외 ${15 - HELD_CAP}개 (판단 보류)`);
   });
-  it("전체 신호가 페르소나 수(표본)로 표기된다", () => {
+  it("전체 신호가 페르소나 수(표본)로 표기된다 (repeats=1이면 각 N회 생략)", () => {
     const report = generateFounderInsightReport(bigResult(), {
       question: "q?",
       choices: ["쓴다", "안쓴다"],
     });
     const md = renderFounderInsightReport(report);
     expect(md).toContain("표본 30명");
-    expect(md).toContain("각 3회 응답");
+    expect(md).not.toContain("각 3회 응답");
+    expect(md).not.toContain("각 1회 응답");
+  });
+  it("반복 응답이 있으면 각 N회 응답(총 M)을 유도해 표기한다", () => {
+    // 페르소나 3명 × 3응답 = repeats 3, panelSize 3, n 9
+    const responses = [];
+    for (let p = 0; p < 3; p++)
+      for (let k = 0; k < 3; k++)
+        responses.push({
+          persona: { id: `p${p}`, attrs: { 연령: "30대" }, weight: 1 },
+          answer: "쓴다",
+          choice: "쓴다",
+        });
+    const report = generateFounderInsightReport(
+      { responses, signal: "consensus" as const, dispersion: 0, bySegment: {} },
+      { question: "q?", choices: ["쓴다", "안쓴다"] },
+    );
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("표본 3명 · 각 3회 응답(총 9)");
   });
 });
 
