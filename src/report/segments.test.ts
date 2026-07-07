@@ -53,14 +53,18 @@ describe("rankSegments", () => {
       ...make(9, 1, "연령", "30대"),
       ...make(1, 9, "연령", "60대"),
     ];
-    const { opportunity, resistance, globalPositiveRatio } = rankSegments(
-      study(responses),
-      "쓴다",
-      8,
-    );
+    const {
+      opportunity,
+      resistance,
+      globalPositiveRatio,
+      panelSize,
+      panelPositive,
+    } = rankSegments(study(responses), "쓴다", 8);
     expect(globalPositiveRatio).toBeCloseTo(0.5, 4);
     expect(opportunity[0].segmentLabel).toBe("연령=30대");
     expect(resistance[0].segmentLabel).toBe("연령=60대");
+    expect(panelSize).toBe(20);
+    expect(panelPositive).toBe(10);
   });
 
   test("sampleCount < minN 세그먼트는 observedButHeld로 (랭킹 제외)", () => {

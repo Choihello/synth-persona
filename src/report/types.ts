@@ -44,6 +44,10 @@ export interface OverallSignalSection {
   seed?: number;
   provider?: string;
   label: string;
+  /** 고유 페르소나 수 (표본 크기). 구 데이터·CLI는 미설정. */
+  panelSize?: number;
+  /** 과반투표 긍정 페르소나 수. */
+  panelPositive?: number;
 }
 
 export interface SegmentInsight {

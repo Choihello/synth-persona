@@ -25,6 +25,7 @@ export const DEFAULT_MIN_N = 8;
 function overallSection(
   result: StudyResult,
   options: FounderReportOptions,
+  panel: { panelSize: number; panelPositive: number },
 ): OverallSignalSection {
   const distribution: Record<string, number> = {};
   for (const r of result.responses) {
@@ -41,6 +42,8 @@ function overallSection(
     seed: options.run?.seed,
     provider: options.run?.provider,
     label: "가상 패널 응답 기준 · 실제 시장 반응 아님 · 탐색 신호",
+    panelSize: panel.panelSize,
+    panelPositive: panel.panelPositive,
   };
 }
 
@@ -80,8 +83,15 @@ export function generateFounderInsightReport(
   }
 
   const minN = options.minN ?? DEFAULT_MIN_N;
-  const { opportunity, resistance, weakSignals, withinNoise, observedButHeld } =
-    rankSegments(result, positiveChoice, minN);
+  const {
+    opportunity,
+    resistance,
+    weakSignals,
+    withinNoise,
+    observedButHeld,
+    panelSize,
+    panelPositive,
+  } = rankSegments(result, positiveChoice, minN);
 
   // 관련성 게이트: AI가 low로 판정한 차원의 승격 세그먼트는 순위에서 빼 lowRelevance로 옮긴다.
   const lowRelevance: SegmentInsight[] = [];
@@ -191,7 +201,10 @@ export function generateFounderInsightReport(
         ? `${topOpportunity} 세그먼트부터 인터뷰 대상 좁히기`
         : "표본이 큰 세그먼트부터 인터뷰 설계",
     },
-    overallSignal: overallSection(result, options),
+    overallSignal: overallSection(result, options, {
+      panelSize,
+      panelPositive,
+    }),
     opportunitySegments,
     resistanceSegments,
     weakSignals: weakSignalsWithConf,

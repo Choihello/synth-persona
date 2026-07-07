@@ -80,6 +80,10 @@ export function rankSegments(
   withinNoise: SegmentInsight[];
   observedButHeld: SegmentInsight[];
   globalPositiveRatio: number;
+  /** 고유 페르소나 수 (표본 크기) */
+  panelSize: number;
+  /** 과반투표 긍정 페르소나 수 */
+  panelPositive: number;
 } {
   const buckets = new Map<string, Bucket>();
   let totalWeight = 0;
@@ -226,5 +230,7 @@ export function rankSegments(
     withinNoise,
     observedButHeld: held,
     globalPositiveRatio,
+    panelSize: perPersona.size,
+    panelPositive: globalPersonaPos,
   };
 }

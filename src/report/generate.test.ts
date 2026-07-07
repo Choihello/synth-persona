@@ -20,6 +20,25 @@ function mk(pos: number, neg: number, dim: string, val: string): Response[] {
   ];
 }
 const opts = { question: "쓸 의향?", choices: ["쓴다", "안쓴다"] };
+/** 세그먼트 다수를 가진 StudyResult 픽스처 (render.test.ts와 동일 구성: 연령 15구간×2명=30 페르소나, 전원 "쓴다") */
+function bigResult(): StudyResult {
+  const responses: Response[] = [];
+  for (let i = 0; i < 15; i++) {
+    for (let j = 0; j < 2; j++) {
+      responses.push({
+        persona: { id: `p${i}-${j}`, attrs: { 연령: `구간${i}` }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    }
+  }
+  return {
+    responses,
+    signal: "consensus" as const,
+    dispersion: 0,
+    bySegment: { 연령: {} },
+  };
+}
 
 describe("generateFounderInsightReport — core/validation", () => {
   test("choices가 2개 미만이면 throw", () => {
@@ -305,6 +324,15 @@ describe("generateFounderInsightReport — core/validation", () => {
     expect(rep.executiveSummary.topOpportunity).toBeUndefined();
     expect(rep.executiveSummary.headline).not.toContain("긍정 신호가 강합니다");
     expect(rep.executiveSummary.headline).toContain("뚜렷한 세그먼트 차이");
+  });
+
+  test("overallSignal에 페르소나 총계가 실린다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    expect(report.overallSignal.panelSize).toBe(30);
+    expect(report.overallSignal.panelPositive).toBe(30);
   });
 
   test("relevance 미전달/null이면 lowRelevance는 빈 배열, 이동 없음", () => {
