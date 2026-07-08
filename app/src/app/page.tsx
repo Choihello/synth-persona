@@ -20,7 +20,7 @@ export default function Landing() {
           <Link className="landing-cta" href="/new">
             리포트 만들기 — 약 2분
           </Link>
-          <Link className="landing-sample-link" href="/r/BAJnsFMKrF">
+          <Link className="landing-sample-link" href="/r/2khi1bDwJ4">
             샘플 리포트 보기 →
           </Link>
           <a
@@ -33,30 +33,28 @@ export default function Landing() {
       </section>
 
       <section className="landing-cards" aria-label="예시 리포트 미리보기">
-        <Link href="/r/BAJnsFMKrF" className="landing-report-card">
+        <Link href="/r/2khi1bDwJ4" className="landing-report-card">
           <span className="landing-card-label">예시 리포트</span>
           <p className="landing-card-kicker">한눈에 보기</p>
-          <p className="landing-card-verdict">반응이 뚜렷하게 긍정적이에요</p>
+          <p className="landing-card-verdict">반응이 갈렸어요</p>
           <p className="landing-card-num">
-            10명 중 9명<span>이 "있다"</span>
+            60명 중 11명<span>이 "온라인 배송"</span>
           </p>
           <span className="landing-bar" aria-hidden="true">
-            <i style={{ width: "87%" }} />
+            <i style={{ width: "18%" }} />
             <em />
           </span>
-          <span className="landing-card-basis">합성 패널 응답 기준</span>
+          <span className="landing-card-basis">가상 응답 180개 기준</span>
         </Link>
-        <Link href="/r/BAJnsFMKrF" className="landing-report-card">
+        <Link href="/r/2khi1bDwJ4" className="landing-report-card">
           <span className="landing-card-label">예시 리포트</span>
           <p className="landing-card-kicker">기회 세그먼트</p>
-          <p className="landing-card-verdict">
-            수도권 거주자의 반응이 가장 좋았어요
-          </p>
+          <p className="landing-card-verdict">지역에서 뚜렷하게 갈렸어요</p>
           <p className="landing-card-num">
-            10명 중 9명<span>이 긍정</span>
+            34.3%<span>수도권 긍정 · 비수도권 6.2%</span>
           </p>
           <span className="landing-bar" aria-hidden="true">
-            <i style={{ width: "89%" }} />
+            <i style={{ width: "34%" }} />
             <em />
           </span>
           <span className="landing-card-basis">합성 패널 응답 기준</span>
