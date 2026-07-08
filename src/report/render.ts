@@ -13,6 +13,9 @@ export const AI_DRAFT_BANNER =
 export const LLM_SUMMARY_BANNER =
   "> 💡 **실제 응답 이유를 종합한 AI 요약** — 패널의 실제 응답 이유를 묶은 것입니다. 참고로 쓰고 실제 고객으로 검증하세요.";
 
+export const LLM_QUESTION_BANNER =
+  "> 💬 **패널이 실제로 답한 이유에서 도출된 질문입니다.** 그대로 물어보기 전에 실제 고객으로 검증하세요.";
+
 const pct = (x: number) => pctBase(x, 1); // 리포트는 소수 1자리
 
 function segmentLines(s: SegmentInsight): string[] {
@@ -174,8 +177,16 @@ export function renderFounderInsightReport(
       "",
     );
   }
-  // ⑩ 인터뷰 질문
-  md.push("## 인터뷰 질문 초안", "", AI_DRAFT_BANNER, "");
+  // ⑩ 인터뷰 질문 — basis가 전부 llm이면 실측 도출 배너 (llm-prescriptions가 생성)
+  const questionsAreLLM =
+    report.interviewQuestions.length > 0 &&
+    report.interviewQuestions.every((q) => q.basis === "llm");
+  md.push(
+    "## 인터뷰 질문 초안",
+    "",
+    questionsAreLLM ? LLM_QUESTION_BANNER : AI_DRAFT_BANNER,
+    "",
+  );
   report.interviewQuestions.forEach((q, i) => {
     md.push(
       `${i + 1}. ${q.text} _(${q.type})_${q.caution ? ` — ⚠️ ${q.caution}` : ""}`,

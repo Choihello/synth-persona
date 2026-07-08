@@ -287,6 +287,73 @@ describe("renderFounderInsightReport — 배너 basis 구분 + 신뢰도 평이�
     );
     expect(md).toContain("실측 일치"); // matched 병기 예시 — 실제 표 위 범례에 등장
   });
+
+  it("인터뷰 질문이 llm 기반이면 실측 도출 배너, heuristic이면 초안 배너", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    expect(base.interviewQuestions.length).toBeGreaterThan(0);
+
+    // heuristic 기본
+    const heuristicMd = renderFounderInsightReport(base);
+    expect(heuristicMd).not.toContain("패널이 실제로 답한 이유에서 도출");
+
+    // 전부 llm이면 실측 배너
+    const llm = {
+      ...base,
+      interviewQuestions: base.interviewQuestions.map((q) => ({
+        ...q,
+        basis: "llm" as const,
+      })),
+    };
+    expect(renderFounderInsightReport(llm)).toContain(
+      "패널이 실제로 답한 이유에서 도출",
+    );
+  });
+
+  it("인터뷰 질문이 하나라도 heuristic이면 초안 배너를 유지한다", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const mixed = {
+      ...base,
+      interviewQuestions: base.interviewQuestions.map((q, i) => ({
+        ...q,
+        basis: i === 0 ? ("heuristic" as const) : ("llm" as const),
+      })),
+    };
+    expect(renderFounderInsightReport(mixed)).not.toContain(
+      "패널이 실제로 답한 이유에서 도출",
+    );
+  });
+
+  it("설문·랜딩·추천 인터뷰는 basis와 무관하게 초안 배너를 유지한다", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const allLlm = {
+      ...base,
+      recommendedInterviews: base.recommendedInterviews.map((t) => ({
+        ...t,
+        basis: "llm" as const,
+      })),
+      surveyDraft: base.surveyDraft.map((q) => ({
+        ...q,
+        basis: "llm" as const,
+      })),
+      landingPageMessageTests: base.landingPageMessageTests.map((t) => ({
+        ...t,
+        basis: "llm" as const,
+      })),
+    };
+    const md = renderFounderInsightReport(allLlm);
+    // 세 섹션 모두 초안 배너 유지 (실제로 heuristic 생성물이므로)
+    const count = md.split("규칙 기반으로 파생된 초안").length - 1;
+    expect(count).toBeGreaterThanOrEqual(3);
+  });
 });
 
 describe("renderFounderInsightReport — 출처 계층화", () => {
