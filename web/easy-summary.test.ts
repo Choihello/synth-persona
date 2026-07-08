@@ -222,8 +222,9 @@ describe("easySummaryHTML — 모집단 명시", () => {
 
   test("panelLabel이 없으면 종전 그대로 'N명 중 M명'", () => {
     const html = easySummaryHTML(reportWith({ opp: "연령=30대" }), "찬성");
-    expect(html).toContain("10명 중 9명");
-    expect(html).not.toContain("· 수도권 10명");
+    // 앞에 공백 하나만 흘러도 잡히도록 마크업을 고정한다 (바이트 동일 보장)
+    expect(html).toContain('<span class="easy-count-num">10명 중 9명</span>');
+    expect(html).not.toContain('<span class="easy-count-num"> ');
   });
 
   test("panelLabel도 이스케이프된다", () => {
@@ -233,5 +234,6 @@ describe("easySummaryHTML — 모집단 명시", () => {
     );
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
+    expect(html).toContain("&quot;x&quot;");
   });
 });
