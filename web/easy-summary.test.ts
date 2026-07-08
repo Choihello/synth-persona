@@ -53,6 +53,8 @@ function reportWith(over: {
     opportunitySegments: over.opp ? [{ segmentLabel: over.opp } as never] : [],
     resistanceSegments: over.res ? [{ segmentLabel: over.res } as never] : [],
     weakSignals: Array.from({ length: over.weak ?? 0 }, () => ({}) as never),
+    observedButHeld: [],
+    lowRelevance: [],
     confidenceCard: {
       responseConsistency: { label: over.consistency ?? "medium" },
     } as never,

@@ -543,12 +543,18 @@ describe("renderFounderInsightReport — 범위 밖 배너", () => {
       question: "q?",
       choices: ["쓴다", "안쓴다"],
     });
-    // 승격 0 · weakSignals 0 · 버킷 2개 → no-effect
+    // 승격 0 · weakSignals 0 · lowRelevance 0 · observedButHeld 0(!) · 버킷 2개 → no-effect
+    // observedButHeld를 base(bigResult, 전량 minN 미만이라 15개 보류)에서 물려받으면
+    // "검정조차 못 한 세그먼트가 있다" = underpowered가 정답이 된다 — 그 상태는 다른
+    // 테스트(§C1 회귀: '세그먼트로 쪼개 보려면 표본을 키우세요')가 커버한다. 여기서는
+    // no-effect를 만들기 위해 observedButHeld도 명시적으로 비운다.
     const rep = {
       ...base,
       opportunitySegments: [],
       resistanceSegments: [],
       weakSignals: [],
+      observedButHeld: [],
+      lowRelevance: [],
       overallSignal: {
         ...base.overallSignal,
         distribution: { 쓴다: 20, 안쓴다: 10 },
@@ -694,5 +700,80 @@ describe("renderFounderInsightReport — underpowered는 표본 문구를 유지
     expect(md).toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
     expect(md).not.toContain("이 질문은 이 도구의 범위 밖입니다");
     expect(md).not.toContain("인구 축에서 갈리지 않았습니다");
+  });
+});
+
+describe("renderFounderInsightReport — 최종 리뷰 회귀 (C1/C2/C3)", () => {
+  it("C1: 100%p로 갈리지만 양쪽 다 minN 미만이면 no-effect가 아니라 underpowered다", () => {
+    // 실제 파이프라인으로 재현: 연령=20대 5명 전원 긍정, 연령=60대 5명 전원 부정.
+    // 두 버킷 모두 total=5 < DEFAULT_MIN_N(8)이라 z-검정 이전에 early continue —
+    // weakSignals에는 절대 못 들어가고 observedButHeld로만 보존된다.
+    const responses = [];
+    for (let i = 0; i < 5; i++)
+      responses.push({
+        persona: { id: `y${i}`, attrs: { 연령: "20대" }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    for (let i = 0; i < 5; i++)
+      responses.push({
+        persona: { id: `o${i}`, attrs: { 연령: "60대" }, weight: 1 },
+        answer: "안쓴다",
+        choice: "안쓴다",
+      });
+    const report = generateFounderInsightReport(
+      {
+        responses,
+        signal: "split" as const,
+        dispersion: 1,
+        bySegment: { 연령: {} },
+      },
+      { question: "q?", choices: ["쓴다", "안쓴다"] },
+    );
+    expect(report.observedButHeld.length).toBeGreaterThan(0);
+    expect(report.weakSignals.length).toBe(0);
+    expect(report.opportunitySegments.length).toBe(0);
+    expect(report.resistanceSegments.length).toBe(0);
+
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
+    expect(md).not.toContain("인구 축에서 갈리지 않았습니다");
+    expect(md).not.toContain("10%p 이상 벌어지는 차이가 없었습니다");
+  });
+
+  it("C3: 한 방향만 승격되고 반대 방향이 비면, 빈 섹션은 전 축에 대한 주장을 하지 않는다", () => {
+    // 30대 20명 전원 긍정, 40대 20명 중 절반만 긍정 → 30대만 opportunity로 승격되고
+    // resistance는 비어 있을 수 있는 분포. 그래도 resistanceSegments를 빈 배열로
+    // 고정해 "승격 있음 + 반대 방향 비었음"을 확실히 재현한다.
+    const responses = [];
+    for (let i = 0; i < 20; i++)
+      responses.push({
+        persona: { id: `a${i}`, attrs: { 연령: "30대" }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    for (let i = 0; i < 20; i++)
+      responses.push({
+        persona: { id: `b${i}`, attrs: { 연령: "40대" }, weight: 1 },
+        answer: i < 10 ? "쓴다" : "안쓴다",
+        choice: i < 10 ? "쓴다" : "안쓴다",
+      });
+    const base = generateFounderInsightReport(
+      {
+        responses,
+        signal: "split" as const,
+        dispersion: 0.6,
+        bySegment: { 연령: {} },
+      },
+      { question: "q?", choices: ["쓴다", "안쓴다"] },
+    );
+    expect(base.opportunitySegments.length).toBeGreaterThan(0);
+    const report = { ...base, resistanceSegments: [] };
+
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain(
+      "이 방향에서는 순위에 올릴 만큼 뚜렷한 세그먼트가 없었습니다",
+    );
+    expect(md).not.toContain("10%p 이상 벌어지는 차이가 없었습니다");
   });
 });
