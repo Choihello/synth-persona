@@ -47,7 +47,11 @@ export function renderFounderInsightReport(
   md.push("## 한 줄 요약", "", es.headline, "");
   if (es.topOpportunity) md.push(`- 최우선 기회: **${es.topOpportunity}**`);
   if (es.topResistance) md.push(`- 최대 저항: **${es.topResistance}**`);
+  // 정직성 신호는 "못 하는 말"만 두지 않는다 — 부록 신뢰도 4층의 허용 범위를 짝지어 올린다.
+  const mj = report.confidenceCard.marketJudgment;
   md.push(
+    `- 이 리포트로 할 수 있는 것: ${mj.whatThisAllows}`,
+    `- 아직 못 하는 것: ${mj.whatThisDoesNotAllow}`,
     `- 아직 믿으면 안 되는 것: ${es.doNotTrustYet}`,
     `- 이번 주 행동: ${es.thisWeekAction}`,
     "",
