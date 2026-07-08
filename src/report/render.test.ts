@@ -844,4 +844,59 @@ describe("renderFounderInsightReport — 패널 스크리너 표기", () => {
     const md = renderFounderInsightReport(withPanelLabel("20~39세 · 수도권"));
     expect(md).toMatch(/^- .*?· 응답 분포: /m);
   });
+
+  it("패널 고지는 '## 한 줄 요약' 앞에 온다 (카드 주입 앵커보다 위)", () => {
+    const md = renderFounderInsightReport(withPanelLabel("20~39세 · 수도권"));
+    const notice = md.indexOf("인구만 대상으로 합니다");
+    const warning = md.indexOf("이 집단이 내 타깃이라는 가정은");
+    const summary = md.indexOf("## 한 줄 요약");
+    expect(notice).toBeGreaterThanOrEqual(0);
+    expect(notice).toBeLessThan(warning);
+    expect(warning).toBeLessThan(summary);
+  });
+});
+
+describe("renderFounderInsightReport — 검정하지 않은 축을 주장하지 않는다", () => {
+  function noEffectWithSkipped(skippedDims?: string[]) {
+    const responses = [];
+    for (let i = 0; i < 10; i++)
+      responses.push({
+        persona: { id: `a${i}`, attrs: { 연령: "30대" }, weight: 1 },
+        answer: i < 5 ? "쓴다" : "안쓴다",
+        choice: i < 5 ? "쓴다" : "안쓴다",
+      });
+    for (let i = 0; i < 10; i++)
+      responses.push({
+        persona: { id: `b${i}`, attrs: { 연령: "40대" }, weight: 1 },
+        answer: i < 5 ? "쓴다" : "안쓴다",
+        choice: i < 5 ? "쓴다" : "안쓴다",
+      });
+    const base = generateFounderInsightReport(
+      {
+        responses,
+        signal: "split" as const,
+        dispersion: 0.9,
+        bySegment: { 연령: {} },
+      },
+      { question: "q?", choices: ["쓴다", "안쓴다"] },
+    );
+    return { ...base, appendix: { ...base.appendix, skippedDims } };
+  }
+
+  it("제외된 축은 '검정할 수 있었던 인구 축' 나열에서 빠진다", () => {
+    const md = renderFounderInsightReport(noEffectWithSkipped(["지역"]));
+    expect(md).toContain("검정할 수 있었던 인구 축(연령·성·가구원수·혼인)");
+    expect(md).not.toContain("연령·성·지역·가구원수·혼인");
+    expect(md).toContain(
+      "지역 축은 이 패널에서 값이 하나뿐이라 검정하지 못했습니다",
+    );
+  });
+
+  it("제외된 축이 없으면 다섯 축을 그대로 나열한다 (바이트 동일)", () => {
+    const md = renderFounderInsightReport(noEffectWithSkipped(undefined));
+    expect(md).toContain(
+      "검정할 수 있었던 인구 축(연령·성·지역·가구원수·혼인)",
+    );
+    expect(md).not.toContain("검정하지 못했습니다");
+  });
 });

@@ -40,6 +40,7 @@ function reportWith(over: {
   panelSize?: number;
   panelPositive?: number;
   panelLabel?: string;
+  skippedDims?: string[];
 }): FounderInsightReport {
   return {
     overallSignal: {
@@ -59,7 +60,10 @@ function reportWith(over: {
     confidenceCard: {
       responseConsistency: { label: over.consistency ?? "medium" },
     } as never,
-    appendix: { options: { panelLabel: over.panelLabel } } as never,
+    appendix: {
+      options: { panelLabel: over.panelLabel },
+      skippedDims: over.skippedDims,
+    } as never,
   } as unknown as FounderInsightReport;
 }
 
@@ -203,6 +207,23 @@ describe("easySummaryHTML — 범위 밖 판정", () => {
       "찬성",
     );
     expect(html).toContain("반응이 뚜렷하게 긍정적이에요");
+  });
+
+  test("no-effect + 제외된 축이면 '검정한 인구 축'이라 말한다", () => {
+    const html = easySummaryHTML(
+      reportWith({ dist: { 찬성: 78, 반대: 12 }, skippedDims: ["지역"] }),
+      "찬성",
+    );
+    expect(html).toContain("검정한 인구 축에서는 갈리지 않았어요");
+  });
+
+  test("no-effect + 제외된 축이 없으면 종전 문구", () => {
+    const html = easySummaryHTML(
+      reportWith({ dist: { 찬성: 78, 반대: 12 } }),
+      "찬성",
+    );
+    expect(html).toContain("인구 축에서는 갈리지 않았어요");
+    expect(html).not.toContain("검정한 인구 축");
   });
 
   test("whoLine 폴백은 그대로 유지된다", () => {

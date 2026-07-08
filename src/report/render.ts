@@ -20,8 +20,28 @@ export const LLM_QUESTION_BANNER =
 export const OUT_OF_SCOPE_BANNER_UNANIMOUS =
   "> ⚠️ **이 질문은 이 도구의 범위 밖입니다.** 표본 전원이 매번 같은 선택을 했습니다 — 인구 구성이 답을 전혀 바꾸지 못했습니다. 따라서 아래 비율은 통계청 인구 분포가 아니라 **언어모델의 사전 판단**입니다.";
 
-export const OUT_OF_SCOPE_BANNER_NO_EFFECT =
-  "> ⚠️ **인구 축에서 갈리지 않았습니다.** 검정할 수 있었던 인구 축(연령·성·지역·가구원수·혼인) 어디에서도 10%p 이상의 차이가 없었습니다 — 이 질문의 답은 인구 구성보다 다른 요인에 달려 있을 가능성이 큽니다.";
+/** 이 도구가 가진 census 축. 스크리너로 고정된 축은 검정되지 않는다. */
+const CENSUS_AXES = ["연령", "성", "지역", "가구원수", "혼인"] as const;
+
+/** 검정한 축만 나열한다. 검정하지 않은 축의 결과를 주장하지 않기 위함이다. */
+function testedAxesLabel(skippedDims?: string[]): string {
+  return CENSUS_AXES.filter((a) => !skippedDims?.includes(a)).join("·");
+}
+
+/**
+ * 스크리너로 고정된 축은 대조군이 없어 검정되지 않는다. 이 배너가 "검정할 수
+ * 있었던 인구 축"을 나열할 때 고정된 축까지 넣으면, 검정하지 않은 축에서
+ * "차이가 없었다"고 주장하는 것이 된다 — commit 29b42f0과 같은 부류의 거짓말.
+ * 그래서 skippedDims를 나열에서 빼고, 빠졌다는 사실 자체는 별도로 밝힌다.
+ */
+export function outOfScopeBannerNoEffect(skippedDims?: string[]): string {
+  const base = `> ⚠️ **인구 축에서 갈리지 않았습니다.** 검정할 수 있었던 인구 축(${testedAxesLabel(skippedDims)}) 어디에서도 10%p 이상의 차이가 없었습니다 — 이 질문의 답은 인구 구성보다 다른 요인에 달려 있을 가능성이 큽니다.`;
+  return skippedDims && skippedDims.length > 0
+    ? `${base} ${skippedDims.join("·")} 축은 이 패널에서 값이 하나뿐이라 검정하지 못했습니다.`
+    : base;
+}
+
+export const OUT_OF_SCOPE_BANNER_NO_EFFECT = outOfScopeBannerNoEffect();
 
 export const SCREENER_CIRCULAR_WARNING =
   '> ⚠️ **이 집단이 내 타깃이라는 가정은 검증되지 않았습니다.** 패널을 한정하면 "누가 반응하는가"는 물을 수 없습니다 — 타깃 자체를 확인하려면 스크리너 없이 한 번 더 돌리세요.';
@@ -34,17 +54,20 @@ export const NO_SEGMENT_UNDERPOWERED =
  * 인구 축에서 의사결정에 쓸 만한 크기(10%p)의 차이 자체가 없는 경우.
  * 10%p는 의사결정 임계이지 진실의 경계가 아니므로 "안 갈린다"고 단언하지 않는다.
  */
-export const NO_SEGMENT_NO_EFFECT =
-  "검정할 수 있었던 인구 축(연령·성·지역·가구원수·혼인)에서 10%p 이상 벌어지는 차이가 없었습니다. 표본을 키워도 이 축들로는 갈리지 않을 가능성이 큽니다 — 전체 비율을 세그먼트 근거로 쓰지 마세요.";
+export function noSegmentNoEffect(skippedDims?: string[]): string {
+  return `검정할 수 있었던 인구 축(${testedAxesLabel(skippedDims)})에서 10%p 이상 벌어지는 차이가 없었습니다. 표본을 키워도 이 축들로는 갈리지 않을 가능성이 큽니다 — 전체 비율을 세그먼트 근거로 쓰지 마세요.`;
+}
+
+export const NO_SEGMENT_NO_EFFECT = noSegmentNoEffect();
 
 /** 승격이 어딘가 있는데 이 방향만 비었을 때. 전 축에 대한 주장을 하면 안 된다. */
 export const NO_SEGMENT_DIRECTIONAL =
   "이 방향에서는 순위에 올릴 만큼 뚜렷한 세그먼트가 없었습니다. 반대 방향은 다른 섹션을 보세요.";
 
-function noSegmentLine(scope: ScopeVerdict): string {
+function noSegmentLine(scope: ScopeVerdict, skippedDims?: string[]): string {
   if (scope === "segmented") return NO_SEGMENT_DIRECTIONAL;
   if (scope === "underpowered") return NO_SEGMENT_UNDERPOWERED;
-  return NO_SEGMENT_NO_EFFECT;
+  return noSegmentNoEffect(skippedDims);
 }
 
 /**
@@ -124,7 +147,8 @@ export function renderFounderInsightReport(
   const es = report.executiveSummary;
   md.push("## 한 줄 요약", "");
   if (scope === "unanimous") md.push(OUT_OF_SCOPE_BANNER_UNANIMOUS, "");
-  else if (scope === "no-effect") md.push(OUT_OF_SCOPE_BANNER_NO_EFFECT, "");
+  else if (scope === "no-effect")
+    md.push(outOfScopeBannerNoEffect(report.appendix.skippedDims), "");
   md.push(scope === "unanimous" ? UNANIMOUS_HEADLINE : es.headline, "");
   if (es.topOpportunity) md.push(`- 최우선 기회: **${es.topOpportunity}**`);
   if (es.topResistance) md.push(`- 최대 저항: **${es.topResistance}**`);
@@ -200,11 +224,12 @@ export function renderFounderInsightReport(
       "",
     );
   if (report.opportunitySegments.length === 0)
-    md.push(noSegmentLine(scope), "");
+    md.push(noSegmentLine(scope, skippedDims), "");
   for (const s of report.opportunitySegments) md.push(...segmentLines(s), "");
   // ⑤ 저항 세그먼트 + 판단 보류 cap
   md.push("## 저항 세그먼트", "");
-  if (report.resistanceSegments.length === 0) md.push(noSegmentLine(scope), "");
+  if (report.resistanceSegments.length === 0)
+    md.push(noSegmentLine(scope, skippedDims), "");
   for (const s of report.resistanceSegments) md.push(...segmentLines(s), "");
   if (report.observedButHeld.length > 0) {
     md.push("### 판단 보류 (표본 부족)", "");

@@ -79,7 +79,9 @@ export function easySummaryHTML(
     scope === "unanimous"
       ? "이 질문은 이 도구의 범위 밖이에요"
       : scope === "no-effect"
-        ? "인구 축에서는 갈리지 않았어요"
+        ? report.appendix.skippedDims?.length
+          ? "검정한 인구 축에서는 갈리지 않았어요"
+          : "인구 축에서는 갈리지 않았어요"
         : verdictSentence(report.overallSignal.signal, r);
 
   const opp = report.opportunitySegments[0];
