@@ -47,6 +47,13 @@ describe("scopeVerdict", () => {
     ).toBe("underpowered");
   });
 
+  it("만장일치면 weakSignals가 있어도 unanimous가 underpowered보다 우선한다", () => {
+    // 순서 회귀 가드: unanimous 검사를 underpowered 아래로 내리면 이 테스트만 깨진다.
+    expect(scopeVerdict(reportWith({ weak: 3, dist: { 끈다: 180 } }))).toBe(
+      "unanimous",
+    );
+  });
+
   it("승격 0 + weakSignals 0 + 응답은 갈림이면 no-effect", () => {
     expect(scopeVerdict(reportWith({ dist: { 찬성: 78, 반대: 12 } }))).toBe(
       "no-effect",
