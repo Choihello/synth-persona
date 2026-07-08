@@ -19,7 +19,8 @@
 - **`## 전체 신호\n` · `## 기회 세그먼트\n` 헤더 문자열 보존** (`web/pipeline.ts:125`가 `md.replace`로 차트를 주입한다).
 - **`- ${signalLabel} · 응답 분포: ${dist}` 불릿 형식 보존** (`web/og-stats.ts` 파서 소스).
 - **스크리너 미지정이 기본이며, 그때 렌더 결과는 변경 전과 바이트 동일해야 한다.** Task 6이 실측 대조한다.
-- 타입 변경은 **`FounderReportOptions`에 옵셔널 `panelLabel?: string` 추가 하나뿐.** `FounderInsightReport`의 기존 필드는 무수정 (`narrative?`·`panelSize?`·`panelPositive?`와 같은 승인 패턴).
+- 타입 변경은 **옵셔널 필드 두 개 추가뿐**: `FounderReportOptions.panelLabel?: string` (Task 4) · `ReportAppendix.skippedDims?: string[]` (Task 3). `FounderInsightReport`의 기존 필드는 무수정 (`narrative?`·`panelSize?`·`panelPositive?`·`reliabilityCardRaw?`와 같은 승인된 가산적 패턴).
+- **조용한 소실 금지** — `generate.test.ts:103`에 이름 붙은 기존 원칙이다. 관측된 축이 리포트에서 흔적 없이 사라지면 안 된다. 값이 하나뿐인 축은 버킷을 만들지 않되(하지 않은 비교를 주장하지 않기 위해) 제외했다는 사실은 렌더가 밝힌다.
 - 비용 회당 ≈ $0.04 유지 (`n = 60`, `repeats = 3`).
 
 ## 환경 함정 (전 태스크 공통)
@@ -432,28 +433,42 @@ git commit -m "feat(study): runCensusStudy가 표집 직전 스크리너를 적�
 
 ---
 
-### Task 3: 상수 축은 세그먼트를 만들지 않는다 — `segments.ts`
+### Task 3: 상수 축은 세그먼트를 만들지 않되, 사라지지 않는다
 
 **Files:**
-- Modify: `src/report/segments.ts` (버킷 구성 루프, 현재 92~111행)
-- Test: `src/report/segments.test.ts`
+- Modify: `src/report/segments.ts` (버킷 구성 루프, 현재 92~111행 + 반환 객체)
+- Modify: `src/report/types.ts` (`ReportAppendix`에 옵셔널 필드 하나)
+- Modify: `src/report/generate.ts` (`skippedDims`를 appendix로 전달)
+- Modify: `src/report/render.ts` (제외된 축을 명시)
+- Test: `src/report/segments.test.ts` · `src/report/generate.test.ts` · `src/report/render.test.ts`
 
 **Interfaces:**
 - Consumes: `constantDims` (Task 1) — `import { constantDims } from "../population/screen.js";`
-- Produces: 없음 (동작 변경)
+- Produces:
+  - `rankSegments(...)` 반환에 `skippedDims: string[]` 추가
+  - `ReportAppendix.skippedDims?: string[]` (옵셔널 · 가산적)
 
-**왜.** `지역=수도권`으로 고정하면 그 축의 버킷은 하나뿐이다. `segments.ts:193`이 `restN = perPersona.size - nP` → `0`, `restRatio = segRatio` → `diff = 0`이 되어 `withinNoise`에 실린다. **비교 대상이 없는데 "차이가 작다"고 말하는 것**이다. 게이트 수학은 건드리지 않고 버킷을 아예 만들지 않는다.
+**왜 버킷을 만들지 않는가.** `지역=수도권`으로 고정하면 그 축의 버킷은 하나뿐이다. `segments.ts:193`이 `restN = perPersona.size - nP` → `0`, `restRatio = segRatio` → `diff = 0`이 되어 `withinNoise`에 실린다. **비교 대상이 없는데 "차이가 작다"고 말하는 것**이다. 게이트 수학은 건드리지 않고 버킷을 아예 만들지 않는다.
 
-**⚠️** 이 변경 이후 단일값 축을 쓰는 기존 픽스처는 세그먼트를 못 만든다. `segments.test.ts:172-175`는 `지역: "A"`·`"B"` 두 값이라 안전하다. **다른 테스트가 깨지면 먼저 그 픽스처를 읽고 보고할 것.** 단언을 조용히 느슨하게 만들지 말 것.
+**왜 그래도 말해야 하는가.** 이 저장소엔 이름 붙은 원칙이 있다 — `generate.test.ts:103` `"기준선과 동률인 세그먼트는 withinNoise로 보존된다 (조용한 소실 금지)"`. 관측된 축이 리포트에서 흔적 없이 사라지면 안 된다. 그래서 **버킷은 만들지 않되(가짜 비교 금지), 제외했다는 사실은 렌더가 밝힌다.** 두 원칙을 다 지킨다.
 
-- [ ] **Step 1: Write the failing test**
+**⚠️ 왜 `observedButHeld`에 넣으면 안 되는가.** 그러면 `scopeVerdict`(`src/report/scope.ts`)가 `observedButHeld.length > 0`을 보고 `underpowered`를 반환하고, 리포트는 **"세그먼트로 쪼개 보려면 표본을 키우세요"**라고 쓴다. 축을 고정한 것은 표본 크기와 무관하다 — 600명을 뽑아도 `지역`은 한 값이다. 2026-07-08에 잡은 Critical(미검정 세그먼트를 `no-effect`로 오분류)과 **같은 종류의 거짓말**이 된다.
 
-`src/report/segments.test.ts` 끝에 추가 (파일의 기존 `makeRepeats`·`study` 헬퍼를 그대로 쓴다):
+**⚠️ 기존 테스트 2건이 반드시 깨진다. 예상된 것이다.** 둘 다 픽스처가 `연령`을 한 값으로 고정한다:
+- `src/report/generate.test.ts:103` — `"기준선과 동률인 세그먼트는 withinNoise로 보존된다 (조용한 소실 금지)"`
+- `src/report/generate.test.ts` — `"비승격 티어(weakSignals/withinNoise/lowRelevance)도 confidence가 unknown이 아니다"`
+
+**단언을 느슨하게 만들지 말고, 새 계약으로 다시 쓸 것.** 첫 번째는 "축이 하나뿐이면 버킷이 없고 대신 `skippedDims`에 담긴다"를 검증하도록, 두 번째는 두 값 이상인 픽스처로 바꿔 원래 의도(비승격 티어의 confidence)를 계속 검증하도록. `src/report/segments.test.ts:172-175`는 `지역: "A"`·`"B"` 두 값이라 안전하다.
+
+**반환 필드명 확인됨** (`src/report/segments.ts:73-81`): `opportunity` · `resistance` (**단수**) · `weakSignals` · `withinNoise` · `observedButHeld` · `globalPositiveRatio`.
+
+- [ ] **Step 1: Write the failing tests**
+
+`src/report/segments.test.ts` 끝에 추가 (파일의 기존 `makeRepeats`·`study` 헬퍼를 쓴다. 이 파일은 `test(`를 쓴다):
 
 ```ts
 describe("rankSegments — 값이 하나뿐인 축", () => {
-  it("상수 축은 세그먼트·약한신호·우연범위·판단보류 어디에도 나오지 않는다", () => {
-    // 지역은 전원 "수도권"(상수), 연령은 두 값 → 연령만 살아남아야 한다
+  test("상수 축은 어느 티어에도 없고 skippedDims에 담긴다", () => {
     const responses = makeRepeats([
       { id: "a1", attrs: { 연령: "30대", 지역: "수도권" }, picks: ["쓴다", "쓴다", "쓴다"] },
       { id: "a2", attrs: { 연령: "30대", 지역: "수도권" }, picks: ["쓴다", "쓴다", "쓴다"] },
@@ -472,9 +487,10 @@ describe("rankSegments — 값이 하나뿐인 축", () => {
     ].map((s) => s.segmentLabel);
     expect(all.some((l) => l.startsWith("지역="))).toBe(false);
     expect(all.some((l) => l.startsWith("연령="))).toBe(true);
+    expect(r.skippedDims).toEqual(["지역"]);
   });
 
-  it("두 값 이상인 축은 종전대로 버킷을 만든다", () => {
+  test("두 값 이상인 축은 종전대로 버킷을 만들고 skippedDims는 빈다", () => {
     const responses = makeRepeats([
       { id: "a1", attrs: { 지역: "수도권" }, picks: ["쓴다", "쓴다", "쓴다"] },
       { id: "b1", attrs: { 지역: "비수도권" }, picks: ["안쓴다", "안쓴다", "안쓴다"] },
@@ -488,23 +504,81 @@ describe("rankSegments — 값이 하나뿐인 축", () => {
       ...r.observedButHeld,
     ].map((s) => s.segmentLabel);
     expect(all.some((l) => l.startsWith("지역="))).toBe(true);
+    expect(r.skippedDims).toEqual([]);
   });
 });
 ```
 
-**반환 필드명 확인됨** (`src/report/segments.ts:73-81`): `opportunity` · `resistance` (**단수**) · `weakSignals` · `withinNoise` · `observedButHeld` · `globalPositiveRatio`. 위 테스트 코드는 이 이름을 쓴다.
+`src/report/generate.test.ts:103`의 테스트를 **다음으로 교체** (계약이 바뀌었다 — 느슨해진 게 아니라 달라졌다):
 
-- [ ] **Step 2: Run test to verify it fails**
+```ts
+  test("값이 하나뿐인 축은 버킷이 없고 appendix.skippedDims에 담긴다 (조용한 소실 금지)", () => {
+    const responses = [
+      ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "쓴다")),
+      ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "안쓴다")),
+    ];
+    const rep = generateFounderInsightReport(study(responses), opts);
+    expect(rep.opportunitySegments).toEqual([]);
+    expect(rep.resistanceSegments).toEqual([]);
+    // 대조군이 없으므로 "차이가 작다"고 말할 수 없다 — 버킷 자체가 없어야 한다
+    expect(rep.withinNoise.some((s) => s.segmentLabel === "연령=30대")).toBe(false);
+    // 그러나 조용히 사라지지도 않는다
+    expect(rep.appendix.skippedDims).toEqual(["연령"]);
+  });
+```
 
-Run: `npx vitest run --pool=threads src/report/segments.test.ts -t "값이 하나뿐인 축"`
-Expected: FAIL — 첫 테스트에서 `지역=수도권` 라벨이 발견된다(현재는 `withinNoise`에 실린다).
+`src/report/generate.test.ts`의 `"비승격 티어(weakSignals/withinNoise/lowRelevance)도 confidence가 unknown이 아니다"` 테스트를 찾아라. 픽스처가 `연령`을 한 값으로 고정하고 있으면 **두 값 이상으로 바꾼다.** 예: 응답의 절반은 `r({ 연령: "30대" }, …)`, 절반은 `r({ 연령: "60대" }, …)`. 원래 의도(비승격 티어의 confidence 검증)를 그대로 유지할 것.
+
+`src/report/render.test.ts` 끝에 추가 (이 파일은 `it(`을 쓴다):
+
+```ts
+describe("renderFounderInsightReport — 제외된 축", () => {
+  it("skippedDims가 있으면 제외 사실과 이유를 밝힌다", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const rep = {
+      ...base,
+      appendix: { ...base.appendix, skippedDims: ["지역"] },
+    };
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain("비교에서 제외된 축: 지역");
+    expect(md).toContain("이 패널에서 값이 하나뿐이라 대조군이 없습니다");
+  });
+
+  it("skippedDims가 비면 그 문구가 없다", () => {
+    const md = renderFounderInsightReport(
+      generateFounderInsightReport(bigResult(), {
+        question: "q?",
+        choices: ["쓴다", "안쓴다"],
+      }),
+    );
+    expect(md).not.toContain("비교에서 제외된 축");
+  });
+});
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+```bash
+npx vitest run --pool=threads src/report/segments.test.ts -t "값이 하나뿐인 축"
+```
+Expected: FAIL — 첫 테스트에서 `지역=수도권`이 `withinNoise`에서 발견되고, `r.skippedDims`가 `undefined`다.
 
 - [ ] **Step 3: Write minimal implementation**
 
-`src/report/segments.ts` 상단 import에 추가:
+**(a) `src/report/segments.ts`** — 상단 import에 추가:
 
 ```ts
 import { constantDims } from "../population/screen.js";
+```
+
+`rankSegments`의 반환 타입(73~81행)에 필드 추가:
+
+```ts
+  /** 값이 하나뿐이라 대조군이 없어 버킷을 만들지 않은 축 (스크리너로 고정한 경우) */
+  skippedDims: string[];
 ```
 
 버킷 구성 루프(현재 92~111행) 바로 **위**에 삽입:
@@ -512,34 +586,63 @@ import { constantDims } from "../population/screen.js";
 ```ts
   // 값이 하나뿐인 축은 여집합이 비어(restN=0) 비교가 불가능하다. 비교 대상 없이
   // "차이가 작다"고 말할 근거가 없으므로 버킷 자체를 만들지 않는다.
-  // (스크리너로 축을 고정했을 때 발생한다. 게이트 수학은 건드리지 않는다.)
-  const skipDims = new Set(
-    constantDims(
-      result.responses.filter((r) => r.choice != null).map((r) => r.persona),
-    ),
+  // 다만 조용히 사라지게 두지 않는다 — skippedDims로 내보내 렌더가 밝힌다.
+  const skipped = constantDims(
+    result.responses.filter((x) => x.choice != null).map((x) => x.persona),
   );
+  const skipDims = new Set(skipped);
 ```
 
-그리고 루프 안의 `for (const [dim, value] of Object.entries(r.persona.attrs)) {` 바로 다음 줄에 삽입:
+루프 안의 `for (const [dim, value] of Object.entries(r.persona.attrs)) {` 바로 다음 줄에 삽입:
 
 ```ts
       if (skipDims.has(dim)) continue;
 ```
 
+`rankSegments`의 `return { … }`에 `skippedDims: skipped,`를 추가한다.
+
+**(b) `src/report/types.ts`** — `ReportAppendix`(148~154행)에 필드 추가:
+
+```ts
+  /** 값이 하나뿐이라 세그먼트 비교에서 제외한 축. 없으면 미설정. */
+  skippedDims?: string[];
+```
+
+**(c) `src/report/generate.ts`** — `rankSegments` 호출 결과에서 `skippedDims`를 받아 appendix에 넣는다. appendix 객체 리터럴에 다음을 추가 (변수명은 실제 구조분해에 맞출 것):
+
+```ts
+      skippedDims: ranked.skippedDims.length > 0 ? ranked.skippedDims : undefined,
+```
+
+**빈 배열이면 `undefined`로 둔다.** 그래야 스크리너 없는 리포트의 appendix가 종전과 동일하다(Task 6의 바이트 동일 회귀).
+
+**(d) `src/report/render.ts`** — `## 기회 세그먼트` 헤더 push 직후(다중비교 고지 앞)에 삽입:
+
+```ts
+  // 조용한 소실 금지 — 버킷은 안 만들었지만 제외했다는 사실은 밝힌다.
+  const skippedDims = report.appendix.skippedDims;
+  if (skippedDims && skippedDims.length > 0)
+    md.push(
+      `_비교에서 제외된 축: ${skippedDims.join(" · ")} — 이 패널에서 값이 하나뿐이라 대조군이 없습니다._`,
+      "",
+    );
+```
+
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-npx vitest run --pool=threads src/report/segments.test.ts
+npx vitest run --pool=threads src/report/segments.test.ts src/report/generate.test.ts src/report/render.test.ts
 npx vitest run --pool=threads --reporter=json --outputFile=/tmp/vitest.json >/dev/null 2>&1
 node -e "const r=require('/tmp/vitest.json');console.log(r.numTotalTests,r.numPassedTests,r.numFailedTests,r.success)"
+npx tsc --noEmit && npm run lint
 ```
-Expected: 전건 PASS. **깨진 테스트가 있으면 그 픽스처를 읽고 보고할 것.**
+Expected: `numFailedTests 0` · `success true`. **위 두 개 말고 다른 테스트가 깨지면 그 픽스처를 읽고 보고할 것.**
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/report/segments.ts src/report/segments.test.ts
-git commit -m "fix(report): 값이 하나뿐인 축은 여집합이 없으므로 세그먼트를 만들지 않는다"
+git add src/report/segments.ts src/report/segments.test.ts src/report/types.ts src/report/generate.ts src/report/generate.test.ts src/report/render.ts src/report/render.test.ts
+git commit -m "fix(report): 값이 하나뿐인 축은 버킷을 만들지 않되 제외 사실을 밝힌다"
 ```
 
 ---
