@@ -34,6 +34,26 @@ export const NO_SEGMENT_UNDERPOWERED =
 export const NO_SEGMENT_NO_EFFECT =
   "우리가 가진 인구 축(연령·성·지역·가구원수·혼인)에서 10%p 이상 벌어지는 차이가 없었습니다. 표본을 키워도 이 축들로는 갈리지 않을 가능성이 큽니다 — 전체 비율을 세그먼트 근거로 쓰지 마세요.";
 
+/**
+ * unanimous 전용 헤드라인.
+ * generate.ts:182의 headline은 result.signal에서 파생되는데, signal은 분산이 낮으면
+ * (완전한 무변별을 포함해) 늘 "consensus"다. generate.ts는 그 값을 "합의된 반응"이라고
+ * 적지만, 표본 전원이 매번 같은 답을 한 것과 "시장이 합의했다"는 서로 다른 주장이다 —
+ * 이 리포트는 인구 구성이 답에 전혀 기여하지 않았다는 것만 보여줄 뿐, 실제 시장의
+ * 의견 일치 여부는 알 수 없다. 이 혼동을 막으려고 이 브랜치가 존재한다.
+ */
+const UNANIMOUS_HEADLINE =
+  "표본 전원이 같은 선택을 했습니다. 이 결과로는 시장이 합의했는지 알 수 없습니다.";
+
+/**
+ * generate.ts:208의 thisWeekAction 폴백("표본이 큰 세그먼트부터 인터뷰 설계")은
+ * 승격된 세그먼트가 없을 때 쓰이는데, unanimous/no-effect에서는 인구 축 자체가
+ * 답을 가르지 못했으므로 표본을 더 모아도 이 축들로는 갈리지 않을 가능성이 크다.
+ * 원문은 지우지 않고(정직성 신호 보존) 뒤에 보정만 덧붙인다.
+ */
+const THIS_WEEK_ACTION_CORRECTION =
+  " — 단, 표본을 키워도 이 인구 축들로는 갈리지 않을 가능성이 큽니다. 인구 축 밖의 변수(사용 맥락·가격·대체재)로 질문을 다시 세우세요.";
+
 const pct = (x: number) => pctBase(x, 1); // 리포트는 소수 1자리
 
 function segmentLines(s: SegmentInsight): string[] {
@@ -86,7 +106,7 @@ export function renderFounderInsightReport(
   md.push("## 한 줄 요약", "");
   if (scope === "unanimous") md.push(OUT_OF_SCOPE_BANNER_UNANIMOUS, "");
   else if (scope === "no-effect") md.push(OUT_OF_SCOPE_BANNER_NO_EFFECT, "");
-  md.push(es.headline, "");
+  md.push(scope === "unanimous" ? UNANIMOUS_HEADLINE : es.headline, "");
   if (es.topOpportunity) md.push(`- 최우선 기회: **${es.topOpportunity}**`);
   if (es.topResistance) md.push(`- 최대 저항: **${es.topResistance}**`);
   // 정직성 신호는 "못 하는 말"만 두지 않는다 — 부록 신뢰도 4층의 허용 범위를 짝지어 올린다.
@@ -99,7 +119,7 @@ export function renderFounderInsightReport(
   md.push(
     `- 이 리포트로 할 수 있는 것: ${mj.whatThisAllows}${allowsSuffix}`,
     `- 아직 믿으면 안 되는 것: ${es.doNotTrustYet}`,
-    `- 이번 주 행동: ${es.thisWeekAction}`,
+    `- 이번 주 행동: ${es.thisWeekAction}${scope === "unanimous" || scope === "no-effect" ? THIS_WEEK_ACTION_CORRECTION : ""}`,
     "",
   );
   // ③ 전체 신호

@@ -601,6 +601,76 @@ describe("renderFounderInsightReport — 범위 밖 배너", () => {
     expect(md).not.toContain("응답 전부 동일");
     expect(md).toMatch(/- (🟢 consensus\(합의\)|🔴 split\(분열\))/);
   });
+
+  it("unanimous면 헤드라인이 '합의' 대신 '표본 전원이 같은 선택'으로 바뀐다", () => {
+    const md = renderFounderInsightReport(
+      generateFounderInsightReport(bigResult(), {
+        question: "q?",
+        choices: ["쓴다", "안쓴다"],
+      }),
+    );
+    expect(md).toContain("표본 전원이 같은 선택을 했습니다");
+    expect(md).not.toContain("전체적으로 비교적 합의된 반응입니다");
+  });
+
+  it("unanimous면 '이번 주 행동' 바닥글에 원문 + 보정 문구가 함께 붙는다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain(report.executiveSummary.thisWeekAction);
+    expect(md).toContain("인구 축 밖의 변수");
+  });
+
+  it("segmented면 헤드라인이 원문 그대로고 '이번 주 행동'에 보정 문구가 없다", () => {
+    const responses = [];
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `a${i}`, attrs: { 연령: "30대" }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `b${i}`, attrs: { 연령: "60대" }, weight: 1 },
+        answer: i < 3 ? "쓴다" : "안쓴다",
+        choice: i < 3 ? "쓴다" : "안쓴다",
+      });
+    const report = generateFounderInsightReport(
+      {
+        responses,
+        signal: "split" as const,
+        dispersion: 0.5,
+        bySegment: { 연령: {} },
+      },
+      { question: "q?", choices: ["쓴다", "안쓴다"] },
+    );
+    expect(report.opportunitySegments.length).toBeGreaterThan(0);
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain(report.executiveSummary.headline);
+    expect(md).not.toContain("인구 축 밖의 변수");
+  });
+
+  it("underpowered면 '이번 주 행동'에 보정 문구가 없다 (표본을 키우면 갈릴 수 있음)", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const rep = {
+      ...base,
+      opportunitySegments: [],
+      resistanceSegments: [],
+      weakSignals: [base.observedButHeld[0] ?? ({} as never)],
+      overallSignal: {
+        ...base.overallSignal,
+        distribution: { 쓴다: 20, 안쓴다: 10 },
+      },
+    };
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain(rep.executiveSummary.thisWeekAction);
+    expect(md).not.toContain("인구 축 밖의 변수");
+  });
 });
 
 describe("renderFounderInsightReport — underpowered는 표본 문구를 유지한다", () => {
