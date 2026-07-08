@@ -8,7 +8,7 @@ import type {
 export const HELD_CAP = 10;
 
 export const AI_DRAFT_BANNER =
-  "> ⚠️ **AI 생성 초안 · 검토 필요** — 아래 항목은 heuristic으로 생성된 추정 초안입니다. 그대로 쓰지 말고 반드시 검토·수정하세요.";
+  "> 📝 **위 발견에서 규칙 기반으로 파생된 초안입니다(LLM 아님).** 인터뷰 설계의 출발점으로 쓰고, 실제 고객의 문장으로 교체하세요.";
 
 export const LLM_SUMMARY_BANNER =
   "> 💡 **실제 응답 이유를 종합한 AI 요약** — 패널의 실제 응답 이유를 묶은 것입니다. 참고로 쓰고 실제 고객으로 검증하세요.";

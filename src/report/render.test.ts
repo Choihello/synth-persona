@@ -187,9 +187,13 @@ describe("renderFounderInsightReport — 처방 섹션", () => {
       expect(md).toContain(h);
     }
   });
-  it("AI 생성 초안 배너가 처방 섹션들에 나타난다", () => {
-    const count = md.split("AI 생성 초안").length - 1;
-    expect(count).toBeGreaterThanOrEqual(3); // ⑥ + 인터뷰/설문/랜딩 등
+  it("초안 배너가 정체·용도·경고를 모두 담고 처방 섹션들에 나타난다", () => {
+    const count = md.split("규칙 기반으로 파생된 초안").length - 1;
+    expect(count).toBeGreaterThanOrEqual(3); // 관심/거부 + 인터뷰/설문/랜딩 등
+    // 정체(LLM 아님) · 용도(출발점) · 경고(교체하세요)를 모두 유지한다
+    expect(md).toContain("LLM 아님");
+    expect(md).toContain("출발점");
+    expect(md).toContain("실제 고객의 문장으로 교체하세요");
   });
 });
 
@@ -264,7 +268,7 @@ describe("renderFounderInsightReport — 배너 basis 구분 + 신뢰도 평이�
     });
     // heuristic 기본
     expect(renderFounderInsightReport(base)).toContain(
-      "heuristic으로 생성된 추정 초안",
+      "규칙 기반으로 파생된 초안",
     );
     // llm으로 바꾼 사본
     const llm = {
