@@ -10,9 +10,22 @@ export interface OgStats {
   dist: [string, number][];
 }
 
+const OVERALL_HEADER = "## 전체 신호";
+
+/** `## 전체 신호` 블록만 잘라낸다. 헤더가 없으면 전체를 반환(구 리포트 호환). */
+function overallSignalScope(md: string): string {
+  const start = md.indexOf(OVERALL_HEADER);
+  if (start < 0) return md;
+  const rest = md.slice(start + OVERALL_HEADER.length);
+  const end = rest.search(/^## /m);
+  return end < 0 ? rest : rest.slice(0, end);
+}
+
 export function extractOgStats(md: string): OgStats | undefined {
+  // 섹션 스코프 한정 — 앞선 섹션의 불릿이 첫 매치를 가로채지 못하게 한다.
+  const scope = overallSignalScope(md);
   // 불릿 줄만 매칭 — 차트 SVG의 aria-label("전체 응답 분포: 찬성 87%…")을 피한다
-  const distLine = md.match(/^- .*?· 응답 분포: ([^\n]+)/m);
+  const distLine = scope.match(/^- .*?· 응답 분포: ([^\n]+)/m);
   if (!distLine) return undefined;
 
   const dist: [string, number][] = [];
@@ -26,8 +39,8 @@ export function extractOgStats(md: string): OgStats | undefined {
   if (dist.length === 0) return undefined;
 
   const nLine =
-    md.match(/^- n=(\d+)/m) ??
-    md.match(/^- 표본 \d+명 · 각 \d+회 응답\(총 (\d+)\)/m);
+    scope.match(/^- n=(\d+)/m) ??
+    scope.match(/^- 표본 \d+명 · 각 \d+회 응답\(총 (\d+)\)/m);
   const n = nLine ? Number(nLine[1]) : dist.reduce((sum, [, c]) => sum + c, 0);
   return { n, dist };
 }
