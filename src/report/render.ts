@@ -174,6 +174,13 @@ export function renderFounderInsightReport(
   md.push("");
   // ④ 기회 세그먼트
   md.push("## 기회 세그먼트", "");
+  // 조용한 소실 금지 — 버킷은 안 만들었지만 제외했다는 사실은 밝힌다.
+  const skippedDims = report.appendix.skippedDims;
+  if (skippedDims && skippedDims.length > 0)
+    md.push(
+      `_비교에서 제외된 축: ${skippedDims.join(" · ")} — 이 패널에서 값이 하나뿐이라 대조군이 없습니다._`,
+      "",
+    );
   // 게이트 통과분도 다중비교 보정은 없다 — 과신 방지 고지 (승격이 있을 때만)
   if (
     report.opportunitySegments.length > 0 ||

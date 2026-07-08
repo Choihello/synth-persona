@@ -679,6 +679,32 @@ describe("renderFounderInsightReport — 범위 밖 배너", () => {
   });
 });
 
+describe("renderFounderInsightReport — 제외된 축", () => {
+  it("skippedDims가 있으면 제외 사실과 이유를 밝힌다", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const rep = {
+      ...base,
+      appendix: { ...base.appendix, skippedDims: ["지역"] },
+    };
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain("비교에서 제외된 축: 지역");
+    expect(md).toContain("이 패널에서 값이 하나뿐이라 대조군이 없습니다");
+  });
+
+  it("skippedDims가 비면 그 문구가 없다", () => {
+    const md = renderFounderInsightReport(
+      generateFounderInsightReport(bigResult(), {
+        question: "q?",
+        choices: ["쓴다", "안쓴다"],
+      }),
+    );
+    expect(md).not.toContain("비교에서 제외된 축");
+  });
+});
+
 describe("renderFounderInsightReport — underpowered는 표본 문구를 유지한다", () => {
   it("weakSignals가 있고 승격이 0이면 기존 표본 안내가 그대로 나온다", () => {
     const base = generateFounderInsightReport(bigResult(), {

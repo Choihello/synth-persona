@@ -151,6 +151,8 @@ export interface ReportAppendix {
   caveats: string[];
   observedButHeldCount: number;
   reliabilityCardRaw?: ReliabilityCard;
+  /** 값이 하나뿐이라 세그먼트 비교에서 제외한 축. 없으면 미설정. */
+  skippedDims?: string[];
 }
 
 export interface FounderInsightReport {

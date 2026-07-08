@@ -100,7 +100,7 @@ describe("generateFounderInsightReport — core/validation", () => {
     }
   });
 
-  test("기준선과 동률인 세그먼트는 withinNoise로 보존된다 (조용한 소실 금지)", () => {
+  test("값이 하나뿐인 축은 버킷이 없고 appendix.skippedDims에 담긴다 (조용한 소실 금지)", () => {
     const responses = [
       ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "쓴다")),
       ...Array.from({ length: 5 }, () => r({ 연령: "30대" }, "안쓴다")),
@@ -108,9 +108,12 @@ describe("generateFounderInsightReport — core/validation", () => {
     const rep = generateFounderInsightReport(study(responses), opts);
     expect(rep.opportunitySegments).toEqual([]);
     expect(rep.resistanceSegments).toEqual([]);
+    // 대조군이 없으므로 "차이가 작다"고 말할 수 없다 — 버킷 자체가 없어야 한다
     expect(rep.withinNoise.some((s) => s.segmentLabel === "연령=30대")).toBe(
-      true,
+      false,
     );
+    // 그러나 조용히 사라지지도 않는다
+    expect(rep.appendix.skippedDims).toEqual(["연령"]);
   });
 
   test("weakSignals/withinNoise가 리포트로 전달된다 (rankSegments 통합 경로)", () => {
@@ -258,7 +261,11 @@ describe("generateFounderInsightReport — core/validation", () => {
     const responses = [
       ...seg(15, 0, "혼인", "A"),
       ...seg(3, 12, "혼인", "B"),
-      ...seg(6, 6, "연령", "30대"), // 50/50 동률 → withinNoise
+      // 연령을 두 값(30대/60대)으로 대칭 구성 — 상수 축(값 하나)이면 skippedDims로 빠져
+      // withinNoise 자체가 생기지 않으므로, 이 테스트(비승격 티어 confidence 검증)가
+      // 의도한 대로 withinNoise가 실제로 채워지려면 최소 두 값이 필요하다.
+      ...seg(4, 4, "연령", "30대"), // 여집합(60대) 대비 diff<10%p → withinNoise
+      ...seg(4, 4, "연령", "60대"),
     ];
     const result: StudyResult = {
       responses,

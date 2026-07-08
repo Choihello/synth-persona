@@ -1,3 +1,4 @@
+import { constantDims } from "../population/screen.js";
 import type { StudyResult } from "../types.js";
 import type { Confidence, SegmentInsight } from "./types.js";
 
@@ -83,7 +84,17 @@ export function rankSegments(
   panelSize: number;
   /** 과반투표 긍정 페르소나 수 */
   panelPositive: number;
+  /** 값이 하나뿐이라 대조군이 없어 버킷을 만들지 않은 축 (스크리너로 고정한 경우) */
+  skippedDims: string[];
 } {
+  // 값이 하나뿐인 축은 여집합이 비어(restN=0) 비교가 불가능하다. 비교 대상 없이
+  // "차이가 작다"고 말할 근거가 없으므로 버킷 자체를 만들지 않는다.
+  // 다만 조용히 사라지게 두지 않는다 — skippedDims로 내보내 렌더가 밝힌다.
+  const skipped = constantDims(
+    result.responses.filter((x) => x.choice != null).map((x) => x.persona),
+  );
+  const skipDims = new Set(skipped);
+
   const buckets = new Map<string, Bucket>();
   let totalWeight = 0;
   let globalTotal = 0;
@@ -95,6 +106,7 @@ export function rankSegments(
     if (r.choice === positiveChoice) globalPositive++;
     totalWeight += r.persona.weight;
     for (const [dim, value] of Object.entries(r.persona.attrs)) {
+      if (skipDims.has(dim)) continue;
       const key = `${dim}=${value}`;
       let b = buckets.get(key);
       if (!b) {
@@ -231,5 +243,6 @@ export function rankSegments(
     globalPositiveRatio,
     panelSize: perPersona.size,
     panelPositive: globalPersonaPos,
+    skippedDims: skipped,
   };
 }

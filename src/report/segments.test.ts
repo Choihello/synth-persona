@@ -209,12 +209,24 @@ describe("rankSegments", () => {
     expect(r.resistance.some((s) => s.segmentLabel === "지역=B")).toBe(true);
   });
 
-  test("세그먼트가 전체와 같으면 대조군이 없어 withinNoise", () => {
+  test("세그먼트가 전체와 같으면(값이 하나뿐인 축) 버킷이 아니라 skippedDims로 (조용한 소실 금지)", () => {
+    // 이 픽스처는 성="여자" 하나뿐이라 restN=0(대조군 없음)인 상수 축이다. 예전에는
+    // diff=0으로 계산돼 withinNoise("차이가 작다")에 실렸는데, 이는 비교 대상이 없는데
+    // "차이가 작다"고 주장하는 것이었다(이번 태스크가 고치는 바로 그 버그). 지금은
+    // 버킷 자체를 만들지 않고 skippedDims로 낸다 — 사라지지 않되 거짓 비교도 하지 않는다.
     const responses = make(12, 3, "성", "여자");
     const r = rankSegments(study(responses), "쓴다", 8);
     expect(r.opportunity).toHaveLength(0);
     expect(r.resistance).toHaveLength(0);
-    expect(r.withinNoise.some((s) => s.segmentLabel === "성=여자")).toBe(true);
+    const all = [
+      ...r.opportunity,
+      ...r.resistance,
+      ...r.weakSignals,
+      ...r.withinNoise,
+      ...r.observedButHeld,
+    ].map((s) => s.segmentLabel);
+    expect(all.some((l) => l === "성=여자")).toBe(false);
+    expect(r.skippedDims).toEqual(["성"]);
   });
 
   test("wilsonInterval 경계: n=0은 [0,1], p=1 n=15 z=1.645 lo≈0.847", () => {
@@ -236,5 +248,74 @@ describe("rankSegments", () => {
     );
     const all = [...opportunity, ...resistance];
     for (const s of all) expect(s.sampleWeightShare).toBeCloseTo(0.5, 4);
+  });
+});
+
+describe("rankSegments — 값이 하나뿐인 축", () => {
+  test("상수 축은 어느 티어에도 없고 skippedDims에 담긴다", () => {
+    const responses = makeRepeats([
+      {
+        id: "a1",
+        attrs: { 연령: "30대", 지역: "수도권" },
+        picks: ["쓴다", "쓴다", "쓴다"],
+      },
+      {
+        id: "a2",
+        attrs: { 연령: "30대", 지역: "수도권" },
+        picks: ["쓴다", "쓴다", "쓴다"],
+      },
+      {
+        id: "a3",
+        attrs: { 연령: "30대", 지역: "수도권" },
+        picks: ["쓴다", "쓴다", "쓴다"],
+      },
+      {
+        id: "b1",
+        attrs: { 연령: "60대", 지역: "수도권" },
+        picks: ["안쓴다", "안쓴다", "안쓴다"],
+      },
+      {
+        id: "b2",
+        attrs: { 연령: "60대", 지역: "수도권" },
+        picks: ["안쓴다", "안쓴다", "안쓴다"],
+      },
+      {
+        id: "b3",
+        attrs: { 연령: "60대", 지역: "수도권" },
+        picks: ["안쓴다", "안쓴다", "안쓴다"],
+      },
+    ]);
+    const r = rankSegments(study(responses), "쓴다", 1);
+    const all = [
+      ...r.opportunity,
+      ...r.resistance,
+      ...r.weakSignals,
+      ...r.withinNoise,
+      ...r.observedButHeld,
+    ].map((s) => s.segmentLabel);
+    expect(all.some((l) => l.startsWith("지역="))).toBe(false);
+    expect(all.some((l) => l.startsWith("연령="))).toBe(true);
+    expect(r.skippedDims).toEqual(["지역"]);
+  });
+
+  test("두 값 이상인 축은 종전대로 버킷을 만들고 skippedDims는 빈다", () => {
+    const responses = makeRepeats([
+      { id: "a1", attrs: { 지역: "수도권" }, picks: ["쓴다", "쓴다", "쓴다"] },
+      {
+        id: "b1",
+        attrs: { 지역: "비수도권" },
+        picks: ["안쓴다", "안쓴다", "안쓴다"],
+      },
+    ]);
+    const r = rankSegments(study(responses), "쓴다", 1);
+    const all = [
+      ...r.opportunity,
+      ...r.resistance,
+      ...r.weakSignals,
+      ...r.withinNoise,
+      ...r.observedButHeld,
+    ].map((s) => s.segmentLabel);
+    expect(all.some((l) => l.startsWith("지역="))).toBe(true);
+    expect(r.skippedDims).toEqual([]);
   });
 });

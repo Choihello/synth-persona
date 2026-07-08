@@ -91,6 +91,7 @@ export function generateFounderInsightReport(
     observedButHeld,
     panelSize,
     panelPositive,
+    skippedDims,
   } = rankSegments(result, positiveChoice, minN);
 
   // 관련성 게이트: AI가 low로 판정한 차원의 승격 세그먼트는 순위에서 빼 lowRelevance로 옮긴다.
@@ -193,6 +194,7 @@ export function generateFounderInsightReport(
     caveats: caveatsWithSource,
     observedButHeldCount: observedButHeld.length,
     reliabilityCardRaw: card,
+    skippedDims: skippedDims.length > 0 ? skippedDims : undefined,
   };
 
   return {
