@@ -7,6 +7,6 @@ describe("report-demo", () => {
     expect(md).toContain("0차 시장검증 리포트");
     expect(md).toContain("## 다음 7일");
     expect(md).toContain("synthetic panel");
-    expect(md).toContain("AI 생성 초안");
+    expect(md).toContain("규칙 기반으로 파생된 초안");
   });
 });

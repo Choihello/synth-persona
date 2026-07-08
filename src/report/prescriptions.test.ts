@@ -168,7 +168,7 @@ describe("survey / landingTests / validationPlan", () => {
     const tests = gen.landingTests(baseCtx());
     expect(tests.length).toBeGreaterThanOrEqual(1);
     expect(tests[0].targetSegment).toBe("연령=25~29세");
-    expect(tests[0].caution).toContain("검토");
+    expect(tests[0].caution).toContain("검증");
   });
   it("기회 세그먼트가 없어도 랜딩 테스트 폴백 1개", () => {
     const tests = gen.landingTests(baseCtx({ opportunitySegments: [] }));

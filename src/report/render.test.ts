@@ -260,21 +260,21 @@ describe("renderFounderInsightReport — v2 재배치·리프레이밍", () => {
     expect(md.indexOf("신뢰도 4층")).toBeGreaterThan(md.indexOf("## 다음 7일"));
   });
 
-  it("한 줄 요약에서 '할 수 있는 것'이 '못 하는 것'보다 먼저 온다", () => {
+  it("한 줄 요약에서 '할 수 있는 것'이 '믿으면 안 되는 것'보다 먼저 오고, 중복 줄은 없다", () => {
     const report = generateFounderInsightReport(bigResult(), {
       question: "q?",
       choices: ["쓴다", "안쓴다"],
     });
     const md = renderFounderInsightReport(report);
     const can = md.indexOf("이 리포트로 할 수 있는 것:");
-    const cannot = md.indexOf("아직 못 하는 것:");
+    const cannot = md.indexOf("아직 믿으면 안 되는 것:");
     expect(can).toBeGreaterThanOrEqual(0);
     expect(cannot).toBeGreaterThan(can);
     // marketJudgment 실제 값이 그대로 실린다
     expect(md).toContain(report.confidenceCard.marketJudgment.whatThisAllows);
-    expect(md).toContain(
-      report.confidenceCard.marketJudgment.whatThisDoesNotAllow,
-    );
+    // 회귀 가드: whatThisDoesNotAllow와 doNotTrustYet은 같은 문자열이므로
+    // 별도 "아직 못 하는 것:" 줄로 중복 렌더링되어서는 안 된다
+    expect(md).not.toContain("아직 못 하는 것:");
   });
 
   it("승격해도 정직성 신호(doNotTrustYet)와 부록 신뢰도 표는 남는다", () => {

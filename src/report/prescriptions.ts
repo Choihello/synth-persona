@@ -290,7 +290,7 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
           targetSegment: "전체 (세그먼트 미확정)",
           hypothesis: "특정 세그먼트에서 전환이 상대적으로 높게 나타날 것",
           successMetric: "방문→이메일 등록 전환율 (세그먼트별 비교)",
-          caution: "AI 생성 초안 — 실제 카피는 검토·수정 필요",
+          caution: "실제 카피는 고객 언어로 검증 후 사용",
           ...INF,
         },
       ];
@@ -302,7 +302,7 @@ export class HeuristicPrescriptionGenerator implements PrescriptionGenerator {
       hypothesis:
         "이 세그먼트 유입에서 등록 전환율이 다른 세그먼트보다 높을 것",
       successMetric: "방문→이메일 등록 전환율 (세그먼트 간 상대 비교)",
-      caution: "AI 생성 초안 — 카피·타겟팅 모두 검토 필요",
+      caution: "카피·타겟팅 모두 실제 고객으로 검증 후 사용",
       ...INF,
     }));
   }

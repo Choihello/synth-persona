@@ -71,7 +71,6 @@ export function renderFounderInsightReport(
   const mj = report.confidenceCard.marketJudgment;
   md.push(
     `- 이 리포트로 할 수 있는 것: ${mj.whatThisAllows}`,
-    `- 아직 못 하는 것: ${mj.whatThisDoesNotAllow}`,
     `- 아직 믿으면 안 되는 것: ${es.doNotTrustYet}`,
     `- 이번 주 행동: ${es.thisWeekAction}`,
     "",
