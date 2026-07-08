@@ -4,6 +4,7 @@ import type { LLMProvider } from "./llm/provider.js";
 import { ipf } from "./personas/ipf.js";
 import { type NarrativePool, attachNarratives } from "./personas/narrative.js";
 import { samplePersonas } from "./personas/sample.js";
+import { type PanelScreener, screenPersonas } from "./population/screen.js";
 import {
   type PersonaSource,
   sampleForSimulation,
@@ -80,6 +81,8 @@ export interface CensusStudyConfig {
   repeats?: number;
   /** 서사 풀 — 주어지면 표본에 배경 서사를 결정적으로 부착 */
   narrativePool?: NarrativePool;
+  /** 합성 패널을 타깃 집단으로 한정한다. 미지정이면 전 인구. */
+  screener?: PanelScreener;
 }
 
 /**
@@ -91,7 +94,12 @@ export async function runCensusStudy(
   config: CensusStudyConfig,
 ): Promise<StudyResult> {
   const all = await config.population.population();
-  let sample = sampleForSimulation(all, config.n, config.seed ?? 1);
+  // 표집 직전에 거른다 — sampleForSimulation이 총 가중치를 인자에서 재계산하므로
+  // 인구 가중치 재정규화가 공짜다(src/population/source.ts:12). 새 수학이 없다.
+  const screened = screenPersonas(all, config.screener);
+  if (screened.length === 0)
+    throw new Error("스크리너 조건에 맞는 인구가 없습니다 — 조건을 넓히세요.");
+  let sample = sampleForSimulation(screened, config.n, config.seed ?? 1);
   if (config.narrativePool) {
     sample = attachNarratives(sample, config.narrativePool, config.seed ?? 1);
   }

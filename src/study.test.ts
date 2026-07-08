@@ -185,3 +185,56 @@ describe("runCensusStudy (key-free, census 합성인구)", () => {
     expect(typeof ob.biased).toBe("boolean");
   });
 });
+
+describe("runCensusStudy — 패널 스크리너", () => {
+  const source = {
+    async population() {
+      return [
+        { id: "a", attrs: { 연령: "20~24세", 지역: "수도권" }, weight: 1 },
+        { id: "b", attrs: { 연령: "30~34세", 지역: "비수도권" }, weight: 1 },
+        { id: "c", attrs: { 연령: "70~74세", 지역: "수도권" }, weight: 1 },
+      ];
+    },
+  };
+  const question = { prompt: "q?", choices: ["쓴다", "안쓴다"] };
+
+  test("스크리너를 주면 조건 밖 페르소나가 표본에 없다", async () => {
+    const r = await runCensusStudy({
+      population: source,
+      provider: new MockProvider(() => "쓴다"),
+      question,
+      n: 12,
+      seed: 1,
+      screener: { 지역: "수도권" },
+    });
+    expect(r.responses.length).toBeGreaterThan(0);
+    expect(r.responses.every((x) => x.persona.attrs.지역 === "수도권")).toBe(
+      true,
+    );
+  });
+
+  test("스크리너가 없으면 전 인구에서 뽑는다", async () => {
+    const r = await runCensusStudy({
+      population: source,
+      provider: new MockProvider(() => "쓴다"),
+      question,
+      n: 30,
+      seed: 1,
+    });
+    const regions = new Set(r.responses.map((x) => x.persona.attrs.지역));
+    expect(regions.size).toBe(2);
+  });
+
+  test("조건에 맞는 인구가 없으면 명확한 에러를 던진다", async () => {
+    await expect(
+      runCensusStudy({
+        population: source,
+        provider: new MockProvider(() => "쓴다"),
+        question,
+        n: 5,
+        seed: 1,
+        screener: { 연령: ["85세이상"] },
+      }),
+    ).rejects.toThrow("스크리너 조건에 맞는 인구가 없습니다");
+  });
+});
