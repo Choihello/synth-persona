@@ -464,3 +464,73 @@ describe("renderFounderInsightReport — 근거 앵커", () => {
     expect(between).not.toContain("← 저항 세그먼트:");
   });
 });
+
+describe("renderFounderInsightReport — 범위 밖 배너", () => {
+  it("unanimous면 범위 밖 배너가 한 줄 요약 위에 온다", () => {
+    // bigResult()는 30명 전원 "쓴다" → 단일 버킷 → unanimous
+    const md = renderFounderInsightReport(
+      generateFounderInsightReport(bigResult(), {
+        question: "q?",
+        choices: ["쓴다", "안쓴다"],
+      }),
+    );
+    expect(md).toContain("이 질문은 이 도구의 범위 밖입니다");
+    expect(md).toContain("언어모델의 사전 판단");
+    const banner = md.indexOf("이 질문은 이 도구의 범위 밖입니다");
+    const summary = md.indexOf("## 한 줄 요약");
+    expect(banner).toBeGreaterThan(summary);
+    expect(banner).toBeLessThan(md.indexOf("## 전체 신호"));
+  });
+
+  it("segmented면 배너가 없다", () => {
+    const responses = [];
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `a${i}`, attrs: { 연령: "30대" }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `b${i}`, attrs: { 연령: "60대" }, weight: 1 },
+        answer: i < 3 ? "쓴다" : "안쓴다",
+        choice: i < 3 ? "쓴다" : "안쓴다",
+      });
+    const report = generateFounderInsightReport(
+      {
+        responses,
+        signal: "split" as const,
+        dispersion: 0.5,
+        bySegment: { 연령: {} },
+      },
+      { question: "q?", choices: ["쓴다", "안쓴다"] },
+    );
+    expect(report.opportunitySegments.length).toBeGreaterThan(0);
+    const md = renderFounderInsightReport(report);
+    expect(md).not.toContain("이 질문은 이 도구의 범위 밖입니다");
+    expect(md).not.toContain("인구 축에서 갈리지 않았습니다");
+  });
+
+  it("segmented가 아니면 '할 수 있는 것'에 보정 문구가 붙는다", () => {
+    const md = renderFounderInsightReport(
+      generateFounderInsightReport(bigResult(), {
+        question: "q?",
+        choices: ["쓴다", "안쓴다"],
+      }),
+    );
+    expect(md).toContain(
+      "이 리포트로 할 수 있는 것: 방향 가설 탐색 · 인터뷰 대상 좁히기 — 단, 이 질문에선 세그먼트가 갈리지 않아 인터뷰 대상을 좁힐 수 없습니다.",
+    );
+  });
+
+  it("정직성 신호는 배너와 무관하게 남는다", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("아직 믿으면 안 되는 것:");
+    expect(md).toContain(report.executiveSummary.doNotTrustYet);
+    expect(md).toContain("## 기술 상세 — 신뢰도 4층");
+  });
+});

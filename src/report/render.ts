@@ -1,4 +1,5 @@
 import { formatDistribution, pct as pctBase, signalDot } from "../format.js";
+import { type ScopeVerdict, scopeVerdict } from "./scope.js";
 import type {
   ConfidenceLayer,
   FounderInsightReport,
@@ -15,6 +16,12 @@ export const LLM_SUMMARY_BANNER =
 
 export const LLM_QUESTION_BANNER =
   "> 💬 **패널이 실제로 답한 이유에서 도출된 질문입니다.** 그대로 물어보기 전에 실제 고객으로 검증하세요.";
+
+export const OUT_OF_SCOPE_BANNER_UNANIMOUS =
+  "> ⚠️ **이 질문은 이 도구의 범위 밖입니다.** 표본 전원이 매번 같은 선택을 했습니다 — 인구 구성이 답을 전혀 바꾸지 못했습니다. 따라서 아래 비율은 통계청 인구 분포가 아니라 **언어모델의 사전 판단**입니다.";
+
+export const OUT_OF_SCOPE_BANNER_NO_EFFECT =
+  "> ⚠️ **인구 축에서 갈리지 않았습니다.** 연령·성·지역·가구원수·혼인 어디에서도 10%p 이상의 차이가 없었습니다 — 이 질문의 답은 인구 구성보다 다른 요인에 달려 있습니다.";
 
 const pct = (x: number) => pctBase(x, 1); // 리포트는 소수 1자리
 
@@ -60,17 +67,26 @@ export function renderFounderInsightReport(
   report: FounderInsightReport,
 ): string {
   const md: string[] = [];
+  const scope: ScopeVerdict = scopeVerdict(report);
   // ① 제목 + 상단 라벨
   md.push(`# ${report.title}`, "", `> ⚠️ ${report.disclaimer}`, "");
   // ② 한 줄 요약
   const es = report.executiveSummary;
-  md.push("## 한 줄 요약", "", es.headline, "");
+  md.push("## 한 줄 요약", "");
+  if (scope === "unanimous") md.push(OUT_OF_SCOPE_BANNER_UNANIMOUS, "");
+  else if (scope === "no-effect") md.push(OUT_OF_SCOPE_BANNER_NO_EFFECT, "");
+  md.push(es.headline, "");
   if (es.topOpportunity) md.push(`- 최우선 기회: **${es.topOpportunity}**`);
   if (es.topResistance) md.push(`- 최대 저항: **${es.topResistance}**`);
   // 정직성 신호는 "못 하는 말"만 두지 않는다 — 부록 신뢰도 4층의 허용 범위를 짝지어 올린다.
+  // 단 세그먼트가 갈리지 않았으면 "인터뷰 대상 좁히기"는 거짓이므로 보정한다(원 문자열은 보존).
   const mj = report.confidenceCard.marketJudgment;
+  const allowsSuffix =
+    scope === "segmented"
+      ? ""
+      : " — 단, 이 질문에선 세그먼트가 갈리지 않아 인터뷰 대상을 좁힐 수 없습니다.";
   md.push(
-    `- 이 리포트로 할 수 있는 것: ${mj.whatThisAllows}`,
+    `- 이 리포트로 할 수 있는 것: ${mj.whatThisAllows}${allowsSuffix}`,
     `- 아직 믿으면 안 되는 것: ${es.doNotTrustYet}`,
     `- 이번 주 행동: ${es.thisWeekAction}`,
     "",
