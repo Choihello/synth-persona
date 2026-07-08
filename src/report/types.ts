@@ -26,6 +26,8 @@ export interface FounderReportOptions {
   concept?: ConceptMeta;
   founderGoal?: FounderGoal;
   run?: { seed?: number; provider?: string; n?: number; narrative?: boolean };
+  /** 스크리너로 한정된 모집단의 이름 ("20~39세 · 수도권"). 미지정이면 전 인구. */
+  panelLabel?: string;
 }
 
 export interface ExecutiveSummary {

@@ -803,3 +803,45 @@ describe("renderFounderInsightReport — 최종 리뷰 회귀 (C1/C2/C3)", () =>
     expect(md).not.toContain("10%p 이상 벌어지는 차이가 없었습니다");
   });
 });
+
+describe("renderFounderInsightReport — 패널 스크리너 표기", () => {
+  function withPanelLabel(label?: string) {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    return {
+      ...base,
+      appendix: {
+        ...base.appendix,
+        options: { ...base.appendix.options, panelLabel: label },
+      },
+    };
+  }
+
+  it("panelLabel이 있으면 상단에 대상 모집단과 순환논증 경고가 온다", () => {
+    const md = renderFounderInsightReport(withPanelLabel("20~39세 · 수도권"));
+    expect(md).toContain(
+      "이 리포트는 **20~39세 · 수도권** 인구만 대상으로 합니다.",
+    );
+    expect(md).toContain("이 집단이 내 타깃이라는 가정은 검증되지 않았습니다");
+    expect(md).toContain("스크리너 없이 한 번 더 돌리세요");
+  });
+
+  it("panelLabel이 있으면 전체 신호 표본 줄에 대상이 접미로 붙는다", () => {
+    const md = renderFounderInsightReport(withPanelLabel("20~39세 · 수도권"));
+    expect(md).toMatch(/^- 표본 \d+명.*· 대상: 20~39세 · 수도권/m);
+  });
+
+  it("panelLabel이 없으면 대상·경고가 어디에도 없다", () => {
+    const md = renderFounderInsightReport(withPanelLabel(undefined));
+    expect(md).not.toContain("인구만 대상으로 합니다");
+    expect(md).not.toContain("이 집단이 내 타깃이라는 가정은");
+    expect(md).not.toContain("· 대상:");
+  });
+
+  it("panelLabel이 붙어도 og-stats 파서 소스 형식은 그대로다", () => {
+    const md = renderFounderInsightReport(withPanelLabel("20~39세 · 수도권"));
+    expect(md).toMatch(/^- .*?· 응답 분포: /m);
+  });
+});

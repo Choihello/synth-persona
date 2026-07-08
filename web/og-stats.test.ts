@@ -101,4 +101,17 @@ describe("extractOgStats", () => {
     expect(s?.n).toBe(180);
     expect(s?.dist).toEqual([["끈다", 180]]);
   });
+
+  it("표본 줄에 '· 대상: …' 접미가 붙어도 n을 그대로 파싱한다", () => {
+    const md = [
+      "## 전체 신호",
+      "",
+      "- 🟢 consensus(합의) · 응답 분포: 쓴다=150, 안쓴다=30",
+      "- 표본 60명 · 각 3회 응답(총 180) · 대상: 20~39세 · 수도권 · 누락률 0.0%",
+      "",
+    ].join("\n");
+    const s = extractOgStats(md);
+    expect(s?.n).toBe(180);
+    expect(s?.dist[0]).toEqual(["쓴다", 150]);
+  });
 });

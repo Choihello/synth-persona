@@ -23,6 +23,9 @@ export const OUT_OF_SCOPE_BANNER_UNANIMOUS =
 export const OUT_OF_SCOPE_BANNER_NO_EFFECT =
   "> ⚠️ **인구 축에서 갈리지 않았습니다.** 검정할 수 있었던 인구 축(연령·성·지역·가구원수·혼인) 어디에서도 10%p 이상의 차이가 없었습니다 — 이 질문의 답은 인구 구성보다 다른 요인에 달려 있을 가능성이 큽니다.";
 
+export const SCREENER_CIRCULAR_WARNING =
+  '> ⚠️ **이 집단이 내 타깃이라는 가정은 검증되지 않았습니다.** 패널을 한정하면 "누가 반응하는가"는 물을 수 없습니다 — 타깃 자체를 확인하려면 스크리너 없이 한 번 더 돌리세요.';
+
 /** 표본이 작아 유의하지 않았을 뿐, 효과는 관측된 경우 — 표본을 키우면 갈릴 수 있다. */
 export const NO_SEGMENT_UNDERPOWERED =
   "이 규모(표본 소수)에선 세그먼트별 차이가 통계적으로 뚜렷하지 않았어요 — 전체 방향(위)이 핵심 신호입니다. 세그먼트로 쪼개 보려면 표본을 키우세요.";
@@ -111,6 +114,12 @@ export function renderFounderInsightReport(
   const scope: ScopeVerdict = scopeVerdict(report);
   // ① 제목 + 상단 라벨
   md.push(`# ${report.title}`, "", `> ⚠️ ${report.disclaimer}`, "");
+  // 스크리너를 걸면 리포트가 말하는 모집단이 바뀐다. 그 사실을 안 실으면 거짓말이 된다.
+  const panelLabel = report.appendix.options.panelLabel;
+  if (panelLabel) {
+    md.push(`> 이 리포트는 **${panelLabel}** 인구만 대상으로 합니다.`, "");
+    md.push(SCREENER_CIRCULAR_WARNING, "");
+  }
   // ② 한 줄 요약
   const es = report.executiveSummary;
   md.push("## 한 줄 요약", "");
@@ -153,7 +162,7 @@ export function renderFounderInsightReport(
     "## 전체 신호",
     "",
     `- ${signalLabel} · 응답 분포: ${dist}`,
-    `- ${sampleLabel}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
+    `- ${sampleLabel}${panelLabel ? ` · 대상: ${panelLabel}` : ""}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
     `- ${o.label}`,
     "",
   );
