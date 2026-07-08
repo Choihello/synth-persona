@@ -4,6 +4,7 @@
  * 스펙: docs/superpowers/specs/2026-07-05-easy-summary-design.md
  */
 
+import { scopeVerdict } from "../src/report/scope.js";
 import type { FounderInsightReport } from "../src/report/types.js";
 
 const SEX_MAP: Record<string, string> = { 여자: "여성", 남자: "남성" };
@@ -69,7 +70,14 @@ export function easySummaryHTML(
   const pp = report.overallSignal.panelPositive;
   const denom = ps ?? panelSize;
   const positiveCount = pp ?? Math.round(r * panelSize);
-  const verdict = verdictSentence(report.overallSignal.signal, r);
+  // 세그먼트가 갈리지 않았으면 시장 판정을 주장하지 않는다 — 판정은 scope.ts 한 곳에서만.
+  const scope = scopeVerdict(report);
+  const verdict =
+    scope === "unanimous"
+      ? "이 질문은 이 도구의 범위 밖이에요"
+      : scope === "no-effect"
+        ? "인구 축에서는 갈리지 않았어요"
+        : verdictSentence(report.overallSignal.signal, r);
 
   const opp = report.opportunitySegments[0];
   const res = report.resistanceSegments[0];

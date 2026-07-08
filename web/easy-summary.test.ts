@@ -28,13 +28,14 @@ describe("humanizeSegmentLabel", () => {
   });
 });
 
-/** 최소 리포트 픽스처 — 필요한 필드만 채우고 나머지는 캐스팅으로 생략 */
+/** 판정에 필요한 필드까지 채운 최소 리포트 픽스처 */
 function reportWith(over: {
   signal?: "consensus" | "split";
   dist?: Record<string, number>;
   n?: number;
   opp?: string;
   res?: string;
+  weak?: number;
   consistency?: "high" | "medium" | "low" | "unknown";
   panelSize?: number;
   panelPositive?: number;
@@ -51,6 +52,7 @@ function reportWith(over: {
     },
     opportunitySegments: over.opp ? [{ segmentLabel: over.opp } as never] : [],
     resistanceSegments: over.res ? [{ segmentLabel: over.res } as never] : [],
+    weakSignals: Array.from({ length: over.weak ?? 0 }, () => ({}) as never),
     confidenceCard: {
       responseConsistency: { label: over.consistency ?? "medium" },
     } as never,
@@ -58,8 +60,8 @@ function reportWith(over: {
 }
 
 describe("easySummaryHTML", () => {
-  test("consensus r=0.87 → 뚜렷 긍정 + 10명 중 9명 + n 기준", () => {
-    const html = easySummaryHTML(reportWith({}), "찬성");
+  test("segmented · consensus r=0.87 → 뚜렷 긍정 + 10명 중 9명 + n 기준", () => {
+    const html = easySummaryHTML(reportWith({ opp: "연령=30대" }), "찬성");
     expect(html).toContain("반응이 뚜렷하게 긍정적이에요");
     expect(html).toContain("10명 중 9명");
     expect(html).toContain("가상 응답 90개 기준");
@@ -91,7 +93,10 @@ describe("easySummaryHTML", () => {
   test("판정 경계: 0.8 뚜렷 긍정 / 0.6 긍정 가까움 / 0.5 갈림 / 0.35 부정 가까움 / 0.1 뚜렷 부정", () => {
     const at = (pos: number, total: number) =>
       easySummaryHTML(
-        reportWith({ dist: { 찬성: pos, 반대: total - pos } }),
+        reportWith({
+          dist: { 찬성: pos, 반대: total - pos },
+          opp: "연령=30대", // segmented 고정 — 이 테스트의 관심사는 verdictSentence 경계값
+        }),
         "찬성",
       );
     expect(at(80, 100)).toContain("반응이 뚜렷하게 긍정적이에요");
@@ -102,7 +107,11 @@ describe("easySummaryHTML", () => {
   });
   test("split이면 비율과 무관하게 갈림", () => {
     const html = easySummaryHTML(
-      reportWith({ signal: "split", dist: { 찬성: 85, 반대: 15 } }),
+      reportWith({
+        signal: "split",
+        dist: { 찬성: 85, 반대: 15 },
+        opp: "연령=30대", // segmented 고정 — 관심사는 split 신호가 비율을 이기는지
+      }),
       "찬성",
     );
     expect(html).toContain("반응이 갈렸어요");
@@ -156,5 +165,44 @@ describe("easySummaryHTML", () => {
   });
   test("total=0이면 빈 문자열", () => {
     expect(easySummaryHTML(reportWith({ dist: {} }), "찬성")).toBe("");
+  });
+});
+
+describe("easySummaryHTML — 범위 밖 판정", () => {
+  test("unanimous면 시장 판정문 대신 범위 밖을 말한다", () => {
+    const html = easySummaryHTML(reportWith({ dist: { 끈다: 180 } }), "켠다");
+    expect(html).toContain("이 질문은 이 도구의 범위 밖이에요");
+    expect(html).not.toContain("반응이 뚜렷하게 부정적이에요");
+  });
+
+  test("no-effect면 인구 축에서 갈리지 않았다고 말한다", () => {
+    const html = easySummaryHTML(
+      reportWith({ dist: { 찬성: 78, 반대: 12 } }),
+      "찬성",
+    );
+    expect(html).toContain("인구 축에서는 갈리지 않았어요");
+    expect(html).not.toContain("반응이 뚜렷하게 긍정적이에요");
+  });
+
+  test("underpowered면 기존 판정문을 유지한다", () => {
+    const html = easySummaryHTML(
+      reportWith({ dist: { 찬성: 78, 반대: 12 }, weak: 2 }),
+      "찬성",
+    );
+    expect(html).toContain("반응이 뚜렷하게 긍정적이에요");
+    expect(html).not.toContain("범위 밖");
+  });
+
+  test("segmented면 기존 판정문을 유지한다", () => {
+    const html = easySummaryHTML(
+      reportWith({ dist: { 찬성: 78, 반대: 12 }, opp: "연령=30대" }),
+      "찬성",
+    );
+    expect(html).toContain("반응이 뚜렷하게 긍정적이에요");
+  });
+
+  test("whoLine 폴백은 그대로 유지된다", () => {
+    const html = easySummaryHTML(reportWith({ dist: { 끈다: 180 } }), "켠다");
+    expect(html).toContain("세그먼트 간 뚜렷한 차이는 없었어요.");
   });
 });
