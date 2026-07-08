@@ -130,11 +130,15 @@ describe("renderFounderInsightReport — 참고 섹션 (약한 신호 / 우연 �
     );
   });
 
-  it("기회 세그먼트 0개면 유의성 문구로 안내한다", () => {
-    const rep = baseReport();
+  it("unanimous면 세그먼트 0개 문구가 '인구 축에서 차이 없음'으로 바뀐다", () => {
+    const rep = baseReport(); // bigResult() → unanimous
     rep.opportunitySegments = [];
     const md = renderFounderInsightReport(rep);
-    expect(md).toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
+    expect(md).toContain("10%p 이상 벌어지는 차이가 없었습니다");
+    expect(md).toContain("전체 비율을 세그먼트 근거로 쓰지 마세요");
+    // 거짓 문장 제거 확인
+    expect(md).not.toContain("전체 방향(위)이 핵심 신호입니다");
+    expect(md).not.toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
   });
 
   it("세그먼트 헤더에 페르소나 수 각주가 붙는다", () => {
@@ -242,13 +246,13 @@ describe("renderFounderInsightReport — v2 재배치·리프레이밍", () => {
       md.indexOf("## 기회 세그먼트"),
     );
   });
-  it("세그먼트 없음은 표본 키우기 안내로 리프레이밍된다", () => {
+  it("세그먼트 없음은 범위 밖 안내로 리프레이밍된다 (표본 탓으로 돌리지 않음)", () => {
     const report = generateFounderInsightReport(bigResult(), {
       question: "q?",
       choices: ["쓴다", "안쓴다"],
     });
     const md = renderFounderInsightReport(report);
-    expect(md).toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
+    expect(md).toContain("10%p 이상 벌어지는 차이가 없었습니다");
     expect(md).not.toContain("유의한 기회 세그먼트 없음");
   });
   it("신뢰도 카드는 출처 직전(부록)에 온다", () => {
@@ -554,5 +558,29 @@ describe("renderFounderInsightReport — 범위 밖 배너", () => {
     expect(md).toContain("인구 축에서 갈리지 않았습니다");
     expect(md).toContain("10%p 이상의 차이가 없었습니다");
     expect(md).not.toContain("이 질문은 이 도구의 범위 밖입니다");
+  });
+});
+
+describe("renderFounderInsightReport — underpowered는 표본 문구를 유지한다", () => {
+  it("weakSignals가 있고 승격이 0이면 기존 표본 안내가 그대로 나온다", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    // 승격 0 · weakSignals 1 · 응답은 갈림 → underpowered
+    const rep = {
+      ...base,
+      opportunitySegments: [],
+      resistanceSegments: [],
+      weakSignals: [base.observedButHeld[0] ?? ({} as never)],
+      overallSignal: {
+        ...base.overallSignal,
+        distribution: { 쓴다: 20, 안쓴다: 10 },
+      },
+    };
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain("세그먼트로 쪼개 보려면 표본을 키우세요");
+    expect(md).not.toContain("이 질문은 이 도구의 범위 밖입니다");
+    expect(md).not.toContain("인구 축에서 갈리지 않았습니다");
   });
 });

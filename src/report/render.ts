@@ -23,6 +23,17 @@ export const OUT_OF_SCOPE_BANNER_UNANIMOUS =
 export const OUT_OF_SCOPE_BANNER_NO_EFFECT =
   "> ⚠️ **인구 축에서 갈리지 않았습니다.** 연령·성·지역·가구원수·혼인 어디에서도 10%p 이상의 차이가 없었습니다 — 이 질문의 답은 인구 구성보다 다른 요인에 달려 있습니다.";
 
+/** 표본이 작아 유의하지 않았을 뿐, 효과는 관측된 경우 — 표본을 키우면 갈릴 수 있다. */
+export const NO_SEGMENT_UNDERPOWERED =
+  "이 규모(표본 소수)에선 세그먼트별 차이가 통계적으로 뚜렷하지 않았어요 — 전체 방향(위)이 핵심 신호입니다. 세그먼트로 쪼개 보려면 표본을 키우세요.";
+
+/**
+ * 인구 축에서 의사결정에 쓸 만한 크기(10%p)의 차이 자체가 없는 경우.
+ * 10%p는 의사결정 임계이지 진실의 경계가 아니므로 "안 갈린다"고 단언하지 않는다.
+ */
+export const NO_SEGMENT_NO_EFFECT =
+  "우리가 가진 인구 축(연령·성·지역·가구원수·혼인)에서 10%p 이상 벌어지는 차이가 없었습니다. 표본을 키워도 이 축들로는 갈리지 않을 가능성이 큽니다 — 전체 비율을 세그먼트 근거로 쓰지 마세요.";
+
 const pct = (x: number) => pctBase(x, 1); // 리포트는 소수 1자리
 
 function segmentLines(s: SegmentInsight): string[] {
@@ -139,7 +150,7 @@ export function renderFounderInsightReport(
     );
   if (report.opportunitySegments.length === 0)
     md.push(
-      "이 규모(표본 소수)에선 세그먼트별 차이가 통계적으로 뚜렷하지 않았어요 — 전체 방향(위)이 핵심 신호입니다. 세그먼트로 쪼개 보려면 표본을 키우세요.",
+      scope === "underpowered" ? NO_SEGMENT_UNDERPOWERED : NO_SEGMENT_NO_EFFECT,
       "",
     );
   for (const s of report.opportunitySegments) md.push(...segmentLines(s), "");
@@ -147,7 +158,7 @@ export function renderFounderInsightReport(
   md.push("## 저항 세그먼트", "");
   if (report.resistanceSegments.length === 0)
     md.push(
-      "이 규모(표본 소수)에선 세그먼트별 차이가 통계적으로 뚜렷하지 않았어요 — 전체 방향(위)이 핵심 신호입니다. 세그먼트로 쪼개 보려면 표본을 키우세요.",
+      scope === "underpowered" ? NO_SEGMENT_UNDERPOWERED : NO_SEGMENT_NO_EFFECT,
       "",
     );
   for (const s of report.resistanceSegments) md.push(...segmentLines(s), "");
