@@ -419,7 +419,14 @@ git commit -m "feat(report): '할 수 있는 것'을 부록에서 한 줄 요약
 
 - [ ] **Step 1: Write the failing test**
 
-`src/report/render.test.ts` 끝에 새 describe 추가:
+먼저 `src/report/render.test.ts` 상단 import에 `pct`를 추가한다
+(`src/format.ts:11` — `export function pct(x: number, digits = 0): string`):
+
+```ts
+import { pct } from "../format.js";
+```
+
+그 다음 파일 끝에 새 describe 추가:
 
 ```ts
 describe("renderFounderInsightReport — 근거 앵커", () => {
@@ -447,17 +454,19 @@ describe("renderFounderInsightReport — 근거 앵커", () => {
   );
   const md = renderFounderInsightReport(report);
 
-  it("승격 세그먼트가 있으면 추천 인터뷰에 근거 앵커(긍정률·신뢰도)가 붙는다", () => {
+  it("추천 인터뷰에 근거 앵커(긍정률·신뢰도)가 붙는다", () => {
+    // prescriptions.ts:149 `targetLabel: s.segmentLabel` — 조인은 반드시 성립한다.
+    // ⚠️ 조건부 단언(if (anchored) {...})을 쓰지 말 것: 조인이 깨지면 테스트가 조용히 통과한다.
     expect(report.opportunitySegments.length).toBeGreaterThan(0);
     const seg = report.opportunitySegments[0];
-    // targetLabel이 세그먼트 라벨과 조인되면 수치가 앵커로 실린다
-    const anchored = report.recommendedInterviews.some(
-      (t) => t.targetLabel === seg.segmentLabel,
+    expect(
+      report.recommendedInterviews.some(
+        (t) => t.targetLabel === seg.segmentLabel,
+      ),
+    ).toBe(true);
+    expect(md).toContain(
+      `- ← 기회 세그먼트: 긍정 ${pct(seg.positiveRatio, 1)} · 신뢰도 ${seg.confidence}`,
     );
-    if (anchored) {
-      expect(md).toContain("← 기회 세그먼트: 긍정 ");
-      expect(md).toContain(`신뢰도 ${seg.confidence}`);
-    }
   });
 
   it("조인되지 않는 대상엔 앵커를 붙이지 않는다 (없는 근거 금지)", () => {
