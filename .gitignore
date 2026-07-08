@@ -7,5 +7,5 @@ eval/report/*.html
 .stryker-tmp/
 .superpowers/
 
-# 크로스-프로젝트 핸드오프 문서(파이썬판 전략 포함) — 공개 금지
+# 크로스-프로젝트 핸드오프 문서(비공개 전략 포함) — 공개 금지
 docs/request-oss-release-checklist.md
