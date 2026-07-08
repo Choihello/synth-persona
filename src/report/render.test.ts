@@ -559,6 +559,48 @@ describe("renderFounderInsightReport — 범위 밖 배너", () => {
     expect(md).toContain("10%p 이상의 차이가 없었습니다");
     expect(md).not.toContain("이 질문은 이 도구의 범위 밖입니다");
   });
+
+  it("unanimous면 전체 신호 라벨이 '응답 전부 동일'로 바뀐다 (signal 필드는 무수정)", () => {
+    const report = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    expect(report.overallSignal.signal).toBe("consensus"); // 필드는 그대로
+    const md = renderFounderInsightReport(report);
+    expect(md).toContain("⚪ 응답 전부 동일");
+    expect(md).not.toContain("🟢 consensus(합의)");
+    // og-stats 파서 소스는 보존
+    expect(md).toMatch(/^- .*?· 응답 분포: /m);
+  });
+
+  it("unanimous가 아니면 기존 consensus/split 라벨을 유지한다", () => {
+    const responses = [];
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `a${i}`, attrs: { 연령: "30대" }, weight: 1 },
+        answer: "쓴다",
+        choice: "쓴다",
+      });
+    for (let i = 0; i < 15; i++)
+      responses.push({
+        persona: { id: `b${i}`, attrs: { 연령: "60대" }, weight: 1 },
+        answer: i < 3 ? "쓴다" : "안쓴다",
+        choice: i < 3 ? "쓴다" : "안쓴다",
+      });
+    const md = renderFounderInsightReport(
+      generateFounderInsightReport(
+        {
+          responses,
+          signal: "split" as const,
+          dispersion: 0.5,
+          bySegment: { 연령: {} },
+        },
+        { question: "q?", choices: ["쓴다", "안쓴다"] },
+      ),
+    );
+    expect(md).not.toContain("응답 전부 동일");
+    expect(md).toMatch(/- (🟢 consensus\(합의\)|🔴 split\(분열\))/);
+  });
 });
 
 describe("renderFounderInsightReport — underpowered는 표본 문구를 유지한다", () => {

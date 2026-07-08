@@ -114,10 +114,15 @@ export function renderFounderInsightReport(
         ? `표본 ${o.panelSize}명 · 각 ${repeats}회 응답(총 ${o.n})`
         : `표본 ${o.panelSize}명`
       : `n=${o.n}`;
+  // unanimous면 "합의"가 아니라 "무변별"이다 — signal 필드는 건드리지 않고 표시만 바꾼다.
+  const signalLabel =
+    scope === "unanimous"
+      ? "⚪ 응답 전부 동일"
+      : `${signalDot(o.signal)} ${o.signal === "split" ? "split(분열)" : "consensus(합의)"}`;
   md.push(
     "## 전체 신호",
     "",
-    `- ${signalDot(o.signal)} ${o.signal === "split" ? "split(분열)" : "consensus(합의)"} · 응답 분포: ${dist}`,
+    `- ${signalLabel} · 응답 분포: ${dist}`,
     `- ${sampleLabel}${o.seed != null ? ` · seed=${o.seed}` : ""}${o.provider ? ` · provider=${o.provider}` : ""} · 누락률 ${pct(o.missingRate)}`,
     `- ${o.label}`,
     "",

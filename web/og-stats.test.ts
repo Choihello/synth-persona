@@ -88,4 +88,17 @@ describe("extractOgStats", () => {
     expect(s?.dist[0]).toEqual(["쓴다", 28]);
     expect(s?.n).toBe(90);
   });
+
+  it("unanimous 리포트의 새 라벨(⚪ 응답 전부 동일)에서도 분포를 파싱한다", () => {
+    const md = [
+      "## 전체 신호",
+      "",
+      "- ⚪ 응답 전부 동일 · 응답 분포: 끈다=180",
+      "- 표본 60명 · 각 3회 응답(총 180) · 누락률 0.0%",
+      "",
+    ].join("\n");
+    const s = extractOgStats(md);
+    expect(s?.n).toBe(180);
+    expect(s?.dist).toEqual([["끈다", 180]]);
+  });
 });
