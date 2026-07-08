@@ -30,6 +30,26 @@ function segmentLines(s: SegmentInsight): string[] {
   return lines;
 }
 
+/**
+ * 액션의 대상 라벨을 승격 세그먼트와 조인해 근거 수치를 끌어온다.
+ * 조인 실패 시 undefined — 없는 근거를 지어내지 않는다.
+ */
+function segmentAnchor(
+  report: FounderInsightReport,
+  label: string,
+): string | undefined {
+  const hit = (list: SegmentInsight[], kind: string) => {
+    const s = list.find((x) => x.segmentLabel === label);
+    return s
+      ? `- ← ${kind}: 긍정 ${pct(s.positiveRatio)} · 신뢰도 ${s.confidence}`
+      : undefined;
+  };
+  return (
+    hit(report.opportunitySegments, "기회 세그먼트") ??
+    hit(report.resistanceSegments, "저항 세그먼트")
+  );
+}
+
 function layerLines(name: string, l: ConfidenceLayer): string[] {
   return [
     `| ${name} | ${l.label} | ${l.reason} | ${l.whatThisAllows} | ${l.whatThisDoesNotAllow} |`,
@@ -172,8 +192,10 @@ export function renderFounderInsightReport(
   // ⑨ 추천 인터뷰
   md.push("## 추천 인터뷰 대상", "", AI_DRAFT_BANNER, "");
   for (const t of report.recommendedInterviews) {
+    md.push(`### ${t.targetLabel}`);
+    const anchor = segmentAnchor(report, t.targetLabel);
+    if (anchor) md.push(anchor);
     md.push(
-      `### ${t.targetLabel}`,
       `- 왜: ${t.whyInterview}`,
       `- 검증할 것: ${t.whatToValidate}`,
       `- 모집 스크리너: ${t.suggestedRecruitingScreener}`,
@@ -208,8 +230,10 @@ export function renderFounderInsightReport(
   // ⑫ 랜딩 메시지 테스트
   md.push("## 랜딩 메시지 테스트", "", AI_DRAFT_BANNER, "");
   for (const t of report.landingPageMessageTests) {
+    md.push(`### ${t.headline}`);
+    const anchor = segmentAnchor(report, t.targetSegment);
+    if (anchor) md.push(anchor);
     md.push(
-      `### ${t.headline}`,
       `- 서브카피: ${t.subcopy}`,
       `- 타겟: ${t.targetSegment}`,
       `- 가설: ${t.hypothesis}`,

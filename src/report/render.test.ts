@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pct } from "../format.js";
 import type { StudyResult } from "../types.js";
 import { generateFounderInsightReport } from "./generate.js";
 import { HELD_CAP, renderFounderInsightReport } from "./render.js";
@@ -395,5 +396,71 @@ describe("renderFounderInsightReport — 출처 계층화", () => {
     expect(md).toContain("통계청 인구총조사 2024");
     expect(md).toContain("DT_1IN1509");
     expect(md).toContain("데이터 근거");
+  });
+});
+
+describe("renderFounderInsightReport — 근거 앵커", () => {
+  const responses = [];
+  for (let i = 0; i < 15; i++)
+    responses.push({
+      persona: { id: `a${i}`, attrs: { 연령: "30대" }, weight: 1 },
+      answer: "쓴다",
+      choice: "쓴다",
+    });
+  for (let i = 0; i < 15; i++)
+    responses.push({
+      persona: { id: `b${i}`, attrs: { 연령: "60대" }, weight: 1 },
+      answer: i < 3 ? "쓴다" : "안쓴다",
+      choice: i < 3 ? "쓴다" : "안쓴다",
+    });
+  const report = generateFounderInsightReport(
+    {
+      responses,
+      signal: "split" as const,
+      dispersion: 0.5,
+      bySegment: { 연령: {} },
+    },
+    { question: "q?", choices: ["쓴다", "안쓴다"] },
+  );
+  const md = renderFounderInsightReport(report);
+
+  it("추천 인터뷰에 근거 앵커(긍정률·신뢰도)가 붙는다", () => {
+    // prescriptions.ts:149 `targetLabel: s.segmentLabel` — 조인은 반드시 성립한다.
+    // ⚠️ 조건부 단언(if (anchored) {...})을 쓰지 말 것: 조인이 깨지면 테스트가 조용히 통과한다.
+    expect(report.opportunitySegments.length).toBeGreaterThan(0);
+    const seg = report.opportunitySegments[0];
+    expect(
+      report.recommendedInterviews.some(
+        (t) => t.targetLabel === seg.segmentLabel,
+      ),
+    ).toBe(true);
+    expect(md).toContain(
+      `- ← 기회 세그먼트: 긍정 ${pct(seg.positiveRatio, 1)} · 신뢰도 ${seg.confidence}`,
+    );
+  });
+
+  it("조인되지 않는 대상엔 앵커를 붙이지 않는다 (없는 근거 금지)", () => {
+    const fake = {
+      ...report,
+      recommendedInterviews: report.recommendedInterviews.map((t) => ({
+        ...t,
+        targetLabel: "존재하지 않는 세그먼트",
+      })),
+      landingPageMessageTests: report.landingPageMessageTests.map((t) => ({
+        ...t,
+        targetSegment: "존재하지 않는 세그먼트",
+      })),
+    };
+    const fakeMd = renderFounderInsightReport(fake);
+    expect(fakeMd).not.toContain("← 기회 세그먼트:");
+    expect(fakeMd).not.toContain("← 저항 세그먼트:");
+  });
+
+  it("인터뷰 질문·설문 섹션엔 앵커가 없다", () => {
+    const qIdx = md.indexOf("## 인터뷰 질문 초안");
+    const sEnd = md.indexOf("## 랜딩 메시지 테스트");
+    const between = md.slice(qIdx, sEnd);
+    expect(between).not.toContain("← 기회 세그먼트:");
+    expect(between).not.toContain("← 저항 세그먼트:");
   });
 });
