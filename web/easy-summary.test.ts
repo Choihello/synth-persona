@@ -39,6 +39,7 @@ function reportWith(over: {
   consistency?: "high" | "medium" | "low" | "unknown";
   panelSize?: number;
   panelPositive?: number;
+  panelLabel?: string;
 }): FounderInsightReport {
   return {
     overallSignal: {
@@ -58,6 +59,7 @@ function reportWith(over: {
     confidenceCard: {
       responseConsistency: { label: over.consistency ?? "medium" },
     } as never,
+    appendix: { options: { panelLabel: over.panelLabel } } as never,
   } as unknown as FounderInsightReport;
 }
 
@@ -206,5 +208,30 @@ describe("easySummaryHTML — 범위 밖 판정", () => {
   test("whoLine 폴백은 그대로 유지된다", () => {
     const html = easySummaryHTML(reportWith({ dist: { 끈다: 180 } }), "켠다");
     expect(html).toContain("세그먼트 간 뚜렷한 차이는 없었어요.");
+  });
+});
+
+describe("easySummaryHTML — 모집단 명시", () => {
+  test("panelLabel이 있으면 카드가 대상 모집단을 밝힌다", () => {
+    const html = easySummaryHTML(
+      reportWith({ opp: "연령=30대", panelLabel: "20~39세 · 수도권" }),
+      "찬성",
+    );
+    expect(html).toContain("20~39세 · 수도권 10명 중 9명");
+  });
+
+  test("panelLabel이 없으면 종전 그대로 'N명 중 M명'", () => {
+    const html = easySummaryHTML(reportWith({ opp: "연령=30대" }), "찬성");
+    expect(html).toContain("10명 중 9명");
+    expect(html).not.toContain("· 수도권 10명");
+  });
+
+  test("panelLabel도 이스케이프된다", () => {
+    const html = easySummaryHTML(
+      reportWith({ opp: "연령=30대", panelLabel: '<script>"x"' }),
+      "찬성",
+    );
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
   });
 });

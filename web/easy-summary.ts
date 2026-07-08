@@ -70,6 +70,9 @@ export function easySummaryHTML(
   const pp = report.overallSignal.panelPositive;
   const denom = ps ?? panelSize;
   const positiveCount = pp ?? Math.round(r * panelSize);
+  // 스크리너를 걸면 "60명"이 전 인구 60명이 아니다. 카드가 그 사실을 밝힌다.
+  const panelLabel = report.appendix.options.panelLabel;
+  const denomPrefix = panelLabel ? `${esc(panelLabel)} ` : "";
   // 세그먼트가 갈리지 않았으면 시장 판정을 주장하지 않는다 — 판정은 scope.ts 한 곳에서만.
   const scope = scopeVerdict(report);
   const verdict =
@@ -105,7 +108,7 @@ export function easySummaryHTML(
   return `<section class="easy-summary" aria-label="한눈에 보기">
 <p class="easy-kicker">한눈에 보기</p>
 <p class="easy-verdict">${verdict}</p>
-<p class="easy-count"><span class="easy-count-num">${denom}명 중 ${positiveCount}명</span>이 "${esc(positiveChoice)}" <span class="easy-basis">가상 응답 ${report.overallSignal.n}개 기준</span></p>
+<p class="easy-count"><span class="easy-count-num">${denomPrefix}${denom}명 중 ${positiveCount}명</span>이 "${esc(positiveChoice)}" <span class="easy-basis">가상 응답 ${report.overallSignal.n}개 기준</span></p>
 <p class="easy-who">${whoLine}</p>
 <p class="easy-next">${next}</p>
 <p class="easy-trust">진짜 사람이 아니라 AI가 인구 구성을 흉내 내 답한 결과예요 — 방향을 잡는 참고로만 쓰세요.${trustExtra}</p>
