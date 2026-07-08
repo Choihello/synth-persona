@@ -533,4 +533,26 @@ describe("renderFounderInsightReport — 범위 밖 배너", () => {
     expect(md).toContain(report.executiveSummary.doNotTrustYet);
     expect(md).toContain("## 기술 상세 — 신뢰도 4층");
   });
+
+  it("no-effect면 '인구 축에서 갈리지 않았습니다' 배너가 온다", () => {
+    const base = generateFounderInsightReport(bigResult(), {
+      question: "q?",
+      choices: ["쓴다", "안쓴다"],
+    });
+    // 승격 0 · weakSignals 0 · 버킷 2개 → no-effect
+    const rep = {
+      ...base,
+      opportunitySegments: [],
+      resistanceSegments: [],
+      weakSignals: [],
+      overallSignal: {
+        ...base.overallSignal,
+        distribution: { 쓴다: 20, 안쓴다: 10 },
+      },
+    };
+    const md = renderFounderInsightReport(rep);
+    expect(md).toContain("인구 축에서 갈리지 않았습니다");
+    expect(md).toContain("10%p 이상의 차이가 없었습니다");
+    expect(md).not.toContain("이 질문은 이 도구의 범위 밖입니다");
+  });
 });
