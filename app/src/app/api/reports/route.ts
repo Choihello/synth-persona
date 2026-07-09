@@ -5,6 +5,7 @@ import { ADMIN_COOKIE, isAdminRequest } from "../../../../../web/admin.js";
 import { checkLimit } from "../../../../../web/limits.js";
 import { executeReport } from "../../../../../web/run-report.js";
 import { validateReportInput } from "../../../../../web/validate.js";
+import type { PanelScreener } from "../../../../../src/population/screen.js";
 import {
   adminToken,
   getRunner,
@@ -17,7 +18,11 @@ export const runtime = "nodejs";
 export const maxDuration = 300; // 실측 ~60초 + LLM 처방 — Fluid에서 after()까지 보장
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  let input: { question: string; choices: string[] };
+  let input: {
+    question: string;
+    choices: string[];
+    screener?: PanelScreener;
+  };
   try {
     input = validateReportInput(await req.json().catch(() => ({})));
   } catch (e) {
@@ -54,6 +59,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     choices: input.choices,
     ipHash,
     createdAt: new Date().toISOString(),
+    ...(input.screener ? { screener: input.screener } : {}),
   });
 
   // 응답 반환 후 백그라운드로 실행 — 진행/결과는 DB로 공유(폴링)
