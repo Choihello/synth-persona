@@ -22,12 +22,17 @@ export async function executeReport(
   if (!row) return;
   await store.setStatus(id, "running");
   try {
-    const md = await runner(row.question, row.choices, (d, t, phase) => {
-      onEvent?.({ type: "progress", done: d, total: t, phase });
-      if (d % 5 === 0 || d === t) {
-        void store.setProgress(id, d, t, phase);
-      }
-    });
+    const md = await runner(
+      row.question,
+      row.choices,
+      (d, t, phase) => {
+        onEvent?.({ type: "progress", done: d, total: t, phase });
+        if (d % 5 === 0 || d === t) {
+          void store.setProgress(id, d, t, phase);
+        }
+      },
+      row.screener,
+    );
     await store.markDone(id, md);
     onEvent?.({ type: "done" });
   } catch (e) {

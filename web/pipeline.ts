@@ -4,6 +4,7 @@ import poolJson from "../data/nemotron/kr-pool.json" with { type: "json" };
 import type { LLMProvider } from "../src/llm/provider.js";
 import type { NarrativePool } from "../src/personas/narrative.js";
 import type { Snapshot } from "../src/population/schema.js";
+import { type PanelScreener, screenerLabel } from "../src/population/screen.js";
 import { CensusPopulation } from "../src/population/source.js";
 import { generateFounderInsightReport } from "../src/report/generate.js";
 import { buildLLMPrescriptions } from "../src/report/llm-prescriptions.js";
@@ -37,7 +38,7 @@ export function makeReportRunner(
 ): ReportRunner {
   const population = new CensusPopulation(snapshotJson as unknown as Snapshot);
 
-  return async (question, choices, onProgress) => {
+  return async (question, choices, onProgress, screener?: PanelScreener) => {
     const totalCalls = params.n * params.repeats;
     let base = 0;
     let last = 0;
@@ -57,6 +58,7 @@ export function makeReportRunner(
       seed,
       repeats: params.repeats,
       narrativePool,
+      screener,
       simulate: {
         concurrency: params.concurrency,
         retries: 1,
@@ -79,6 +81,9 @@ export function makeReportRunner(
         provider: "web",
         narrative: narrativeOn,
       },
+      // 🔴 스크리너가 있을 때만 panelLabel — screenerLabel(undefined)="전체 인구"를
+      // 무조건 넘기면 render가 모집단 고지를 찍어 바이트 동일이 깨진다.
+      ...(screener ? { panelLabel: screenerLabel(screener) } : {}),
     };
     const llmGen = await buildLLMPrescriptions({
       provider,

@@ -1,3 +1,4 @@
+import type { PanelScreener } from "../src/population/screen.js";
 import { executeReport } from "./run-report.js";
 import type { ReportStore } from "./store.js";
 
@@ -6,6 +7,7 @@ export type ReportRunner = (
   question: string,
   choices: string[],
   onProgress: (done: number, total: number, phase: string) => void,
+  screener?: PanelScreener,
 ) => Promise<string>;
 
 export interface JobEvent {

@@ -131,6 +131,36 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
     }
   });
 
+  test("스크리너 없으면 모집단 고지가 없다 (바이트 동일 방향)", async () => {
+    const provider = new MockProvider(() => "쓴다");
+    const runner = makeReportRunner(provider, {
+      n: 10,
+      repeats: 1,
+      concurrency: 1,
+    });
+    const md = await runner("질문?", ["쓴다", "안쓴다"], () => {});
+    expect(md).not.toContain("인구만 대상으로 합니다");
+    expect(md).not.toContain("· 대상:");
+  });
+
+  test("스크리너가 있으면 모집단 고지 + 대상 접미 + 순환논증 경고", async () => {
+    const provider = new MockProvider(() => "쓴다");
+    const runner = makeReportRunner(provider, {
+      n: 20,
+      repeats: 1,
+      concurrency: 1,
+    });
+    const md = await runner("질문?", ["쓴다", "안쓴다"], () => {}, {
+      연령: ["20~24세", "25~29세", "30~34세", "35~39세"],
+      지역: "수도권",
+    });
+    expect(md).toContain(
+      "이 리포트는 **20~39세 · 수도권** 인구만 대상으로 합니다",
+    );
+    expect(md).toContain("· 대상: 20~39세 · 수도권");
+    expect(md).toContain("패널을 한정하면"); // SCREENER_CIRCULAR_WARNING 일부
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
