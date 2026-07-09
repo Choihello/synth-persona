@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Persona } from "../types.js";
 import {
   ageRangeLabel,
+  CENSUS_AGE_LABELS,
   constantDims,
   screenPersonas,
   screenerLabel,
@@ -98,5 +99,21 @@ describe("constantDims", () => {
   });
   it("페르소나가 없으면 빈 배열", () => {
     expect(constantDims([])).toEqual([]);
+  });
+});
+
+import census from "../../data/census/kr-2024.json" with { type: "json" };
+
+describe("CENSUS_AGE_LABELS", () => {
+  it("census 스냅샷의 연령 순서와 정확히 일치한다 (드리프트 가드)", () => {
+    const fromSnapshot = (census as { core: { categories: { 연령: string[] } } })
+      .core.categories.연령;
+    expect(CENSUS_AGE_LABELS).toEqual(fromSnapshot);
+  });
+
+  it("15개 라벨, 15~19세로 시작해 85세이상으로 끝난다", () => {
+    expect(CENSUS_AGE_LABELS).toHaveLength(15);
+    expect(CENSUS_AGE_LABELS[0]).toBe("15~19세");
+    expect(CENSUS_AGE_LABELS.at(-1)).toBe("85세이상");
   });
 });
