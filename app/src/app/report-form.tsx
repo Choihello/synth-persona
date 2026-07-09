@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { CENSUS_AGE_LABELS } from "../../../src/population/screen.js";
 
 export default function ReportForm() {
   const router = useRouter();
@@ -11,6 +12,9 @@ export default function ReportForm() {
   const [phase, setPhase] = useState("");
   const [pct, setPct] = useState(0);
   const [error, setError] = useState("");
+  const [ageMin, setAgeMin] = useState("");
+  const [ageMax, setAgeMax] = useState("");
+  const [region, setRegion] = useState("");
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function submit(e: React.FormEvent) {
@@ -19,6 +23,12 @@ export default function ReportForm() {
     setBusy(true);
     setPct(0);
     setPhase("");
+    const screener: Record<string, string> = {};
+    if (ageMin && ageMax) {
+      screener.ageMin = ageMin;
+      screener.ageMax = ageMax;
+    }
+    if (region) screener.region = region;
     const res = await fetch("/api/reports", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -28,6 +38,7 @@ export default function ReportForm() {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
+        ...(Object.keys(screener).length > 0 ? { screener } : {}),
       }),
     });
     if (!res.ok) {
@@ -86,6 +97,53 @@ export default function ReportForm() {
             required
           />
         </label>
+        <fieldset className="field screener">
+          <legend>패널 한정 (선택 — 비우면 전 인구)</legend>
+          <div className="screener-row">
+            <label>
+              <span>연령 시작</span>
+              <select
+                value={ageMin}
+                onChange={(e) => setAgeMin(e.target.value)}
+              >
+                <option value="">전체</option>
+                {CENSUS_AGE_LABELS.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>연령 끝</span>
+              <select
+                value={ageMax}
+                onChange={(e) => setAgeMax(e.target.value)}
+              >
+                <option value="">전체</option>
+                {CENSUS_AGE_LABELS.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>지역</span>
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+              >
+                <option value="">전체</option>
+                <option value="수도권">수도권</option>
+                <option value="비수도권">비수도권</option>
+              </select>
+            </label>
+          </div>
+          <p className="hint">
+            ⚠️ 있는 축은 연령·지역뿐입니다. 직업·소득·자녀로는 거를 수 없습니다.
+          </p>
+        </fieldset>
         <button type="submit" disabled={busy}>
           {busy ? "생성 중…" : "리포트 생성 — 약 2분"}
         </button>
