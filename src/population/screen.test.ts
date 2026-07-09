@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Persona } from "../types.js";
 import {
-  ageRangeLabel,
   CENSUS_AGE_LABELS,
+  ageRangeLabel,
   constantDims,
   screenPersonas,
   screenerLabel,
@@ -106,8 +106,9 @@ import census from "../../data/census/kr-2024.json" with { type: "json" };
 
 describe("CENSUS_AGE_LABELS", () => {
   it("census 스냅샷의 연령 순서와 정확히 일치한다 (드리프트 가드)", () => {
-    const fromSnapshot = (census as { core: { categories: { 연령: string[] } } })
-      .core.categories.연령;
+    const fromSnapshot = (
+      census as { core: { categories: { 연령: string[] } } }
+    ).core.categories.연령;
     expect(CENSUS_AGE_LABELS).toEqual(fromSnapshot);
   });
 
