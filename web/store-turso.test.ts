@@ -43,4 +43,20 @@ describe("TursoStore (libsql, :memory:)", () => {
     await s.markFailed("t2", "boom");
     expect((await s.get("t2"))?.error).toBe("boom");
   });
+
+  test("screener를 저장·복원한다 (Turso 인메모리)", async () => {
+    const s = new TursoStore({ url: ":memory:" });
+    await s.create({
+      id: "t1",
+      question: "q?",
+      choices: ["A", "B"],
+      ipHash: "h1",
+      createdAt: "2026-07-10T10:00:00Z",
+      screener: { 연령: ["20~24세"], 지역: "수도권" },
+    });
+    expect((await s.get("t1"))?.screener).toEqual({
+      연령: ["20~24세"],
+      지역: "수도권",
+    });
+  });
 });

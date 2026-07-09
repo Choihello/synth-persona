@@ -1,8 +1,11 @@
 import { type Client, createClient } from "@libsql/client";
+import type { PanelScreener } from "../src/population/screen.js";
 import {
+  MIGRATIONS,
   type ReportRow,
   type ReportStatus,
   type ReportStore,
+  isDuplicateColumnError,
   rowToReport,
 } from "./store.js";
 
@@ -17,7 +20,8 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS reports (
   ip_hash TEXT NOT NULL,
   progress_done INTEGER,
   progress_total INTEGER,
-  phase TEXT
+  phase TEXT,
+  screener TEXT
 )`;
 
 /**
@@ -37,10 +41,19 @@ export class TursoStore implements ReportStore {
         this.client.execute(
           "CREATE INDEX IF NOT EXISTS idx_reports_ip_day ON reports(ip_hash, created_at)",
         ),
-      );
+      )
+      .then(async () => {
+        for (const sql of MIGRATIONS) {
+          try {
+            await this.client.execute(sql);
+          } catch (e) {
+            if (!isDuplicateColumnError(e)) throw e;
+          }
+        }
+      });
   }
 
-  private async exec(sql: string, args: (string | number)[]) {
+  private async exec(sql: string, args: (string | number | null)[]) {
     await this.ready;
     return this.client.execute({ sql, args });
   }
@@ -51,10 +64,18 @@ export class TursoStore implements ReportStore {
     choices: string[];
     ipHash: string;
     createdAt: string;
+    screener?: PanelScreener;
   }): Promise<void> {
     await this.exec(
-      "INSERT INTO reports (id, question, choices, status, created_at, ip_hash) VALUES (?, ?, ?, 'queued', ?, ?)",
-      [r.id, r.question, JSON.stringify(r.choices), r.createdAt, r.ipHash],
+      "INSERT INTO reports (id, question, choices, status, created_at, ip_hash, screener) VALUES (?, ?, ?, 'queued', ?, ?, ?)",
+      [
+        r.id,
+        r.question,
+        JSON.stringify(r.choices),
+        r.createdAt,
+        r.ipHash,
+        r.screener ? JSON.stringify(r.screener) : null,
+      ],
     );
   }
 

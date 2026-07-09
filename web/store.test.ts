@@ -1,3 +1,5 @@
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { checkLimit } from "./limits.js";
 import { SqliteStore } from "./store.js";
@@ -52,6 +54,51 @@ describe("SqliteStore (ReportStore 구현)", () => {
     expect(await s.countByIpOnDate("h1", "2026-07-04")).toBe(2);
     expect(await s.countOnDate("2026-07-04")).toBe(3);
     expect(await s.countByIpOnDate("h1", "2026-07-05")).toBe(1);
+  });
+
+  test("screener를 저장·복원한다", async () => {
+    const s = new SqliteStore(":memory:");
+    await s.create({
+      id: "scr",
+      question: "q?",
+      choices: ["A", "B"],
+      ipHash: "h1",
+      createdAt: "2026-07-10T10:00:00Z",
+      screener: { 연령: ["20~24세", "25~29세"], 지역: "수도권" },
+    });
+    const r = await s.get("scr");
+    expect(r?.screener).toEqual({
+      연령: ["20~24세", "25~29세"],
+      지역: "수도권",
+    });
+  });
+
+  test("screener 없으면 undefined (기존 리포트 호환)", async () => {
+    const s = new SqliteStore(":memory:");
+    await s.create({
+      id: "plain",
+      question: "q?",
+      choices: ["A", "B"],
+      ipHash: "h1",
+      createdAt: "2026-07-10T10:00:00Z",
+    });
+    expect((await s.get("plain"))?.screener).toBeUndefined();
+  });
+
+  test("같은 파일 DB에 스토어를 두 번 열어도 마이그레이션이 재실행 안전하다", async () => {
+    const path = join(tmpdir(), `screener-migrate-${Date.now()}.db`);
+    const a = new SqliteStore(path);
+    await a.create({
+      id: "m1",
+      question: "q?",
+      choices: ["A", "B"],
+      ipHash: "h1",
+      createdAt: "2026-07-10T10:00:00Z",
+      screener: { 지역: "비수도권" },
+    });
+    // 두 번째 오픈 — ALTER가 중복 컬럼으로 던져도 삼켜져야 한다(생성자 무예외).
+    const b = new SqliteStore(path);
+    expect((await b.get("m1"))?.screener).toEqual({ 지역: "비수도권" });
   });
 });
 

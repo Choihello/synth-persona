@@ -1,4 +1,5 @@
 import type { DatabaseSync as DatabaseSyncT } from "node:sqlite";
+import type { PanelScreener } from "../src/population/screen.js";
 
 export type ReportStatus = "queued" | "running" | "done" | "failed";
 
@@ -14,6 +15,8 @@ export interface ReportRow {
   progressDone?: number;
   progressTotal?: number;
   phase?: string;
+  /** 스크리너로 한정된 모집단 (연령 라벨 목록 + 지역). 없으면 전 인구. */
+  screener?: PanelScreener;
 }
 
 /**
@@ -27,6 +30,7 @@ export interface ReportStore {
     choices: string[];
     ipHash: string;
     createdAt: string;
+    screener?: PanelScreener;
   }): Promise<void>;
   get(id: string): Promise<ReportRow | undefined>;
   setStatus(id: string, status: ReportStatus): Promise<void>;
@@ -53,8 +57,20 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS reports (
   ip_hash TEXT NOT NULL,
   progress_done INTEGER,
   progress_total INTEGER,
-  phase TEXT
+  phase TEXT,
+  screener TEXT
 )`;
+
+/** 기존 테이블용 가산적 마이그레이션. 첫 요청 시 실행, 재실행 안전(중복 컬럼 삼킴). */
+export const MIGRATIONS: readonly string[] = [
+  "ALTER TABLE reports ADD COLUMN screener TEXT",
+];
+
+/** SQLite/libSQL의 "이미 존재하는 컬럼" 에러 판별 — 마이그레이션 재실행 안전용. */
+export function isDuplicateColumnError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return /duplicate column name/i.test(msg);
+}
 
 export function rowToReport(row: Record<string, unknown>): ReportRow {
   return {
@@ -71,6 +87,10 @@ export function rowToReport(row: Record<string, unknown>): ReportRow {
     progressTotal:
       row.progress_total == null ? undefined : Number(row.progress_total),
     phase: row.phase == null ? undefined : String(row.phase),
+    screener:
+      row.screener == null
+        ? undefined
+        : (JSON.parse(String(row.screener)) as PanelScreener),
   };
 }
 
@@ -101,6 +121,13 @@ export class SqliteStore implements ReportStore {
     this.db.exec(
       "CREATE INDEX IF NOT EXISTS idx_reports_ip_day ON reports(ip_hash, created_at)",
     );
+    for (const sql of MIGRATIONS) {
+      try {
+        this.db.exec(sql);
+      } catch (e) {
+        if (!isDuplicateColumnError(e)) throw e;
+      }
+    }
   }
 
   async create(r: {
@@ -109,12 +136,20 @@ export class SqliteStore implements ReportStore {
     choices: string[];
     ipHash: string;
     createdAt: string;
+    screener?: PanelScreener;
   }): Promise<void> {
     this.db
       .prepare(
-        "INSERT INTO reports (id, question, choices, status, created_at, ip_hash) VALUES (?, ?, ?, 'queued', ?, ?)",
+        "INSERT INTO reports (id, question, choices, status, created_at, ip_hash, screener) VALUES (?, ?, ?, 'queued', ?, ?, ?)",
       )
-      .run(r.id, r.question, JSON.stringify(r.choices), r.createdAt, r.ipHash);
+      .run(
+        r.id,
+        r.question,
+        JSON.stringify(r.choices),
+        r.createdAt,
+        r.ipHash,
+        r.screener ? JSON.stringify(r.screener) : null,
+      );
   }
 
   async get(id: string): Promise<ReportRow | undefined> {
