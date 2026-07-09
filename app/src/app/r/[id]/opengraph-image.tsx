@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { screenerLabel } from "../../../../../src/population/screen.js";
 import { extractOgStats } from "../../../../../web/og-stats.js";
 import { getStore } from "../../../lib/backend.js";
 import { unescapeHtml } from "../../../lib/html.js";
@@ -27,6 +28,7 @@ export default async function OgImage({
 
   const question = row ? unescapeHtml(row.question) : "0차 시장검증 리포트";
   const stats = row?.md ? extractOgStats(row.md) : undefined;
+  const panelLabel = row?.screener ? screenerLabel(row.screener) : undefined;
 
   let bar: { posLabel: string; posPct: number; negLabel: string } | undefined;
   if (stats && stats.dist.length > 0) {
@@ -48,7 +50,12 @@ export default async function OgImage({
     "synth-persona 0차 시장검증·리포트 가상 패널 응답 — 실제 여론이 아닙니다 합성이 응답하는 중 질문을 입력하면 60명 n=%()0123456789";
   const glyphs = [
     ...new Set(
-      (question + fixed + (bar ? bar.posLabel + bar.negLabel : "")).split(""),
+      (
+        question +
+        fixed +
+        (panelLabel ?? "") +
+        (bar ? bar.posLabel + bar.negLabel : "")
+      ).split(""),
     ),
   ].join("");
   const [serif700, serif400] = await Promise.all([
@@ -83,8 +90,22 @@ export default async function OgImage({
         }}
       >
         <div style={{ fontSize: 30, fontWeight: 700 }}>synth·persona</div>
-        <div style={{ fontSize: 20, fontWeight: 400, color: INK_MUTED }}>
-          0차 시장검증 리포트
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            fontSize: 20,
+            fontWeight: 400,
+            color: INK_MUTED,
+          }}
+        >
+          <div style={{ display: "flex" }}>0차 시장검증 리포트</div>
+          {panelLabel ? (
+            <div style={{ display: "flex", fontSize: 16 }}>
+              대상: {panelLabel}
+            </div>
+          ) : null}
         </div>
       </div>
 
