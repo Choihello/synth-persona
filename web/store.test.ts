@@ -1,3 +1,4 @@
+import { rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -99,6 +100,12 @@ describe("SqliteStore (ReportStore 구현)", () => {
     // 두 번째 오픈 — ALTER가 중복 컬럼으로 던져도 삼켜져야 한다(생성자 무예외).
     const b = new SqliteStore(path);
     expect((await b.get("m1"))?.screener).toEqual({ 지역: "비수도권" });
+    a.close();
+    b.close();
+    rmSync(path, { force: true });
+    rmSync(`${path}-wal`, { force: true });
+    rmSync(`${path}-shm`, { force: true });
+    rmSync(`${path}-journal`, { force: true });
   });
 });
 

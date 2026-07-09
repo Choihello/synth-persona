@@ -90,23 +90,27 @@ export default async function OgImage({
         }}
       >
         <div style={{ fontSize: 30, fontWeight: 700 }}>synth·persona</div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            fontSize: 20,
-            fontWeight: 400,
-            color: INK_MUTED,
-          }}
-        >
-          <div style={{ display: "flex" }}>0차 시장검증 리포트</div>
-          {panelLabel ? (
+        {panelLabel ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              fontSize: 20,
+              fontWeight: 400,
+              color: INK_MUTED,
+            }}
+          >
+            <div style={{ display: "flex" }}>0차 시장검증 리포트</div>
             <div style={{ display: "flex", fontSize: 16 }}>
               대상: {panelLabel}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 20, fontWeight: 400, color: INK_MUTED }}>
+            0차 시장검증 리포트
+          </div>
+        )}
       </div>
 
       {/* headline */}

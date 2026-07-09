@@ -206,4 +206,8 @@ export class SqliteStore implements ReportStore {
       .get(`${date}%`) as { c: number };
     return Number(row.c);
   }
+
+  close(): void {
+    (this.db as unknown as { close(): void }).close();
+  }
 }
