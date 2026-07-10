@@ -4,7 +4,11 @@ import poolJson from "../data/nemotron/kr-pool.json" with { type: "json" };
 import type { LLMProvider } from "../src/llm/provider.js";
 import type { NarrativePool } from "../src/personas/narrative.js";
 import type { Snapshot } from "../src/population/schema.js";
-import { type PanelScreener, screenerLabel } from "../src/population/screen.js";
+import {
+  type PanelScreener,
+  narrowsPanel,
+  screenerLabel,
+} from "../src/population/screen.js";
 import { CensusPopulation } from "../src/population/source.js";
 import { generateFounderInsightReport } from "../src/report/generate.js";
 import { buildLLMPrescriptions } from "../src/report/llm-prescriptions.js";
@@ -81,9 +85,12 @@ export function makeReportRunner(
         provider: "web",
         narrative: narrativeOn,
       },
-      // 🔴 스크리너가 있을 때만 panelLabel — screenerLabel(undefined)="전체 인구"를
-      // 무조건 넘기면 render가 모집단 고지를 찍어 바이트 동일이 깨진다.
-      ...(screener ? { panelLabel: screenerLabel(screener) } : {}),
+      // 🔴 패널이 실제로 좁혀졌을 때만 panelLabel — 축이 없는 스크리너({}·{연령:[]})에
+      // screenerLabel은 "전체 인구"를 돌려주므로, 무조건 넘기면 render가 거짓 모집단
+      // 고지를 찍고 바이트 동일이 깨진다. 표집과 동일한 술어(narrowsPanel)를 쓴다.
+      ...(narrowsPanel(screener)
+        ? { panelLabel: screenerLabel(screener) }
+        : {}),
     };
     const llmGen = await buildLLMPrescriptions({
       provider,

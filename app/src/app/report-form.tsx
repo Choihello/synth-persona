@@ -20,6 +20,12 @@ export default function ReportForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    // 한쪽만 고른 연령은 조용히 버리지 않는다 — 거른 줄 알았는데 안 걸린 리포트가
+    // 나오면 이 도구가 없애려는 바로 그 착각이 된다.
+    if (Boolean(ageMin) !== Boolean(ageMax)) {
+      setError("연령 범위는 시작과 끝을 모두 고르거나, 둘 다 비워 두세요.");
+      return;
+    }
     setBusy(true);
     setPct(0);
     setPhase("");

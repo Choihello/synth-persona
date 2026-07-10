@@ -61,13 +61,24 @@ export function screenerLabel(s?: PanelScreener): string {
 }
 
 /**
+ * 이 스크리너가 실제로 패널을 좁히는가. 빈 객체·빈 연령 목록은 좁히지 않는다.
+ *
+ * 모집단 고지("이 리포트는 …만 대상으로 합니다")는 **패널이 실제로 좁혀졌을 때만**
+ * 붙어야 한다. 좁히지 않는 스크리너에 screenerLabel은 "전체 인구"를 돌려주므로
+ * 그걸 고지로 찍으면 거짓말이 된다. 표집(screenPersonas)과 고지(pipeline)가
+ * 같은 술어를 써야 둘이 어긋나지 않는다.
+ */
+export function narrowsPanel(s?: PanelScreener): s is PanelScreener {
+  return !!s && ((s.연령?.length ?? 0) > 0 || s.지역 != null);
+}
+
+/**
  * 표집 직전에 모집단을 거른다. 가중치는 건드리지 않는다 —
  * sampleForSimulation이 총 가중치를 인자에서 재계산하므로 재정규화는 공짜다.
  */
 export function screenPersonas(all: Persona[], s?: PanelScreener): Persona[] {
-  const hasAge = !!s?.연령 && s.연령.length > 0;
-  if (!s || (!hasAge && !s.지역)) return all;
-  const ages = hasAge ? new Set(s.연령) : undefined;
+  if (!narrowsPanel(s)) return all;
+  const ages = (s.연령?.length ?? 0) > 0 ? new Set(s.연령) : undefined;
   return all.filter(
     (p) =>
       (!ages || ages.has(p.attrs.연령)) && (!s.지역 || p.attrs.지역 === s.지역),

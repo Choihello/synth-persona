@@ -143,6 +143,27 @@ describe("makeReportRunner (키 없는 mock 경로)", () => {
     expect(md).not.toContain("· 대상:");
   });
 
+  // panelLabel은 "패널이 실제로 좁혀졌을 때만" 붙는다. 축이 없는 스크리너는
+  // screenPersonas가 전 인구를 그대로 돌려주므로 "전체 인구" 고지를 찍으면 거짓말이 된다.
+  test.each([
+    ["빈 객체", {}],
+    ["빈 연령 목록", { 연령: [] }],
+  ])(
+    "축이 없는 스크리너(%s)는 모집단 고지를 찍지 않는다",
+    async (_label, screener) => {
+      const provider = new MockProvider(() => "쓴다");
+      const runner = makeReportRunner(provider, {
+        n: 10,
+        repeats: 1,
+        concurrency: 1,
+      });
+      const md = await runner("질문?", ["쓴다", "안쓴다"], () => {}, screener);
+      expect(md).not.toContain("전체 인구");
+      expect(md).not.toContain("인구만 대상으로 합니다");
+      expect(md).not.toContain("· 대상:");
+    },
+  );
+
   test("스크리너가 있으면 모집단 고지 + 대상 접미 + 순환논증 경고", async () => {
     const provider = new MockProvider(() => "쓴다");
     const runner = makeReportRunner(provider, {

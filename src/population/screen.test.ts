@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { Persona } from "../types.js";
 import {
   CENSUS_AGE_LABELS,
+  type PanelScreener,
   ageRangeLabel,
   constantDims,
+  narrowsPanel,
   screenPersonas,
   screenerLabel,
 } from "./screen.js";
@@ -50,6 +52,30 @@ describe("screenerLabel", () => {
     expect(
       screenerLabel({ 연령: ["20~24세", "35~39세"], 지역: "수도권" }),
     ).toBe("20~39세 · 수도권");
+  });
+});
+
+describe("narrowsPanel", () => {
+  it("축이 하나도 없으면 좁히지 않는다", () => {
+    expect(narrowsPanel(undefined)).toBe(false);
+    expect(narrowsPanel({})).toBe(false);
+  });
+  it("빈 연령 목록은 좁히지 않는다 (screenerLabel이 '전체 인구'를 돌려주는 바로 그 경우)", () => {
+    expect(narrowsPanel({ 연령: [] })).toBe(false);
+    expect(screenerLabel({ 연령: [] })).toBe("전체 인구");
+  });
+  it("연령 또는 지역이 있으면 좁힌다", () => {
+    expect(narrowsPanel({ 연령: ["20~24세"] })).toBe(true);
+    expect(narrowsPanel({ 지역: "수도권" })).toBe(true);
+    expect(narrowsPanel({ 연령: [], 지역: "비수도권" })).toBe(true);
+  });
+  it("screenPersonas가 거르는 조건과 정확히 일치한다", () => {
+    const all = [p({ 연령: "20~24세", 지역: "수도권" }, "a")];
+    const noop: (PanelScreener | undefined)[] = [undefined, {}, { 연령: [] }];
+    for (const s of noop) {
+      expect(narrowsPanel(s)).toBe(false);
+      expect(screenPersonas(all, s)).toBe(all); // 동일 참조 = 안 걸렀다
+    }
   });
 });
 
