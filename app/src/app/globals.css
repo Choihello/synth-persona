@@ -735,7 +735,14 @@ select:focus-visible {
   max-width: 40rem;
 }
 
+/* ⚠️ 가이드 §3 h1 clamp(최대 2.15rem)에 대한 의도적 예외 — 랜딩 히어로 한 곳뿐.
+   랜딩은 첫인상이 전부라 본문 h1 스케일로는 힘이 죽는다. 나머지 h1(리포트·새
+   리포트 폼)은 가이드값을 그대로 쓴다. 위계 규칙은 유지된다 — 이 페이지의 강조
+   수치(.landing-card-num 1.35rem)는 여전히 h1보다 작다. */
 .landing-headline {
+  font-size: clamp(1.9rem, 1.1rem + 2.9vw, 3rem);
+  line-height: 1.22;
+  letter-spacing: -0.025em;
   margin: var(--space-4) 0;
 }
 
