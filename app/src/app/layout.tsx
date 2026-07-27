@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </Link>
             <a
               className="family-link"
-              href="https://founder-hub.fly.dev"
+              href="https://foundersteps.fly.dev"
               target="_blank"
               rel="noreferrer noopener"
               aria-label="FounderSteps — 별도 서비스, 새 창에서 열림"
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               같은 사람이 만든 별도 서비스:
               <a
                 className="family-link"
-                href="https://founder-hub.fly.dev"
+                href="https://foundersteps.fly.dev"
                 target="_blank"
                 rel="noreferrer noopener"
                 aria-label="FounderSteps — 별도 서비스, 새 창에서 열림"
