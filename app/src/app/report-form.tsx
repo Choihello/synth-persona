@@ -103,7 +103,7 @@ export default function ReportForm() {
             required
           />
         </label>
-        <fieldset className="field screener">
+        <fieldset className="screener">
           <legend>패널 한정 (선택 — 비우면 전 인구)</legend>
           <div className="screener-row">
             <label>

@@ -10,13 +10,15 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "0차 시장검증 리포트 — synth-persona";
 
-// charts.ts와 동일한 검증 팔레트 (크림 서피스 대비 ALL PASS)
-const CREAM = "#faf6ef";
-const INK = "#1f1d1a";
-const INK_MUTED = "#6b675e";
+// FounderSteps 패밀리 토큰(docs/DESIGN-GUIDE.md §2)의 라이트 값.
+// 공유 카드는 테마를 따라가지 않으므로 라이트 고정.
+const CREAM = "#f2f4f6"; // --bg (패밀리 시그니처인 조용한 회색 층)
+const INK = "#191f28"; // --text
+const INK_MUTED = "#4e5968"; // --text-muted
+const HAIRLINE = "#d1d6db"; // --border-strong
+// 막대는 리포트 본문 차트(web/charts.ts)와 같은 값이어야 같은 데이터로 읽힌다.
 const POSITIVE = "#2a78d6";
 const NEGATIVE = "#e34948";
-const HAIRLINE = "rgba(31,29,26,0.18)";
 
 export default async function OgImage({
   params,
@@ -85,7 +87,7 @@ export default async function OgImage({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "baseline",
-          borderBottom: `2px solid ${INK}`,
+          borderBottom: `1px solid ${HAIRLINE}`,
           paddingBottom: 18,
         }}
       >

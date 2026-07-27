@@ -9,3 +9,6 @@ eval/report/*.html
 
 # 크로스-프로젝트 핸드오프 문서(비공개 전략 포함) — 공개 금지
 docs/request-oss-release-checklist.md
+
+# 로컬 개발용 SQLite (backend.ts 기본 DB_PATH)
+web-reports.db

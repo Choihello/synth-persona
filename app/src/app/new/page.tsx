@@ -30,6 +30,7 @@ export default async function NewReportPage() {
 
   return (
     <main>
+      <p className="kicker">새 리포트</p>
       <h1>
         아이디어를 검증하기 전에,
         <br />
@@ -45,16 +46,18 @@ export default async function NewReportPage() {
         실제 시장 반응·구매율이 아닙니다 — 고객 인터뷰 전에 가설을 탐색하는
         용도입니다.
       </div>
-      <p className="lede" style={{ fontSize: "0.85em" }}>
+
+      <ReportForm />
+
+      <p className="landing-bottom-note">
         이 페이지는 오픈소스 프로젝트{" "}
         <a href="https://github.com/Choihello/synth-persona">synth-persona</a>의
         라이브 데모입니다 — 자기 API 키로 직접 실행하면 횟수 제한이 없습니다.
       </p>
 
-      <ReportForm />
-
       {gallery.length > 0 && (
         <section className="gallery">
+          <p className="kicker">지난 결과</p>
           <h2>샘플 리포트</h2>
           <ul>
             {gallery.map((g) => (

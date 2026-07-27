@@ -1,16 +1,118 @@
-/* 리서치 에디토리얼 — 크림 서피스 + 잉크 텍스트 + 세리프 헤드라인.
-   차트 팔레트(#2a78d6/#e34948)는 이 서피스 대비 검증기 ALL PASS. */
+/* FounderSteps 패밀리 디자인 언어 — docs/DESIGN-GUIDE.md (founder-hub) 이식.
+   원천은 founder-hub `app/templates/_base.html`. 값이 어긋나면 그쪽이 맞다.
+
+   핵심 규칙 3개만 기억하면 된다:
+   1. 그림자 금지 — 바탕(#f2f4f6) 위 흰 카드(#ffffff) + 1px 보더의 대비가 깊이다.
+   2. 블루는 기능(링크·버튼·현재 위치·강조 수치)에만. 장식 그라데이션·워시 금지.
+   3. 카드는 우하단을 깎는다(패밀리 시그니처) — border가 아니라 두 겹으로 그린다(§카드). */
+
+/* Wanted Sans Variable 자체 호스팅 (OFL 1.1, 저장소 커밋 허용).
+   출처: wanteddev/wanted-sans v1.0.3 …/variable/complete/woff2/WantedSansVariable.woff2
+   ⚠️ 가이드에 적힌 raw 경로에는 `/woff2/` 세그먼트가 빠져 있다(404). 위 경로가 실물이다. */
+@font-face {
+  font-family: "Wanted Sans Variable";
+  src: url("/fonts/WantedSansVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
-  --surface: #faf6ef;
-  --surface-raised: #ffffff;
-  --ink: #1f1d1a;
-  --ink-secondary: #52504a;
-  --ink-muted: #8a8578;
-  --hairline: #e4ddd0;
-  --accent: #2a78d6;
-  --negative: #b3362f;
-  --amber: #b98500;
+
+  /* ── 컬러 토큰 (가이드 §2 — 변수명 유지) ───────────────── */
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --surface-2: #f7f9fb; /* 로컬 확장 */
+  --border: #e5e8eb;
+  --border-strong: #d1d6db; /* 로컬 확장 */
+  --text: #191f28;
+  --text-muted: #4e5968;
+  --text-faint: #8b95a1; /* 고지에는 금지(§1-4) */
+  --primary: #3182f6; /* 로고 블루 #0064ff는 쓰지 않는다 */
+  --primary-hover: #2272eb;
+  --primary-contrast: #ffffff;
+  --link: #1b64da;
+  --focus: #3182f6;
+  --ok-bg: #eaf6ee;
+  --ok-text: #1a7f37;
+  --ok-border: #bfe6c9;
+  --check-bg: #fff6e3;
+  --check-text: #7a4a00;
+  --check-border: #f0d896;
+  --tier-soon-bg: #e8f3ff;
+  --tier-soon-text: #1b64da;
+  --tier-soon-border: #bcdcfb;
+  --danger: #e42939;
+  --danger-bg: #fdecee;
+  --danger-border: #f6b8c0;
+  --primary-soft: rgba(49, 130, 246, 0.16); /* 로컬 확장 */
+
+  /* 히어로 CTA (가이드 §5-2 — Toss marketing-dark) */
+  --cta-dark: rgba(0, 12, 30, 0.8);
+  --cta-dark-hover: rgba(0, 12, 30, 0.92);
+  --cta-dark-text: #ffffff;
+
+  /* 차트 팔레트 — 저장된 리포트 md(web/charts.ts)에 박히는 값과 동일.
+     md는 소급 수정이 안 되므로 여기를 바꾸면 기존 리포트와 신규 리포트의
+     색이 갈린다. charts.ts와 함께가 아니면 건드리지 말 것. */
+  --chart-positive: #2a78d6;
+  --chart-negative: #e34948;
+
+  /* ── 간격·반경 (가이드 §4) ─────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-btn: 7px;
+
+  --font-sans: "Wanted Sans Variable", "Wanted Sans", -apple-system,
+    BlinkMacSystemFont, system-ui, "Segoe UI", "Apple SD Gothic Neo",
+    "Malgun Gothic", sans-serif;
+
+  --section-gap: calc(var(--space-7) * 1.1);
+  --measure: 720px; /* 산문 폭 — 가이드 §8이 허용한 서비스별 조정(리포트는 표·차트를 낀 장문) */
+}
+
+/* 다크 토큰 — 전부 Toss 문서에 없는 로컬 파생값(가이드 §2 각주). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #101317;
+    --surface: #171b20;
+    --surface-2: #1c2127;
+    --border: #2b3038;
+    --border-strong: #3c434c;
+    --text: #edeef1;
+    --text-muted: #a7adb6;
+    --text-faint: #7d838d;
+    --primary: #6ea3ea;
+    --primary-hover: #8fb8ef;
+    --primary-contrast: #0b1420;
+    --link: #7fb0f0;
+    --focus: #6ea3ea;
+    --ok-bg: #12301f;
+    --ok-text: #63d68f;
+    --ok-border: #1f5c3c;
+    --check-bg: #362a08;
+    --check-text: #f0bd5c;
+    --check-border: #5c4413;
+    --tier-soon-bg: #16283f;
+    --tier-soon-text: #7fb0f0;
+    --tier-soon-border: #2c4568;
+    --danger: #ff7b73;
+    --danger-bg: #351514;
+    --danger-border: #5c211d;
+    --primary-soft: rgba(110, 163, 234, 0.22);
+    --cta-dark: #2a3547;
+    --cta-dark-hover: #35425a;
+    --cta-dark-text: #ffffff;
+  }
 }
 
 * {
@@ -18,301 +120,820 @@
 }
 
 html {
-  background: var(--surface);
+  background: var(--bg);
 }
 
 body {
   margin: 0;
-  color: var(--ink);
-  font-family: var(--font-sans), "Apple SD Gothic Neo", sans-serif;
-  font-size: 16px;
-  line-height: 1.75;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  word-break: keep-all; /* 한국어 본문 필수(§3) */
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── 레이아웃 ─────────────────────────────────────────────── */
 .shell {
-  max-width: 720px;
+  max-width: 1160px;
   margin: 0 auto;
-  padding: 0 20px 96px;
+  padding: 0 1.25rem var(--space-7);
 }
 
-/* ── 헤더/푸터 ─────────────────────────────── */
+/* 산문 페이지(리포트·폼)는 읽기 폭으로 가운데 정렬 — 넓은 화면에서 오른쪽이
+   비어 보이지 않게 margin-inline: auto(가이드 §4). 랜딩은 그리드라 전폭. */
+.shell > main:not(.landing) {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+/* ── 헤더 ─────────────────────────────────────────────────── */
 .masthead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 28px 0 16px;
-  border-bottom: 2px solid var(--ink);
-  margin-bottom: 40px;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4) 0;
+  margin-bottom: var(--space-6);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .masthead a {
-  color: var(--ink);
+  color: var(--text);
   text-decoration: none;
 }
 
 .wordmark {
-  font-family: var(--font-serif), serif;
   font-weight: 700;
-  font-size: 20px;
+  font-size: 1.02rem;
   letter-spacing: -0.01em;
+  color: var(--text);
 }
 
-.masthead .tag {
-  font-size: 12.5px;
-  color: var(--ink-muted);
+/* 패밀리 백링크 — 별도 서비스 표기(§1-5·§5-4). 외부가 더 화려하면 안 되므로 중립. */
+.family-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted) !important;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: border-color 0.12s ease, color 0.12s ease;
 }
 
+.family-link:hover {
+  border-color: var(--primary);
+  color: var(--link) !important;
+}
+
+.family-link svg {
+  flex: none;
+}
+
+/* ── 푸터 ─────────────────────────────────────────────────── */
 .colophon {
-  margin-top: 72px;
-  padding-top: 16px;
-  border-top: 1px solid var(--hairline);
-  font-size: 13px;
-  color: var(--ink-muted);
+  margin-top: var(--section-gap);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  /* 정직성 고지("실제 시장 반응이 아닌 탐색 신호")를 포함하므로 faint 금지(§1-4). */
+  color: var(--text-muted);
 }
 
 .colophon a {
-  color: var(--ink-secondary);
+  color: var(--link);
 }
 
-/* ── 타이포그래피 ──────────────────────────── */
+.colophon-family {
+  margin: 0 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  color: var(--text-faint);
+}
+
+.colophon-legal {
+  margin: 0;
+}
+
+/* ── 타이포그래피 (§3) ────────────────────────────────────── */
 h1,
 h2,
 h3 {
-  font-family: var(--font-serif), serif;
-  line-height: 1.3;
+  color: var(--text);
+  line-height: 1.35;
   letter-spacing: -0.015em;
 }
 
 h1 {
-  font-size: 34px;
+  font-size: clamp(1.5rem, 0.62rem + 1.95vw, 2.15rem);
   font-weight: 700;
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
+}
+
+h2 {
+  font-size: clamp(1.3rem, 1.1rem + 0.6vw, 1.55rem);
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.02rem;
+  font-weight: 600;
 }
 
 .lede {
-  font-size: 17.5px;
-  color: var(--ink-secondary);
-  margin: 0 0 20px;
+  font-size: 1.08rem;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-5);
 }
 
-.disclaimer {
-  margin: 24px 0 32px;
-  padding: 12px 16px;
-  border-left: 3px solid var(--amber);
-  background: rgba(185, 133, 0, 0.06);
-  font-size: 14px;
-  color: var(--ink-secondary);
+/* 섹션 킥커 — 한국어·primary. 영문 킥커(YOUR JOURNEY류) 금지(§4). */
+.kicker {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 var(--space-2);
 }
 
-/* ── 폼 ────────────────────────────────────── */
+/* ── 깎기 카드 (§5-1 패밀리 시그니처) ─────────────────────
+   clip-path가 border까지 잘라내므로 border를 쓰지 않고 두 겹으로 그린다:
+   바깥을 보더 색으로 칠하고 1px 안쪽을 ::before 표면이 덮는다. */
+.card,
+.easy-summary,
+.progress-panel,
+.landing-report-card,
+.landing-honest ul {
+  position: relative;
+  --cut: 14px;
+  background: var(--border);
+  border: 0;
+  border-radius: var(--radius-md);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%
+  );
+}
+
+.card::before,
+.easy-summary::before,
+.progress-panel::before,
+.landing-report-card::before,
+.landing-honest ul::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: var(--surface);
+  border-radius: calc(var(--radius-md) - 1px);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--cut) + 1px),
+    calc(100% - var(--cut) + 1px) 100%,
+    0 100%
+  );
+}
+
+/* 내용을 표면 위로. 맨 텍스트 노드는 z-index를 못 받아 표면 아래 깔린다 —
+   카드 안에서는 반드시 요소로 감쌀 것(§5-1 파생규칙 3). */
+.card > *,
+.easy-summary > *,
+.progress-panel > *,
+.landing-report-card > *,
+.landing-honest ul > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 깎인 카드에 outline은 clip-path가 잘라먹는다 — ::after로 직접 그린다(파생규칙 2). */
+.landing-report-card:focus-visible {
+  outline: none;
+}
+
+.landing-report-card:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  z-index: 2;
+  pointer-events: none;
+  border: 2px solid var(--focus);
+  border-radius: calc(var(--radius-md) - 3px);
+}
+
+/* 상태 변형은 두 겹으로 — 테두리는 바깥, 배경은 ::before(파생규칙 1). */
+.landing-report-card:hover {
+  background: var(--primary);
+}
+
+.landing-honest ul {
+  --cut: 9px;
+  background: var(--check-border);
+}
+
+.landing-honest ul::before {
+  background: var(--check-bg);
+}
+
+/* ── 버튼 (§5-2) — 주 CTA는 페이지당 하나 ─────────────────── */
+.btn-hero,
+button[type="submit"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 54px;
+  padding: 0 22px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--cta-dark-text);
+  background: var(--cta-dark);
+  border: 0;
+  border-radius: var(--radius-btn);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.btn-hero:hover,
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--cta-dark-hover);
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 11px 16px;
+  border-radius: var(--radius-btn);
+  background: var(--tier-soon-bg);
+  color: var(--tier-soon-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.12s ease;
+}
+
+.btn-primary:hover {
+  background: var(--tier-soon-border);
+}
+
+.btn-primary svg,
+.btn-hero svg {
+  transition: transform 0.12s ease;
+}
+
+.btn-primary:hover svg,
+.btn-hero:hover svg {
+  transform: translateX(3px);
+}
+
+/* ── 알약·칩 (§5-3) ───────────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--tier-soon-border);
+  border-radius: 999px;
+  background: var(--tier-soon-bg);
+  color: var(--tier-soon-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.pill::before {
+  content: "·";
+  color: currentColor;
+}
+
+/* ── 폼 ───────────────────────────────────────────────────── */
 .card {
-  background: var(--surface-raised);
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  padding: 24px;
-  box-shadow: 0 1px 2px rgba(31, 29, 26, 0.04);
+  padding: var(--space-5);
 }
 
 .field {
   display: block;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-4);
 }
 
-.field span {
+.field > span,
+.screener legend {
   display: block;
-  font-size: 13px;
+  font-size: 0.85rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--ink-secondary);
-  margin-bottom: 6px;
+  color: var(--text);
+  margin-bottom: var(--space-2);
+  padding: 0;
 }
 
 textarea,
-input[type="text"] {
+input[type="text"],
+select {
   width: 100%;
-  padding: 12px 14px;
+  padding: 11px 12px;
   font: inherit;
-  font-size: 15.5px;
-  color: var(--ink);
-  background: var(--surface-raised);
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
+  font-size: 0.98rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
   resize: vertical;
 }
 
-textarea:focus,
-input[type="text"]:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-  border-color: transparent;
+textarea:focus-visible,
+input[type="text"]:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-color: var(--primary);
 }
 
-button[type="submit"] {
-  padding: 12px 22px;
-  font: inherit;
-  font-size: 15.5px;
+.screener {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.screener-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.screener-row label {
+  display: block;
+}
+
+.screener-row span {
+  display: block;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: #fff;
-  background: var(--ink);
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-button[type="submit"]:hover:not(:disabled) {
-  background: #000;
-}
-
-button[type="submit"]:disabled {
-  opacity: 0.45;
-  cursor: default;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
 }
 
 .hint {
-  margin-left: 12px;
-  font-size: 13px;
-  color: var(--ink-muted);
+  display: inline-block;
+  margin-left: var(--space-3);
+  font-size: 0.82rem;
+  color: var(--text-faint);
+}
+
+.screener .hint {
+  display: block;
+  margin: var(--space-3) 0 0;
+  color: var(--text-muted); /* 축 한계 고지 — faint 금지(§1-4) */
 }
 
 .error-text {
-  color: var(--negative);
-  font-size: 14.5px;
+  margin-top: var(--space-3);
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 0.9rem;
 }
 
-/* ── 진행 ──────────────────────────────────── */
+/* ── 진행 ─────────────────────────────────────────────────── */
 .progress-panel {
-  margin-top: 28px;
-  padding: 20px 24px;
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  background: var(--surface-raised);
+  margin-top: var(--space-5);
+  padding: var(--space-5);
 }
 
 .progress-phase {
-  font-size: 14.5px;
-  color: var(--ink-secondary);
-  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
   font-variant-numeric: tabular-nums;
 }
 
 .progress-track {
   height: 6px;
-  background: var(--hairline);
-  border-radius: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--accent);
-  border-radius: 3px;
+  background: var(--primary);
   transition: width 0.5s ease;
 }
 
 .progress-note {
-  margin: 10px 0 0;
-  font-size: 13px;
-  color: var(--ink-muted);
+  margin: var(--space-3) 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
-/* ── 리포트 본문 (marked 출력) ──────────────── */
+/* ── 리포트 본문 (marked 출력) ────────────────────────────── */
 .report {
-  font-size: 16px;
+  font-size: 0.98rem;
+  color: var(--text-muted);
 }
 
 .report h1 {
-  font-size: 30px;
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 
 .report h2 {
-  font-size: 21px;
-  margin: 44px 0 14px;
-  padding-top: 20px;
-  border-top: 1px solid var(--hairline);
+  margin: var(--section-gap) 0 var(--space-4);
+  padding-top: var(--section-gap);
+  border-top: 1px solid var(--border);
 }
 
 .report h3 {
-  font-size: 17px;
-  margin: 26px 0 8px;
+  margin: var(--space-5) 0 var(--space-2);
 }
 
+.report strong {
+  color: var(--text);
+}
+
+.report a {
+  color: var(--link);
+}
+
+/* 리포트의 ⚠️ 고지·경고 인용구 — §5-3의 "확인 필요"(앰버) 축에 매핑.
+   새 축을 만들지 않는다. 고지는 결과 근처에 있고 대비는 muted 이상이다(§1-4). */
 .report blockquote {
-  margin: 16px 0;
-  padding: 10px 16px;
-  border-left: 3px solid var(--amber);
-  background: rgba(185, 133, 0, 0.06);
-  color: var(--ink-secondary);
-  font-size: 14.5px;
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--check-border);
+  border-left: 3px solid var(--check-text);
+  border-radius: var(--radius-md);
+  background: var(--check-bg);
+  color: var(--check-text);
+  font-size: 0.9rem;
 }
 
 .report blockquote p {
   margin: 0;
 }
 
+.report blockquote strong {
+  color: inherit;
+}
+
 .report table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   display: block;
-  overflow-x: auto;
+  overflow-x: auto; /* 좁은 화면에서 표가 가로로 페이지를 밀지 않게 */
 }
 
 .report th {
   text-align: left;
   font-weight: 600;
-  color: var(--ink-secondary);
-  border-bottom: 2px solid var(--ink);
-  padding: 6px 10px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border-strong);
+  padding: var(--space-2) var(--space-3);
+  white-space: nowrap;
 }
 
 .report td {
-  border-bottom: 1px solid var(--hairline);
-  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-2) var(--space-3);
   vertical-align: top;
 }
 
 .report li {
-  margin: 4px 0;
+  margin: var(--space-1) 0;
 }
 
 .report hr {
   border: 0;
-  border-top: 1px solid var(--hairline);
-  margin: 40px 0;
+  border-top: 1px solid var(--border);
+  margin: var(--space-6) 0;
 }
 
+/* 차트 SVG는 검증된 라이트 팔레트 고정 — 다크에서도 흰 판 위에 얹는다
+   (색 자동 플립 금지: 저장된 md의 색과 같아야 한다). */
 .report svg {
-  margin: 8px 0 4px;
+  display: block;
+  margin: var(--space-3) 0;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
 }
 
 .report code {
-  background: rgba(31, 29, 26, 0.06);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.9em;
 }
 
 .backlink {
-  font-size: 14px;
+  margin: 0 0 var(--space-4);
+  font-size: 0.85rem;
 }
 
 .backlink a {
-  color: var(--ink-secondary);
+  color: var(--link);
 }
 
-/* ── 홈 갤러리 ─────────────────────────────── */
+/* ── 쉬운 요약 카드 (한눈에 보기) ─────────────────────────── */
+.easy-summary {
+  padding: var(--space-5);
+  margin: var(--space-5) 0 var(--space-4);
+}
+
+.easy-summary p {
+  margin: 0;
+}
+
+.easy-kicker {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: var(--space-2) !important;
+}
+
+.easy-verdict {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.easy-count {
+  margin: var(--space-3) 0 0 !important;
+  color: var(--text-muted);
+}
+
+/* 강조 수치는 페이지 h1(최대 2.15rem)보다 작아야 위계가 안 뒤집힌다(§3). */
+.easy-count-num {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  margin-right: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "가상 응답 180개 기준" — 큰 수치의 근거를 밝히는 문구라 고지에 준해 muted.
+   faint(#8b95a1)는 흰 배경에서 3.04:1로 AA 미달이다(§1-4의 취지). */
+.easy-basis {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}
+
+.easy-who,
+.easy-next {
+  margin-top: var(--space-4) !important;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+/* 정직성 고지 — 사용자가 결과를 믿게 되는 지점 바로 아래.
+   faint로 낮추면 WCAG AA 미달이라 muted 고정(§1-4). */
+.easy-trust {
+  margin-top: var(--space-4) !important;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── 랜딩 ─────────────────────────────────────────────────── */
+.landing-hero {
+  padding: var(--space-6) 0 var(--space-7);
+  max-width: 40rem;
+}
+
+.landing-headline {
+  margin: var(--space-4) 0;
+}
+
+.landing-headline em {
+  font-style: normal;
+  color: var(--primary); /* 기능적 강조 — 장식 아님 */
+}
+
+.landing-sub {
+  font-size: 1.08rem;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-5);
+}
+
+.landing-cta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.landing-sample-link {
+  font-size: 0.9rem;
+  color: var(--link);
+  text-decoration: none;
+}
+
+.landing-sample-link:hover {
+  text-decoration: underline;
+}
+
+.landing-section {
+  margin-top: var(--section-gap);
+  padding-top: var(--section-gap);
+  border-top: 1px solid var(--border);
+}
+
+.landing-section h2 {
+  margin: 0 0 var(--space-2);
+}
+
+.landing-section .lede {
+  margin-bottom: var(--space-5);
+}
+
+.landing-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--space-4);
+}
+
+.landing-report-card {
+  display: block;
+  padding: var(--space-5);
+  text-decoration: none;
+  color: var(--text-muted);
+}
+
+.landing-card-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  margin-bottom: var(--space-3);
+}
+
+.landing-card-kicker {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 var(--space-1);
+}
+
+.landing-card-verdict {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.landing-card-num {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: var(--space-2) 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-card-num span {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: var(--space-1);
+}
+
+/* 미니 바 — 리포트 차트와 같은 팔레트여야 사용자가 같은 것으로 읽는다. */
+.landing-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: var(--space-3);
+  background: var(--surface-2);
+}
+
+.landing-bar i {
+  background: var(--chart-positive);
+  margin-right: 2px;
+}
+
+.landing-bar em {
+  background: var(--chart-negative);
+  flex: 1;
+}
+
+.landing-card-basis {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted); /* 근거 문구 — easy-basis와 같은 이유로 muted */
+  margin-top: var(--space-2);
+}
+
+.landing-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-5);
+}
+
+.landing-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: var(--space-3);
+}
+
+.landing-steps h3 {
+  margin: 0 0 var(--space-2);
+}
+
+.landing-steps p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.landing-honest ul {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+}
+
+.landing-honest li {
+  font-size: 0.92rem;
+  color: var(--check-text);
+  margin: var(--space-2) 0;
+}
+
+.landing-honest strong {
+  font-weight: 600;
+}
+
+.landing-bottom {
+  margin-top: var(--section-gap);
+  padding-top: var(--section-gap);
+  border-top: 1px solid var(--border);
+}
+
+.landing-bottom-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: var(--space-3) 0 0;
+}
+
+/* ── 갤러리 ───────────────────────────────────────────────── */
 .gallery {
-  margin-top: 56px;
+  margin-top: var(--section-gap);
+  padding-top: var(--section-gap);
+  border-top: 1px solid var(--border);
 }
 
 .gallery h2 {
-  font-size: 21px;
-  margin: 0 0 14px;
-  padding-top: 20px;
-  border-top: 1px solid var(--hairline);
+  margin: 0 0 var(--space-4);
 }
 
 .gallery ul {
@@ -322,389 +943,44 @@ button[type="submit"]:disabled {
 }
 
 .gallery li {
-  margin: 10px 0;
-  font-size: 15.5px;
+  margin: var(--space-2) 0;
+  font-size: 0.95rem;
 }
 
 .gallery a {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--hairline);
-  text-underline-offset: 4px;
+  color: var(--link);
+  text-decoration: none;
 }
 
 .gallery a:hover {
-  text-decoration-color: var(--ink-secondary);
+  text-decoration: underline;
 }
 
-/* ── 쉬운 요약 카드 (한눈에 보기) ───────────── */
-.easy-summary {
-  background: var(--surface-raised);
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  padding: 24px 28px;
-  margin: 28px 0 8px;
-  box-shadow: 0 1px 2px rgba(31, 29, 26, 0.04);
+/* ── 고지 배너 ────────────────────────────────────────────── */
+.disclaimer {
+  margin: var(--space-5) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--check-border);
+  border-left: 3px solid var(--check-text);
+  border-radius: var(--radius-md);
+  background: var(--check-bg);
+  font-size: 0.9rem;
+  color: var(--check-text);
 }
 
-.easy-summary p {
-  margin: 0;
+/* ── 포커스·모션 (§5-6) ───────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
-.easy-kicker {
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
-  margin-bottom: 6px !important;
-}
-
-.easy-verdict {
-  font-family: var(--font-serif), serif;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  line-height: 1.35;
-}
-
-.easy-count {
-  margin: 10px 0 0 !important;
-  color: var(--ink-secondary);
-}
-
-.easy-count-num {
-  font-family: var(--font-serif), serif;
-  font-size: 40px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: -0.02em;
-  margin-right: 4px;
-  font-variant-numeric: tabular-nums;
-}
-
-.easy-basis {
-  display: block;
-  font-size: 12.5px;
-  color: var(--ink-muted);
-  margin-top: 2px;
-}
-
-.easy-who,
-.easy-next {
-  margin-top: 14px !important;
-  padding-top: 14px;
-  border-top: 1px solid var(--hairline);
-  font-size: 15.5px;
-}
-
-.easy-trust {
-  margin-top: 14px !important;
-  padding-top: 12px;
-  border-top: 1px solid var(--hairline);
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-
-/* ── 랜딩 (신문 1면) ────────────────────────── */
-.landing {
-  word-break: keep-all;
-  overflow-wrap: break-word;
-}
-
-.landing-hero {
-  text-align: center;
-  padding: 48px 0 40px;
-}
-
-.landing-kicker {
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  color: var(--ink-muted);
-  margin: 0 0 18px;
-}
-
-.landing-headline {
-  font-size: clamp(34px, 6.4vw, 54px);
-  line-height: 1.22;
-  letter-spacing: -0.02em;
-  margin: 0 0 18px;
-}
-
-.landing-underline {
-  border-bottom: 3px solid var(--accent);
-  padding-bottom: 2px;
-}
-
-.landing-sub {
-  font-size: 17px;
-  color: var(--ink-secondary);
-  max-width: 30em;
-  margin: 0 auto 26px;
-}
-
-.landing-cta-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.landing-cta {
-  display: inline-block;
-  padding: 13px 26px;
-  font-size: 15.5px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--ink);
-  border-radius: 8px;
-  text-decoration: none;
-}
-
-.landing-cta:hover {
-  background: #000;
-}
-
-.landing-sample-link {
-  font-size: 14.5px;
-  color: var(--ink-secondary);
-}
-
-.landing-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin: 8px 0 8px;
-}
-
-.landing-report-card {
-  display: block;
-  background: var(--surface-raised);
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  padding: 20px 22px;
-  text-decoration: none;
-  color: var(--ink);
-  box-shadow: 0 1px 2px rgba(31, 29, 26, 0.04);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.landing-report-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(31, 29, 26, 0.08);
-}
-
-.landing-card-label {
-  display: inline-block;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
-  border: 1px solid var(--hairline);
-  border-radius: 4px;
-  padding: 1px 7px;
-  margin-bottom: 12px;
-}
-
-.landing-card-kicker {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
-  margin: 0 0 4px;
-}
-
-.landing-card-verdict {
-  font-family: var(--font-serif), serif;
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
-  margin: 0;
-}
-
-.landing-card-num {
-  font-family: var(--font-serif), serif;
-  font-size: 26px;
-  font-weight: 700;
-  margin: 8px 0 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.landing-card-num span {
-  font-family: var(--font-sans), sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--ink-secondary);
-  margin-left: 4px;
-}
-
-.landing-bar {
-  display: flex;
-  height: 8px;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 12px;
-  background: #faf6ef; /* 차트 팔레트는 크림 위 검증분 — 카드가 다크여도 크림 유지 */
-  padding: 0;
-}
-
-.landing-bar i {
-  background: #2a78d6;
-  border-radius: 4px 0 0 4px;
-  margin-right: 2px;
-}
-
-.landing-bar em {
-  background: #e34948;
-  flex: 1;
-  border-radius: 0 4px 4px 0;
-}
-
-.landing-card-basis {
-  display: block;
-  font-size: 12px;
-  color: var(--ink-muted);
-  margin-top: 8px;
-}
-
-.landing-how {
-  margin-top: 48px;
-}
-
-.landing-how h2,
-.landing-honest h2 {
-  font-size: 21px;
-  margin: 0 0 18px;
-  padding-top: 20px;
-  border-top: 1px solid var(--hairline);
-}
-
-.landing-how ol {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 24px;
-}
-
-.landing-step-num {
-  font-family: var(--font-serif), serif;
-  font-size: 34px;
-  font-weight: 700;
-  color: var(--ink-muted);
-  line-height: 1;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.landing-how h3 {
-  font-size: 16px;
-  margin: 0 0 6px;
-}
-
-.landing-how li p {
-  font-size: 14px;
-  color: var(--ink-secondary);
-  margin: 0;
-}
-
-.landing-honest {
-  margin-top: 48px;
-}
-
-.landing-honest ul {
-  list-style: none;
-  margin: 0;
-  padding: 16px 20px;
-  border-left: 3px solid var(--amber);
-  background: rgba(185, 133, 0, 0.06);
-}
-
-.landing-honest li {
-  font-size: 14.5px;
-  color: var(--ink-secondary);
-  margin: 6px 0;
-}
-
-.landing-honest strong {
-  color: var(--ink);
-}
-
-.landing-bottom {
-  text-align: center;
-  margin-top: 56px;
-  padding-top: 32px;
-  border-top: 1px solid var(--hairline);
-}
-
-.landing-bottom-note {
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin: 10px 0 0;
-}
-
-@media (max-width: 640px) {
-  .landing-cards,
-  .landing-how ol {
-    grid-template-columns: 1fr;
-  }
-
-  .landing-hero {
-    padding: 28px 0 32px;
-  }
-}
-
-/* ── 다크 모드 ─────────────────────────────── */
-/* 페이지 크롬만 웜 잉크로 반전. 차트 SVG는 검증된 크림 서피스 카드 위에
-   그대로 얹는다(팔레트 자동 플립 금지, dataviz 검증기 통과분 유지). */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --surface: #191613;
-    --surface-raised: #221e19;
-    --ink: #ece7dc;
-    --ink-secondary: #beb8aa;
-    --ink-muted: #97917f;
-    --hairline: #37332c;
-    --accent: #5b9be0;
-    --negative: #e07a72;
-    --amber: #d4a017;
-  }
-
-  button[type="submit"] {
-    color: var(--surface);
-  }
-
-  button[type="submit"]:hover:not(:disabled) {
-    background: #fff;
-  }
-
-  .landing-cta {
-    color: var(--surface);
-  }
-
-  .landing-cta:hover {
-    background: #fff;
-  }
-
-  .landing-honest ul {
-    background: rgba(212, 160, 23, 0.09);
-  }
-
-  .report svg {
-    background: #faf6ef;
-    padding: 14px 16px;
-    border-radius: 10px;
-  }
-
-  .report code {
-    background: rgba(236, 231, 220, 0.09);
-  }
-
-  .disclaimer,
-  .report blockquote {
-    background: rgba(212, 160, 23, 0.09);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

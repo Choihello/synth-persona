@@ -1,69 +1,76 @@
 import Link from "next/link";
 
-/** 랜딩 — 신문 1면. 정적 마크업만, DB 접근 없음 (항상 즉시 뜨고 깨지지 않는다). */
+/** 랜딩 — 정적 마크업만, DB 접근 없음 (항상 즉시 뜨고 깨지지 않는다). */
 export default function Landing() {
   return (
     <main className="landing">
       <section className="landing-hero">
-        <p className="landing-kicker">오픈소스 합성 패널 엔진 · 라이브 데모</p>
+        <span className="pill">오픈소스 합성 패널 엔진 · 라이브 데모</span>
         <h1 className="landing-headline">
           진짜 고객을 만나기 전,
           <br />
-          <span className="landing-underline">가짜 60명</span>에게 먼저
-          물어보세요
+          <em>가짜 60명</em>에게 먼저 물어보세요
         </h1>
         <p className="landing-sub">
           통계청 인구 분포를 흉내 낸 합성 패널 — 실제 여론이 아니라서, 오히려
           솔직하게 쓸 수 있습니다
         </p>
         <div className="landing-cta-row">
-          <Link className="landing-cta" href="/new">
+          <Link className="btn-hero" href="/new">
             리포트 만들기 — 약 2분
           </Link>
           <Link className="landing-sample-link" href="/r/2khi1bDwJ4">
-            샘플 리포트 보기 →
+            샘플 리포트 보기
           </Link>
           <a
             className="landing-sample-link"
             href="https://github.com/Choihello/synth-persona"
           >
-            GitHub에서 코드 보기 →
+            GitHub에서 코드 보기
           </a>
         </div>
       </section>
 
-      <section className="landing-cards" aria-label="예시 리포트 미리보기">
-        <Link href="/r/2khi1bDwJ4" className="landing-report-card">
-          <span className="landing-card-label">예시 리포트</span>
-          <p className="landing-card-kicker">한눈에 보기</p>
-          <p className="landing-card-verdict">반응이 갈렸어요</p>
-          <p className="landing-card-num">
-            60명 중 11명<span>이 "온라인 배송"</span>
-          </p>
-          <span className="landing-bar" aria-hidden="true">
-            <i style={{ width: "18%" }} />
-            <em />
-          </span>
-          <span className="landing-card-basis">가상 응답 180개 기준</span>
-        </Link>
-        <Link href="/r/2khi1bDwJ4" className="landing-report-card">
-          <span className="landing-card-label">예시 리포트</span>
-          <p className="landing-card-kicker">기회 세그먼트</p>
-          <p className="landing-card-verdict">지역에서 뚜렷하게 갈렸어요</p>
-          <p className="landing-card-num">
-            34.3%<span>수도권 긍정 · 비수도권 6.2%</span>
-          </p>
-          <span className="landing-bar" aria-hidden="true">
-            <i style={{ width: "34%" }} />
-            <em />
-          </span>
-          <span className="landing-card-basis">합성 패널 응답 기준</span>
-        </Link>
+      <section className="landing-section" aria-label="예시 리포트 미리보기">
+        <p className="kicker">실제 결과</p>
+        <h2>리포트는 이렇게 나옵니다</h2>
+        <p className="lede">
+          아래 두 카드는 실제 생성된 샘플 리포트의 값입니다.
+        </p>
+        <div className="landing-cards">
+          <Link href="/r/2khi1bDwJ4" className="landing-report-card">
+            <span className="landing-card-label">예시 리포트</span>
+            <p className="landing-card-kicker">한눈에 보기</p>
+            <p className="landing-card-verdict">반응이 갈렸어요</p>
+            <p className="landing-card-num">
+              60명 중 11명<span>이 "온라인 배송"</span>
+            </p>
+            <span className="landing-bar" aria-hidden="true">
+              <i style={{ width: "18%" }} />
+              <em />
+            </span>
+            <span className="landing-card-basis">가상 응답 180개 기준</span>
+          </Link>
+          <Link href="/r/2khi1bDwJ4" className="landing-report-card">
+            <span className="landing-card-label">예시 리포트</span>
+            <p className="landing-card-kicker">기회 세그먼트</p>
+            <p className="landing-card-verdict">지역에서 뚜렷하게 갈렸어요</p>
+            <p className="landing-card-num">
+              34.3%<span>수도권 긍정 · 비수도권 6.2%</span>
+            </p>
+            <span className="landing-bar" aria-hidden="true">
+              <i style={{ width: "34%" }} />
+              <em />
+            </span>
+            <span className="landing-card-basis">합성 패널 응답 기준</span>
+          </Link>
+        </div>
       </section>
 
-      <section className="landing-how">
-        <h2>작동 방식</h2>
-        <ol>
+      <section className="landing-section">
+        <p className="kicker">작동 방식</p>
+        <h2>질문 하나로 리포트까지</h2>
+        <ol className="landing-steps">
           <li>
             <span className="landing-step-num">1</span>
             <h3>질문을 입력합니다</h3>
@@ -88,7 +95,8 @@ export default function Landing() {
         </ol>
       </section>
 
-      <section className="landing-honest">
+      <section className="landing-section landing-honest">
+        <p className="kicker">먼저 밝힙니다</p>
         <h2>이 서비스가 하지 않는 것</h2>
         <ul>
           <li>
@@ -107,7 +115,7 @@ export default function Landing() {
       </section>
 
       <section className="landing-bottom">
-        <Link className="landing-cta" href="/new">
+        <Link className="btn-primary" href="/new">
           리포트 만들기 — 약 2분
         </Link>
         <p className="landing-bottom-note">
